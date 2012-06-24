@@ -4,10 +4,11 @@ import java.io.File;
 import java.util.List;
 import java.util.Random;
 
-import similarity.arff.ArffFileReader;
-import similarity.arff.ArffFileWriter;
-import similarity.chord.Mode;
-import similarity.util.InstanceUtils;
+import chordest.arff.ArffFileReader;
+import chordest.arff.ArffFileWriter;
+import chordest.chord.Key;
+import chordest.util.InstanceUtils;
+
 import weka.core.Instances;
 
 public class ArffCombiner {
@@ -18,7 +19,7 @@ public class ArffCombiner {
 	private static final String PREFIX = ARTIST + SEP; //+ ALBUM + SEP;
 	private static final String LAB_DIR = PathConstants.LAB_DIR + PREFIX;
 	private static final int LIMIT = 100;
-	private static final Mode MODE = Mode.E_MAJ;
+	private static final Key MODE = Key.E_MAJ;
 
 	public static void main(String[] args) {
 		List<String> tracklist = TracklistCreator.createTracklist(
@@ -44,7 +45,7 @@ public class ArffCombiner {
 		return all;
 	}
 
-	private static Instances combineForMode(List<String> tracklist, Mode mode) {
+	private static Instances combineForMode(List<String> tracklist, Key mode) {
 		Instances instances = combine(tracklist);
 		instances = InstanceUtils.preserveWithValues(instances, mode.getChords());
 		return instances;

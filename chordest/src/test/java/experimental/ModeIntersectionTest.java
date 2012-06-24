@@ -6,9 +6,10 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import similarity.chord.Chord;
-import similarity.chord.Mode;
-import similarity.chord.Note;
+import chordest.chord.Chord;
+import chordest.chord.Key;
+import chordest.chord.Note;
+
 
 public class ModeIntersectionTest {
 
@@ -18,19 +19,19 @@ public class ModeIntersectionTest {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Mode[] modes = new Mode[12];
+		Key[] modes = new Key[12];
 		int index = 0;
 		for (Note note : Note.values()) {
-			modes[index++] = new Mode(note, Chord.MAJ);
+			modes[index++] = new Key(note, Chord.MAJ);
 //			modes[index++] = new Mode(note, Chord.MIN);
 		}
 		int maxCommon = 0;
-		Mode max1 = null;
-		Mode max2 = null;
+		Key max1 = null;
+		Key max2 = null;
 		for (int i = 0; i < 12; i++) {
-			Mode mode1 = modes[i];
+			Key mode1 = modes[i];
 			for (int j = i+1; j < 12; j++) {
-				Mode mode2 = modes[j];
+				Key mode2 = modes[j];
 				int common = commonNotes(mode1, mode2);
 				if (common > maxCommon) {
 					maxCommon = common;
@@ -44,7 +45,7 @@ public class ModeIntersectionTest {
 		LOG.info("Mode 2: " + max2.toString());
 	}
 
-	private static int commonNotes(Mode mode1, Mode mode2) {
+	private static int commonNotes(Key mode1, Key mode2) {
 		Set<Note> set = new HashSet<Note>();
 		set.addAll(mode1.getNotes());
 		set.addAll(mode2.getNotes());

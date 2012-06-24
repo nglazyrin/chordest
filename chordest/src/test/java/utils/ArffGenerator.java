@@ -3,11 +3,12 @@ package utils;
 import java.io.File;
 import java.util.List;
 
-import similarity.arff.ArffFileWriter;
-import similarity.lab.LabFileReader;
-import similarity.spectrum.SpectrumData;
-import similarity.spectrum.SpectrumFileReader;
-import similarity.util.InstanceUtils;
+import chordest.arff.ArffFileWriter;
+import chordest.lab.LabFileReader;
+import chordest.spectrum.SpectrumData;
+import chordest.spectrum.SpectrumFileReader;
+import chordest.util.InstanceUtils;
+
 import weka.core.Instances;
 
 public class ArffGenerator {

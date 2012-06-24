@@ -5,10 +5,11 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import similarity.chord.ChordExtractor;
-import similarity.lab.LabFileReader;
-import similarity.lab.LabFileWriter;
-import similarity.lab.LabSimilarity;
+import chordest.chord.ChordExtractor;
+import chordest.lab.LabFileReader;
+import chordest.lab.LabFileWriter;
+import chordest.lab.LabSimilarity;
+
 import utils.PathConstants;
 import utils.Visualizer;
 

@@ -6,9 +6,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import similarity.chord.Chord;
-import similarity.chord.Note;
-import similarity.lab.LabFileReader;
+import chordest.chord.Chord;
+import chordest.chord.Note;
+import chordest.lab.LabFileReader;
+
 
 public class ChordFinder {
 

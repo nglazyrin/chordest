@@ -6,12 +6,13 @@ import java.util.concurrent.ExecutionException;
 
 import org.jfree.data.xy.XYZDataset;
 
-import similarity.chord.ChordExtractor;
-import similarity.chord.Note;
-import similarity.gui.JFreeChartUtils;
-import similarity.lab.LabFileReader;
-import similarity.util.DatasetUtil;
-import similarity.util.NoteLabelProvider;
+import chordest.chord.ChordExtractor;
+import chordest.chord.Note;
+import chordest.gui.JFreeChartUtils;
+import chordest.lab.LabFileReader;
+import chordest.util.DatasetUtil;
+import chordest.util.NoteLabelProvider;
+
 
 public class LabViewer {
 

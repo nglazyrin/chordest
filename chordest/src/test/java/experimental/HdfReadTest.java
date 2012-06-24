@@ -13,9 +13,10 @@ import ncsa.hdf.object.h5.H5File;
 
 import org.jfree.data.xy.XYZDataset;
 
-import similarity.gui.JFreeChartUtils;
-import similarity.gui.StructureMapGenerator;
-import similarity.hdf5.Hdf5Getters;
+import chordest.gui.JFreeChartUtils;
+import chordest.gui.StructureMapGenerator;
+import experimental.hdf5.Hdf5Getters;
+
 
 
 public class HdfReadTest {

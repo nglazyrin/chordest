@@ -6,7 +6,8 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import similarity.lastfm.Track;
+import experimental.lastfm.Track;
+
 
 
 public class LastFmReadTest {

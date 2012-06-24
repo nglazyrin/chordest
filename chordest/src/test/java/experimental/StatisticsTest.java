@@ -2,7 +2,7 @@ package experimental;
 import java.io.File;
 
 import ncsa.hdf.object.h5.H5File;
-import similarity.hdf5.Hdf5Getters;
+import experimental.hdf5.Hdf5Getters;
 
 
 public class StatisticsTest {

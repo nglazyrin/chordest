@@ -10,12 +10,13 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import similarity.chord.ChordExtractor;
-import similarity.lab.CsvFileWriter;
-import similarity.lab.LabFileReader;
-import similarity.lab.LabFileWriter;
-import similarity.lab.LabSimilarity;
-import similarity.util.MapUtil;
+import chordest.chord.ChordExtractor;
+import chordest.lab.CsvFileWriter;
+import chordest.lab.LabFileReader;
+import chordest.lab.LabFileWriter;
+import chordest.lab.LabSimilarity;
+import chordest.util.MapUtil;
+
 import utils.PathConstants;
 import utils.TracklistCreator;
 

@@ -6,8 +6,9 @@ import org.jfree.data.xy.XYDataset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import similarity.gui.JFreeChartUtils;
-import similarity.util.DatasetUtil;
+import chordest.gui.JFreeChartUtils;
+import chordest.util.DatasetUtil;
+
 import uk.co.labbookpages.WavFile;
 
 
