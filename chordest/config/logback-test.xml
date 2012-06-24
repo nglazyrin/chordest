@@ -1,0 +1,37 @@
+<configuration scan="true">
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<!--
+			encoders are assigned the type
+			ch.qos.logback.classic.encoder.PatternLayoutEncoder by default
+		-->
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="SIM_FILE" class="ch.qos.logback.core.FileAppender">
+		<file>logs\similarity.csv</file>
+		<append>false</append>
+		<encoder>
+			<pattern>%msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="LOG_FILE" class="ch.qos.logback.core.FileAppender">
+		<file>logs\roundtrip.log</file>
+		<append>false</append>
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<logger name="Similarity" level="INFO" additivity="false">
+		<appender-ref ref="SIM_FILE" />
+	</logger>
+
+	<root level="info">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="LOG_FILE" />
+	</root>
+</configuration>

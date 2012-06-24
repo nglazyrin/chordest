@@ -1,0 +1,166 @@
+options {
+  LOOKAHEAD = 4;
+  FORCE_LA_CHECK = true;
+  STATIC = false;
+}
+
+PARSER_BEGIN(ChordParser)
+  package similarity.chord.parser;
+
+  import similarity.chord.Chord;
+  import similarity.chord.Interval;
+  import similarity.chord.Note;
+  import java.io.ByteArrayInputStream;
+  import java.io.PrintStream;
+  import java.util.List;
+  import java.util.ArrayList;
+
+  public class ChordParser {
+    public static void main(String[] args) throws ParseException, TokenMgrError, NumberFormatException {
+      ChordParser parser = new ChordParser(System.in);
+      parser.Start(System.out);
+    }
+
+    public static Chord parseString(String toParse) throws ParseException, TokenMgrError, NumberFormatException {
+      ChordParser parser = new ChordParser(new ByteArrayInputStream(toParse.getBytes()));
+      //parser.Start(System.out);
+      return parser.ParseChord();
+    }
+  }
+PARSER_END(ChordParser)
+
+SKIP: {" " | "\t" | "\r" | "\n" | "\r\n"}
+TOKEN: {<NATURAL: ["A"-"G"]>}
+TOKEN: {<NO_CHORD: "N">}
+TOKEN: {<MODIFIER: "b" | "#">}
+TOKEN: {<COLON: ":"> : AFTER_COLON}
+TOKEN: {<SLASH: "/">}
+TOKEN: {<INTERVAL: ["1"-"9"] | "10" | "11" | "12" | "13">}
+< AFTER_COLON > TOKEN: {<SHORTHAND: "maj" | "min" | "dim" | "aug" | "maj7" | "min7" | "7" | "dim7" | "hdim7" | "minmaj7" | "maj6" | "min6" | "9" | "maj9" | "min9" | "sus2" | "sus4"> : DEFAULT}
+< AFTER_COLON > TOKEN: {<OPEN_BRACE_AC: "("> : DEFAULT}
+TOKEN: {<OPEN_BRACE: "("> : DEFAULT}
+TOKEN: {<CLOSE_BRACE: ")">}
+TOKEN: {<COMMA: ",">}
+TOKEN: {<OMIT: "*">}
+
+void Start(PrintStream printStream) :
+{
+  Chord chord;
+}
+{
+  chord = ParseChord()
+  { printStream.println(chord.toString()); }
+}
+
+Chord ParseChord() :
+{
+  Note root;
+  Token ts;
+  Integer[] degreeList;
+  int degree;
+}
+{
+  root = ParseNote() <COLON> ts = <SHORTHAND>
+  { degree = 0; degreeList = new Integer[0]; }
+  (
+    <OPEN_BRACE> degreeList = DegreeList() <CLOSE_BRACE>
+  )?
+  (
+    <SLASH> degree = Degree()
+  )?
+  { if (degreeList.length == 0 && degree == 0) { return new Chord(root, ts.image); } }
+  { List<Note> notes = new Chord(root, ts.image).getNotesAsList(); }
+  { for (int i=0; i < degreeList.length; i++) {
+      if (degreeList[i] > 0) {        notes.add(root.withOffset(degreeList[i]));
+      }
+      else if (degreeList[i] < 0) {        notes.remove(root.withOffset(-degreeList[i]));
+      }    }
+  }
+  { if (degree != 0) { notes.add(root.withOffset(degree)); } }
+  { return new Chord(notes.toArray(new Note[notes.size()])); }
+ |
+  root = ParseNote() <COLON> <OPEN_BRACE_AC> degreeList = DegreeList() <CLOSE_BRACE>
+  { degree = 0; }
+  (
+    <SLASH> degree = Degree()
+  )?
+  { List<Note> notes = new ArrayList<Note>(); }
+  { notes.add(root); }
+  { for (int i=0; i < degreeList.length; i++) { notes.add(root.withOffset(degreeList[i])); }  }
+  { if (degree != 0) { notes.add(root.withOffset(degree)); } }
+  { return new Chord(notes.toArray(new Note[notes.size()])); }
+ |
+  root = ParseNote()
+  { degree = 0; }
+  (
+    <SLASH> degree = Degree()
+  )?
+  { if (degree != 0) {
+    	List<Note> notes = new Chord(root, "maj").getNotesAsList();
+    	notes.add(root.withOffset(degree));
+    	return new Chord(notes.toArray(new Note[notes.size()]));
+    } else { return new Chord( root, "maj" ); }
+  }
+ |
+  <NO_CHORD>
+  { return Chord.empty(); }
+}
+
+int Degree() throws NumberFormatException :
+{
+  Token ti;
+  Token tm;
+  int deg;
+}
+{
+  ti = <INTERVAL>
+  { return Interval.toOffset(Integer.parseInt(ti.image)); }
+ |
+  tm = <MODIFIER> deg = Degree()
+  { if ("b".equals(tm.image)) { return deg - 1; } else if ("#".equals(tm.image)) { return deg + 1; } }
+}
+
+int DegreeListElement() :
+{
+  int d;
+}
+{
+  <OMIT> d = Degree()
+  { return -d; }
+ |
+  d = Degree()
+  { return d; }
+}
+
+Integer[] DegreeList() :
+{
+  int el1;
+  List<Integer> list;
+  int prevElem;
+}
+{
+  { list = new ArrayList<Integer>(); }
+  el1 = DegreeListElement()
+  { list.add(el1); }
+  (
+    <COMMA> prevElem = DegreeListElement()
+    { list.add(prevElem); }
+  )*
+  { return list.toArray(new Integer[list.size()]); }
+}
+
+Note ParseNote() :
+{
+  Token tn;
+  Token tm;
+  int total;
+}
+{
+  tn = <NATURAL>
+  { total = 0; }
+  (
+    tm = <MODIFIER>
+    { if ("b".equals(tm.image)) { total--; } else if ("#".equals(tm.image)) { total++; } }
+  )*
+  { return Note.valueOf(tn.image).withOffset(total); }
+}
