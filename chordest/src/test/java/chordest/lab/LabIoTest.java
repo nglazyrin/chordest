@@ -11,8 +11,8 @@ import org.junit.Test;
 import chordest.chord.Chord;
 import chordest.lab.LabFileReader;
 import chordest.lab.LabFileWriter;
+import chordest.util.PathConstants;
 
-import utils.PathConstants;
 
 public class LabIoTest {
 

@@ -470,20 +470,20 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[][] getRecurrencePlot(double[][] selfSim) {
+	public static double[][] getRecurrencePlot(double[][] selfSim, double theta, int minLength) {
 		if (selfSim == null) {
 			throw new NullPointerException("self similarity matrix is null");
 		}
 		LOG.debug("Calculating the recurrence plot ...");
 		int size = selfSim.length;
-		int theta = (int) (size * 0.15);
+		int preserved = (int) (size * theta);
 		double[][] result = new double[size][];
 		for (int i = 0; i < size; i++) {
 			result[i] = new double[size];
 		}
 		for (int i = 0; i < size; i++) {
 			double[] col = Arrays.copyOf(selfSim[i], size);
-			double eps = findKthSmallest(col, 0, size, theta);
+			double eps = findKthSmallest(col, 0, size, preserved);
 //			Arrays.sort(col);
 //			double eps = col[theta];
 //			double eps = col[size - 1];
@@ -494,7 +494,7 @@ public class DataUtil {
 			}
 		}
 		
-		int minLength = 3;
+//		int minLength = 3;
 		for (int i = 0; i < size; i++) {
 			for (int j = 0; j < size; j++) {
 				if (i > 0 && j > 0 && result[i][j] < 1 && result[i-1][j-1] < 1) {

@@ -2,16 +2,16 @@ package chordest.chord;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.co.labbookpages.WavFile;
+import uk.co.labbookpages.WavFileException;
 import chordest.beat.BeatRootAdapter;
 import chordest.chord.recognition.TemplatesRecognition;
+import chordest.properties.Configuration;
 import chordest.spectrum.SpectrumData;
 import chordest.spectrum.SpectrumFileReader;
 import chordest.spectrum.SpectrumFileWriter;
@@ -19,14 +19,8 @@ import chordest.transform.CQConstants;
 import chordest.transform.PooledTransformer;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
-import chordest.util.MapUtil;
-import chordest.util.NoteLabelProvider;
 import chordest.util.TuningFrequencyFinder;
 import chordest.wave.WaveReader;
-
-import uk.co.labbookpages.WavFile;
-import uk.co.labbookpages.WavFileException;
-import utils.Visualizer;
 
 /**
  * This class incapsulates all the chord extraction logic. All you need is to
@@ -44,23 +38,21 @@ public class ChordExtractor {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ChordExtractor.class);
 	
-	public static final ScaleInfo scaleInfo = new ScaleInfo(4, 60);
-	
 	private final double[] originalBeatTimes;
-	private final double[] beatTimes;
+	private final double[] expandedBeatTimes;
 	private final Chord[] chords;
 	private final double[][] spectrum;
 	private final double totalSeconds;
 	private final int startNoteOffsetInSemitonesFromF0;
 	private final Key key;
 
-	public ChordExtractor(String wavFilePath, String beatFilePath, String spectrumFilePath) {
+	public ChordExtractor(Configuration c, String wavFilePath, String beatFilePath, String spectrumFilePath) {
 		BeatRootAdapter beatRoot = new BeatRootAdapter(wavFilePath, beatFilePath);
 		originalBeatTimes = beatRoot.getBeatTimes();
-		beatTimes = expand(originalBeatTimes, 3);
-		LOG.debug("Transforms: " + beatTimes.length);
+		expandedBeatTimes = expand(originalBeatTimes, 3);
+		LOG.debug("Transforms: " + expandedBeatTimes.length);
 		
-		SpectrumData data = readWaveFile(wavFilePath, spectrumFilePath, scaleInfo, beatTimes);
+		SpectrumData data = readSpectrum(c, wavFilePath, spectrumFilePath, expandedBeatTimes);
 		double[][] result = data.spectrum;
 		totalSeconds = data.totalSeconds;
 		startNoteOffsetInSemitonesFromF0 = data.startNoteOffsetInSemitonesFromF0;
@@ -76,7 +68,7 @@ public class ChordExtractor {
 //		whitened = DataUtil.removeShortLines(whitened, 8);
 //		Visualizer.visualizeSpectrum(whitened, beatTimes, labels, "Whitened spectrum after short lines removal");
 
-		result = DataUtil.smoothHorizontallyMedian(result, 17); // step 1
+		result = DataUtil.smoothHorizontallyMedian(result, c.process.medianFilter1Window); // step 1
 		result = DataUtil.filterHorizontal3(result);			// step 2
 //		result = DataUtil.removeShortLines(result, 20);			// step 2
 		
@@ -89,16 +81,16 @@ public class ChordExtractor {
 //		whitened = DataUtil.shrink(whitened, 8);
 		
 //		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Prewitt after shrink");
-		result = DataUtil.smoothHorizontallyMedian(result, 3);	// step 3
+		result = DataUtil.smoothHorizontallyMedian(result, c.process.medianFilter2Window);	// step 3
 //		whitened = DataUtil.smoothHorizontally(whitened, 2);
 //		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Prewitt after smooth 2");
 
-		double[][] pcp = DataUtil.toPitchClassProfiles(result, scaleInfo.getNotesInOctaveCount());
-//		double[][] pcp = DataUtil.toPitchClassProfiles(whitened, scaleInfo.getNotesInOctaveCount());
+		double[][] pcp = DataUtil.toPitchClassProfiles(result, c.spectrum.notesPerOctave);
+//		double[][] pcp = DataUtil.toPitchClassProfiles(whitened, c.spectrum.notesPerOctave);
 		pcp = DataUtil.reduceTo12Notes(pcp);
 //		Visualizer.visualizeSpectrum(pcp, originalBeatTimes, labels1, "PCP");
 		double[][] rp = DataUtil.getSelfSimilarity(pcp);		// step 6
-		rp = DataUtil.getRecurrencePlot(rp);					// step 6
+		rp = DataUtil.getRecurrencePlot(rp, c.process.recurrencePlotTheta, c.process.recurrencePlotMinLength);					// step 6
 //		Visualizer.visualizeSelfSimilarity(rp, originalBeatTimes);
 		pcp = DataUtil.smoothWithRecurrencePlot(pcp, rp);		// step 6
 //		Visualizer.visualizeSpectrum(pcp, originalBeatTimes, labels1, "PCP with RP");
@@ -113,16 +105,16 @@ public class ChordExtractor {
 		chords = second.recognize(spectrum, new ScaleInfo(1, 12));
 	}
 
-	private SpectrumData readWaveFile(String filename, String spectrumFileName,
-			ScaleInfo scaleInfo, double[] beatTimes2) {
+	private SpectrumData readSpectrum(Configuration c, String waveFileName,
+			String spectrumFileName, double[] expandedBeatTimes) {
 		SpectrumData result = new SpectrumData();
-		result.beatTimes = beatTimes2;
-		result.scaleInfo = scaleInfo;
-		result.startNoteOffsetInSemitonesFromF0 = -33; // 0 = A5, -33 = C3
-		result.wavFilePath = filename;
+		result.beatTimes = expandedBeatTimes;
+		result.scaleInfo = new ScaleInfo(c.spectrum.octaves, c.spectrum.notesPerOctave);
+		result.startNoteOffsetInSemitonesFromF0 = c.spectrum.offsetFromF0InSemitones;
+		result.wavFilePath = waveFileName;
 		WavFile wavFile = null;
 		try {
-			wavFile = WavFile.openWavFile(new File(filename));
+			wavFile = WavFile.openWavFile(new File(waveFileName));
 			result.samplingRate = (int) wavFile.getSampleRate();
 			int frames = (int) wavFile.getNumFrames();
 			result.totalSeconds = frames * 1.0 / result.samplingRate;
@@ -132,7 +124,7 @@ public class ChordExtractor {
 				LOG.info("Spectrum was read from " + spectrumFileName);
 				return serialized;
 			} else {
-				result.f0 = TuningFrequencyFinder.getTuningFrequency(filename);
+				result.f0 = TuningFrequencyFinder.getTuningFrequency(waveFileName);
 //				result.f0 = CQConstants.F0_DEFAULT;
 				CQConstants cqConstants = CQConstants.getInstance(result.samplingRate,
 						result.scaleInfo, result.f0, result.startNoteOffsetInSemitonesFromF0);
@@ -151,11 +143,11 @@ public class ChordExtractor {
 				return result;
 			}
 		} catch (WavFileException e) {
-			throw new IllegalArgumentException("Error when reading wave file " + filename, e);
+			throw new IllegalArgumentException("Error when reading wave file " + waveFileName, e);
 		} catch (IOException e) {
-			throw new IllegalArgumentException("Error when reading wave file " + filename, e);
+			throw new IllegalArgumentException("Error when reading wave file " + waveFileName, e);
 		} catch (InterruptedException e) {
-			throw new IllegalArgumentException("Error when reading wave file " + filename, e);
+			throw new IllegalArgumentException("Error when reading wave file " + waveFileName, e);
 		} finally {
 			if (wavFile != null) { try {
 				wavFile.close();
@@ -169,7 +161,7 @@ public class ChordExtractor {
 	}
 
 	public double[] getBeatTimes() {
-		return beatTimes;
+		return expandedBeatTimes;
 	}
 
 	public Chord[] getChords() {

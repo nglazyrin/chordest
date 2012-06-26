@@ -1,4 +1,4 @@
-package roundtrip;
+package chordest.main;
 import java.io.File;
 import java.io.IOException;
 
@@ -9,20 +9,19 @@ import chordest.chord.ChordExtractor;
 import chordest.lab.LabFileReader;
 import chordest.lab.LabFileWriter;
 import chordest.lab.LabSimilarity;
+import chordest.properties.Configuration;
+import chordest.util.PathConstants;
+import chordest.util.Visualizer;
 
-import utils.PathConstants;
-import utils.Visualizer;
 
 
-public class CQTSpectrumTest {
+public class SingleFile {
 
 	private static final String SEP = PathConstants.SEP;
 	private static final String ARTIST = "Beatles";
 	private static final String ALBUM = "05_-_Help!";
 	private static final String TRACK = "08_-_Act_Naturally";
-//	private static final String FILENAME = "..\\samples\\happy.wav";
-	private static final String FILENAME = PathConstants.WAV_DIR + 
-			ARTIST + SEP + ALBUM + SEP + TRACK + PathConstants.EXT_WAV;
+	
 	private static final String LAB_FILENAME = PathConstants.LAB_DIR + 
 			ARTIST + SEP + ALBUM + SEP + TRACK + PathConstants.EXT_LAB;
 	private static final String BEAT_FILENAME = PathConstants.BEAT_DIR + 
@@ -30,10 +29,12 @@ public class CQTSpectrumTest {
 	private static final String SPECTRUM_DIR = "spectrum_tuning" + SEP;
 	private static final String SPECTRUM_FILENAME = SPECTRUM_DIR + 
 			ARTIST + SEP + ALBUM + SEP + TRACK + PathConstants.EXT_BIN;
-	private static final Logger LOG = LoggerFactory.getLogger(CQTSpectrumTest.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SingleFile.class);
 
 	public static void main(String[] args) {
-		ChordExtractor ce = new ChordExtractor(FILENAME, BEAT_FILENAME, SPECTRUM_FILENAME);
+		Configuration c = new Configuration("config" + SEP + "parameters.properties");
+		String FILENAME = c.directory.wav + ARTIST + SEP + ALBUM + SEP + TRACK + PathConstants.EXT_WAV;
+		ChordExtractor ce = new ChordExtractor(c, FILENAME, BEAT_FILENAME, SPECTRUM_FILENAME);
 //		ChordExtractor ce = new ChordExtractor(FILENAME, null, null);
 
 		LabFileReader labReader = new LabFileReader(new File(LAB_FILENAME));

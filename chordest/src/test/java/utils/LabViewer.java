@@ -6,10 +6,11 @@ import java.util.concurrent.ExecutionException;
 
 import org.jfree.data.xy.XYZDataset;
 
-import chordest.chord.ChordExtractor;
 import chordest.chord.Note;
 import chordest.gui.JFreeChartUtils;
 import chordest.lab.LabFileReader;
+import chordest.properties.Configuration;
+import chordest.transform.ScaleInfo;
 import chordest.util.DatasetUtil;
 import chordest.util.NoteLabelProvider;
 
@@ -30,8 +31,10 @@ public class LabViewer {
 	public static void main(String[] args) {
 		LabFileReader eReader = new LabFileReader(new File(LAB_EXPECTED_FILENAME));
 		LabFileReader aReader = new LabFileReader(new File(LAB_ACTUAL_FILENAME));
+		Configuration c = new Configuration("config/paremeters.properties");
 		try {
-			String[] labels = NoteLabelProvider.getNoteLabels(-33, ChordExtractor.scaleInfo);
+			String[] labels = NoteLabelProvider.getNoteLabels(c.spectrum.offsetFromF0InSemitones,
+					new ScaleInfo(c.spectrum.octaves, c.spectrum.notesPerOctave));
 			XYZDataset eds = DatasetUtil.toXYZDataset(
 					Arrays.copyOfRange(eReader.getTimestamps(), 0, eReader.getChords().length),
 					eReader.getChords(), Note.C);

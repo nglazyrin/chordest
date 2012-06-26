@@ -1,4 +1,4 @@
-package roundtrip;
+package chordest.main;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,14 +15,14 @@ import chordest.lab.CsvFileWriter;
 import chordest.lab.LabFileReader;
 import chordest.lab.LabFileWriter;
 import chordest.lab.LabSimilarity;
+import chordest.properties.Configuration;
 import chordest.util.MapUtil;
+import chordest.util.PathConstants;
+import chordest.util.TracklistCreator;
 
-import utils.PathConstants;
-import utils.TracklistCreator;
+public class Roundtrip {
 
-public class RoundtripTest {
-
-	private static final Logger LOG = LoggerFactory.getLogger(RoundtripTest.class);
+	private static final Logger LOG = LoggerFactory.getLogger(Roundtrip.class);
 	private static final Logger SIM_LOG = LoggerFactory.getLogger("Similarity");
 
 	private static final String SEP = PathConstants.SEP;
@@ -30,14 +30,14 @@ public class RoundtripTest {
 //	private static final String ALBUM = "10CD1_-_The_Beatles";
 //	private static final String PREFIX = ARTIST + SEP + ALBUM + SEP;
 //	private static final String PREFIX = ARTIST + SEP;
-	private static final String CSV_ACTUAL_DIR = PathConstants.CSV_DIR + SEP + "actual" + SEP;
-	private static final String CSV_EXPECTED_DIR = PathConstants.CSV_DIR + SEP + "expected" + SEP;
+	private static final String CSV_ACTUAL_DIR = PathConstants.CSV_DIR + "actual" + SEP;
+	private static final String CSV_EXPECTED_DIR = PathConstants.CSV_DIR + "expected" + SEP;
 	private static final String LAB_DIR = PathConstants.LAB_DIR;
 	private static final String SPECTRUM_DIR = "spectrum_tuning" + SEP; // step 0
 
 	public static void main(String[] args) {
-		List<String> tracklist = TracklistCreator.createTracklist(
-				new File(LAB_DIR), "");
+		List<String> tracklist = TracklistCreator.createTracklist(new File(LAB_DIR), "");
+		Configuration c = new Configuration("config" + SEP + "parameters.properties");
 		double totalOverlap = 0;
 		double totalWeightedOverlap = 0;
 		int totalTracks = 0;
@@ -50,9 +50,9 @@ public class RoundtripTest {
 			final String csvFileName = labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_CSV);
 			final String spectrumFileName = SPECTRUM_DIR + 
 					labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_BIN);
-			final String wavFileName = PathConstants.WAV_DIR + 
+			final String wavFileName = c.directory.wav + 
 					labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_WAV);
-			ChordExtractor ce = new ChordExtractor(wavFileName, beatFileName, spectrumFileName);
+			ChordExtractor ce = new ChordExtractor(c, wavFileName, beatFileName, spectrumFileName);
 
 			double[] beatTimes = ce.getOriginalBeatTimes();
 			LabFileWriter labWriter = new LabFileWriter(ce.getChords(), beatTimes);

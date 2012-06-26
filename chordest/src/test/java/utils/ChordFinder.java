@@ -7,8 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import chordest.chord.Chord;
-import chordest.chord.Note;
 import chordest.lab.LabFileReader;
+import chordest.util.PathConstants;
+import chordest.util.TracklistCreator;
 
 
 public class ChordFinder {

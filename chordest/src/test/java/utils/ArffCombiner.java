@@ -8,6 +8,8 @@ import chordest.arff.ArffFileReader;
 import chordest.arff.ArffFileWriter;
 import chordest.chord.Key;
 import chordest.util.InstanceUtils;
+import chordest.util.PathConstants;
+import chordest.util.TracklistCreator;
 
 import weka.core.Instances;
 

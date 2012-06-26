@@ -8,6 +8,8 @@ import chordest.lab.LabFileReader;
 import chordest.spectrum.SpectrumData;
 import chordest.spectrum.SpectrumFileReader;
 import chordest.util.InstanceUtils;
+import chordest.util.PathConstants;
+import chordest.util.TracklistCreator;
 
 import weka.core.Instances;
 

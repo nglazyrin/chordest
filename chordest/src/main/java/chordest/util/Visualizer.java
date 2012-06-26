@@ -1,4 +1,4 @@
-package utils;
+package chordest.util;
 
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
@@ -12,8 +12,6 @@ import chordest.chord.Chord;
 import chordest.chord.Note;
 import chordest.gui.JFreeChartUtils;
 import chordest.transform.ScaleInfo;
-import chordest.util.DatasetUtil;
-import chordest.util.NoteLabelProvider;
 
 
 public class Visualizer {
