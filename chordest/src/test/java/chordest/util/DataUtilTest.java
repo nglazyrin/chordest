@@ -75,4 +75,21 @@ public class DataUtilTest {
 		Assert.assertTrue(Math.abs(3 - s1[2][1]) < eps);
 	}
 
+	@Test
+	public void testExpandBeatTimes() {
+		double[] array = new double[] { 1, 2, 4 };
+		double[] result = DataUtil.makeMoreFrequent(array, 4);
+		double eps = 0.00001;
+		Assert.assertEquals(9, result.length);
+		Assert.assertTrue(Math.abs(result[0] - 1) < eps);
+		Assert.assertTrue(Math.abs(result[1] - 1.25) < eps);
+		Assert.assertTrue(Math.abs(result[2] - 1.5) < eps);
+		Assert.assertTrue(Math.abs(result[3] - 1.75) < eps);
+		Assert.assertTrue(Math.abs(result[4] - 2) < eps);
+		Assert.assertTrue(Math.abs(result[5] - 2.5) < eps);
+		Assert.assertTrue(Math.abs(result[6] - 3) < eps);
+		Assert.assertTrue(Math.abs(result[7] - 3.5) < eps);
+		Assert.assertTrue(Math.abs(result[8] - 4) < eps);
+	}
+
 }

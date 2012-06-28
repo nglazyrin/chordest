@@ -382,26 +382,29 @@ public class DataUtil {
 	}
 
 	/**
-	 * For each pair of successive elements in an array inserts arithmetic 
-	 * mean of them in the middle. The resulting array has length 2 * L - 1
-	 * where L is the length of the source array. 
+	 * For each pair of successive elements in an array inserts intermediate 
+	 * values evenly between them. The resulting array has length times * L - 1
+	 * where L is the length of the array. 
 	 * @param array
 	 * @param times
 	 * @return
 	 */
-	public static double[] expandBeatTimes(double[] beatTimes) {
-		if (beatTimes == null) {
+	public static double[] makeMoreFrequent(double[] array, int times) {
+		if (array == null) {
 			throw new NullPointerException("beatTimes is null");
 		}
-		double[] result = new double[2 * beatTimes.length - 1];
-		int lastIndex = beatTimes.length - 1;
+		LOG.debug("Creating the more frequent beat sequence ...");
+		int lastIndex = array.length - 1;
+		double[] result = new double[times * lastIndex + 1];
 		for (int i = 0; i < lastIndex; i++) {
-			double a = beatTimes[i];
-			double b = beatTimes[i + 1];
-			result[2 * i] = a;
-			result[2 * i + 1] = a + (b - a) / 2;
+			double value = array[i];
+			double d = (array[i + 1] - array[i]) / times;
+			for (int j = 0; j < times; j++) {
+				result[times * i + j] = value;
+				value += d;
+			}
 		}
-		result[2 * lastIndex] = beatTimes[lastIndex];
+		result[times * lastIndex] = array[lastIndex];
 		return result;
 	}
 

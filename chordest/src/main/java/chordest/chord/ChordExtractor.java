@@ -14,7 +14,6 @@ import chordest.chord.recognition.TemplatesRecognition;
 import chordest.properties.Configuration;
 import chordest.spectrum.SpectrumData;
 import chordest.spectrum.SpectrumFileReader;
-import chordest.spectrum.SpectrumFileWriter;
 import chordest.transform.CQConstants;
 import chordest.transform.PooledTransformer;
 import chordest.transform.ScaleInfo;
@@ -40,23 +39,64 @@ public class ChordExtractor {
 	
 	private final double[] originalBeatTimes;
 	private final double[] expandedBeatTimes;
-	private final Chord[] chords;
-	private final double[][] spectrum;
 	private final double totalSeconds;
 	private final int startNoteOffsetInSemitonesFromF0;
-	private final Key key;
+	private final SpectrumData spectrum;
+	private Chord[] chords;
+	private Key key;
 
-	public ChordExtractor(Configuration c, String wavFilePath, String beatFilePath, String spectrumFilePath) {
-		BeatRootAdapter beatRoot = new BeatRootAdapter(wavFilePath, beatFilePath);
+	public ChordExtractor(Configuration c, String wavFilePath, BeatRootAdapter beatRoot) {
 		originalBeatTimes = beatRoot.getBeatTimes();
-		expandedBeatTimes = expand(originalBeatTimes, 3);
+		expandedBeatTimes = DataUtil.makeMoreFrequent(originalBeatTimes, c.spectrum.framesPerBeat);
 		LOG.debug("Transforms: " + expandedBeatTimes.length);
 		
-		SpectrumData data = readSpectrum(c, wavFilePath, spectrumFilePath, expandedBeatTimes);
-		double[][] result = data.spectrum;
-		totalSeconds = data.totalSeconds;
-		startNoteOffsetInSemitonesFromF0 = data.startNoteOffsetInSemitonesFromF0;
+		spectrum = readSpectrum(c, wavFilePath, expandedBeatTimes);
+		totalSeconds = spectrum.totalSeconds;
+		startNoteOffsetInSemitonesFromF0 = spectrum.startNoteOffsetInSemitonesFromF0;
+		doChordExtraction(c);
+	}
+
+	public ChordExtractor(Configuration c, String spectrumFilePath) {
+		spectrum = readSpectrum(spectrumFilePath);
+		totalSeconds = spectrum.totalSeconds;
+		startNoteOffsetInSemitonesFromF0 = spectrum.startNoteOffsetInSemitonesFromF0;
+		expandedBeatTimes = restoreBeatTimes();
 		
+		int framesPerBeat = c.spectrum.framesPerBeat;
+		originalBeatTimes = new double[expandedBeatTimes.length / framesPerBeat + 1];
+		for (int i = 0; i < originalBeatTimes.length; i++) {
+			originalBeatTimes[i] = expandedBeatTimes[framesPerBeat * i];
+		}
+		
+		doChordExtraction(c);
+	}
+
+	/**
+	 * Beat times in spectrum are really the start positions of constant-Q
+	 * transform analysis windows. But those windows are centered at the
+	 * real beat time positions, which we need to restore. So we add half of
+	 * the longest constant-Q window to each position
+	 * @return
+	 */
+	private double[] restoreBeatTimes() {
+		double[] result = new double[spectrum.beatTimes.length];
+		double shift = getWindowsShift();
+		for (int i = 0; i < result.length; i++) {
+			result[i] = spectrum.beatTimes[i] + shift;
+		}
+		return result;
+	}
+
+	private double getWindowsShift() {
+		CQConstants cqConstants = CQConstants.getInstance(spectrum.samplingRate,
+				spectrum.scaleInfo, spectrum.f0, spectrum.startNoteOffsetInSemitonesFromF0);
+		int windowSize = cqConstants.getWindowLengthForComponent(0) + 1; // the longest window
+		double shift = windowSize / (spectrum.samplingRate * 2.0);
+		return shift;
+	}
+
+	private void doChordExtraction(Configuration c) {
+		double[][] result = spectrum.spectrum;
 		DataUtil.scaleTo01(result);
 		
 //		String[] labels = NoteLabelProvider.getNoteLabels(startNoteOffsetInSemitonesFromF0, scaleInfo);
@@ -77,8 +117,8 @@ public class ChordExtractor {
 //		double[] e = DataUtil.getSoundEnergyByFrequencyDistribution(result);
 //		Visualizer.visualizeXByFrequencyDistribution(e, scaleInfo, startNoteOffsetInSemitonesFromF0);
 
-		result = DataUtil.shrink(result, 8);
-//		whitened = DataUtil.shrink(whitened, 8);
+		result = DataUtil.shrink(result, c.spectrum.framesPerBeat);
+//		whitened = DataUtil.shrink(whitened, c.spectrum.framesPerBeat);
 		
 //		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Prewitt after shrink");
 		result = DataUtil.smoothHorizontallyMedian(result, c.process.medianFilter2Window);	// step 3
@@ -95,18 +135,16 @@ public class ChordExtractor {
 		pcp = DataUtil.smoothWithRecurrencePlot(pcp, rp);		// step 6
 //		Visualizer.visualizeSpectrum(pcp, originalBeatTimes, labels1, "PCP with RP");
 
-		spectrum = pcp;
-
 		Note startNote = Note.byNumber(startNoteOffsetInSemitonesFromF0);
 //		key = Key.recognizeKey(getTonalProfile(pcp, 0, pcp.length), startNote);
 		key = null;
 		TemplatesRecognition second = new TemplatesRecognition(startNote, key);
-//		chords = second.recognize(spectrum, scaleInfo);
-		chords = second.recognize(spectrum, new ScaleInfo(1, 12));
+//		chords = second.recognize(pcp, scaleInfo);
+		chords = second.recognize(pcp, new ScaleInfo(1, 12));
 	}
 
 	private SpectrumData readSpectrum(Configuration c, String waveFileName,
-			String spectrumFileName, double[] expandedBeatTimes) {
+			 double[] expandedBeatTimes) {
 		SpectrumData result = new SpectrumData();
 		result.beatTimes = expandedBeatTimes;
 		result.scaleInfo = new ScaleInfo(c.spectrum.octaves, c.spectrum.notesPerOctave);
@@ -119,29 +157,21 @@ public class ChordExtractor {
 			int frames = (int) wavFile.getNumFrames();
 			result.totalSeconds = frames * 1.0 / result.samplingRate;
 			
-			SpectrumData serialized = SpectrumFileReader.read(spectrumFileName);
-			if (result.equalsIgnoreSpectrumAndF0(serialized)) {
-				LOG.info("Spectrum was read from " + spectrumFileName);
-				return serialized;
-			} else {
-				result.f0 = TuningFrequencyFinder.getTuningFrequency(waveFileName);
+			result.f0 = TuningFrequencyFinder.getTuningFrequency(waveFileName);
 //				result.f0 = CQConstants.F0_DEFAULT;
-				CQConstants cqConstants = CQConstants.getInstance(result.samplingRate,
-						result.scaleInfo, result.f0, result.startNoteOffsetInSemitonesFromF0);
-				int windowSize = cqConstants.getWindowLengthForComponent(0) + 1; // the longest window
-				double shift = windowSize / (result.samplingRate * 2.0);
-				for (int i = 0; i < result.beatTimes.length; i++) {
-					result.beatTimes[i] -= shift;
-				}
-				WaveReader reader = new WaveReader(wavFile, result.beatTimes, windowSize);
-				PooledTransformer transformer = new PooledTransformer(
-						reader, result.beatTimes.length, result.scaleInfo, cqConstants);
-				result.spectrum = transformer.run();
-				if (spectrumFileName != null) {
-					SpectrumFileWriter.write(spectrumFileName, result);
-				}
-				return result;
+			CQConstants cqConstants = CQConstants.getInstance(result.samplingRate,
+					result.scaleInfo, result.f0, result.startNoteOffsetInSemitonesFromF0);
+			int windowSize = cqConstants.getWindowLengthForComponent(0) + 1; // the longest window
+			// need to make windows centered at the beat positions, so shift them to the left
+			double shift = getWindowsShift();
+			for (int i = 0; i < result.beatTimes.length; i++) {
+				result.beatTimes[i] -= shift;
 			}
+			WaveReader reader = new WaveReader(wavFile, result.beatTimes, windowSize);
+			PooledTransformer transformer = new PooledTransformer(
+					reader, result.beatTimes.length, result.scaleInfo, cqConstants);
+			result.spectrum = transformer.run();
+			return result;
 		} catch (WavFileException e) {
 			throw new IllegalArgumentException("Error when reading wave file " + waveFileName, e);
 		} catch (IOException e) {
@@ -153,6 +183,14 @@ public class ChordExtractor {
 				wavFile.close();
 			} catch (IOException ignore) {} }
 		}
+	}
+
+	private SpectrumData readSpectrum(String spectrumFileName) {
+		SpectrumData serialized = SpectrumFileReader.read(spectrumFileName);
+		if (serialized != null) {
+			LOG.info("Spectrum was read from " + spectrumFileName);
+		}
+		return serialized;
 	}
 
 	public double[] getOriginalBeatTimes() {
@@ -168,11 +206,11 @@ public class ChordExtractor {
 		return chords;
 	}
 
-	public Key getMode() {
+	public Key getKey() {
 		return key;
 	}
 
-	public double[][] getSpectrum() {
+	public SpectrumData getSpectrum() {
 		return spectrum;
 	}
 
@@ -182,23 +220,6 @@ public class ChordExtractor {
 
 	public int getStartNoteOffsetInSemitonesFromF0() {
 		return startNoteOffsetInSemitonesFromF0;
-	}
-
-	/**
-	 * For each pair of successive elements in an array inserts arithmetic 
-	 * mean of them in the middle. This operation is performed for a specified
-	 * number of times. The resulting array has length 2^times * (L - 1) + 1
-	 * where L is the length of the source array. 
-	 * @param array
-	 * @param times
-	 * @return
-	 */
-	private double[] expand(double[] array, int times) {
-		double[] temp = array;
-		for (int i = 0; i < times; i++) {
-			temp = DataUtil.expandBeatTimes(temp);
-		}
-		return temp;
 	}
 
 }

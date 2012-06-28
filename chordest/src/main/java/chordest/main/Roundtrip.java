@@ -45,14 +45,15 @@ public class Roundtrip {
 		final Map<String, Double> errors = new HashMap<String, Double>();
 		SIM_LOG.info("name,key,overlap,effective_length,full_length");
 		for (final String labFileName : tracklist) {
-			final String beatFileName = PathConstants.BEAT_DIR +
-					labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_BEAT);
 			final String csvFileName = labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_CSV);
 			final String spectrumFileName = SPECTRUM_DIR + 
 					labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_BIN);
-			final String wavFileName = c.directory.wav + 
-					labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_WAV);
-			ChordExtractor ce = new ChordExtractor(c, wavFileName, beatFileName, spectrumFileName);
+//			final String beatFileName = PathConstants.BEAT_DIR +
+//					labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_BEAT);
+//			final String wavFileName = c.directory.wav + 
+//					labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_WAV);
+//			BeatRootAdapter beatRoot = new BeatRootAdapter(wavFileName, beatFileName);
+			ChordExtractor ce = new ChordExtractor(c, spectrumFileName);
 
 			double[] beatTimes = ce.getOriginalBeatTimes();
 			LabFileWriter labWriter = new LabFileWriter(ce.getChords(), beatTimes);
@@ -98,7 +99,7 @@ public class Roundtrip {
 			LOG.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 			LOG.info(labFileName + ": " + overlap);
 			LOG.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-			SIM_LOG.info(labFileName.replace(',', '_').replace('\\', '/') + "," + ce.getMode() + "," +
+			SIM_LOG.info(labFileName.replace(',', '_').replace('\\', '/') + "," + ce.getKey() + "," +
 					overlap + "," + effectiveSeconds + "," + ce.getTotalSeconds());
 		}
 		

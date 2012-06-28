@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import chordest.beat.BeatRootAdapter;
 import chordest.chord.ChordExtractor;
 import chordest.lab.LabFileReader;
 import chordest.lab.LabFileWriter;
@@ -34,8 +35,9 @@ public class SingleFile {
 	public static void main(String[] args) {
 		Configuration c = new Configuration("config" + SEP + "parameters.properties");
 		String FILENAME = c.directory.wav + ARTIST + SEP + ALBUM + SEP + TRACK + PathConstants.EXT_WAV;
-		ChordExtractor ce = new ChordExtractor(c, FILENAME, BEAT_FILENAME, SPECTRUM_FILENAME);
-//		ChordExtractor ce = new ChordExtractor(FILENAME, null, null);
+		ChordExtractor ce = new ChordExtractor(c, SPECTRUM_FILENAME);
+//		BeatRootAdapter beatRoot = new BeatRootAdapter(FILENAME, BEAT_FILENAME);
+//		ChordExtractor ce = new ChordExtractor(c, FILENAME, beatRoot);
 
 		LabFileReader labReader = new LabFileReader(new File(LAB_FILENAME));
 		LabSimilarity sim = new LabSimilarity(labReader.getChords(),
