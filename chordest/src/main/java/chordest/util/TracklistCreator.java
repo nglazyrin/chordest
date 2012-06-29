@@ -10,12 +10,16 @@ import java.util.List;
 public class TracklistCreator {
 
 	public static List<String> createTracklist(File root, String prefix) {
+		return createTracklist(root, prefix, PathConstants.EXT_LAB);
+	}
+
+	public static List<String> createTracklist(File root, String prefix, final String extension) {
 		List<String> result = new LinkedList<String>();
 		if (root.exists() && root.isDirectory()) {
 			File[] labFiles = root.listFiles(new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
-					if (name.endsWith(PathConstants.EXT_LAB) && !dir.getAbsolutePath().contains(".svn")) {
+					if (name.endsWith(extension) && !dir.getAbsolutePath().contains(".svn")) {
 						return true;
 					}
 					return false;

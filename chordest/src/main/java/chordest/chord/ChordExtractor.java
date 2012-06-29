@@ -80,18 +80,18 @@ public class ChordExtractor {
 	 */
 	private double[] restoreBeatTimes() {
 		double[] result = new double[spectrum.beatTimes.length];
-		double shift = getWindowsShift();
+		double shift = getWindowsShift(spectrum);
 		for (int i = 0; i < result.length; i++) {
 			result[i] = spectrum.beatTimes[i] + shift;
 		}
 		return result;
 	}
 
-	private double getWindowsShift() {
-		CQConstants cqConstants = CQConstants.getInstance(spectrum.samplingRate,
-				spectrum.scaleInfo, spectrum.f0, spectrum.startNoteOffsetInSemitonesFromF0);
+	private double getWindowsShift(SpectrumData data) {
+		CQConstants cqConstants = CQConstants.getInstance(data.samplingRate,
+				data.scaleInfo, data.f0, data.startNoteOffsetInSemitonesFromF0);
 		int windowSize = cqConstants.getWindowLengthForComponent(0) + 1; // the longest window
-		double shift = windowSize / (spectrum.samplingRate * 2.0);
+		double shift = windowSize / (data.samplingRate * 2.0);
 		return shift;
 	}
 
@@ -163,7 +163,7 @@ public class ChordExtractor {
 					result.scaleInfo, result.f0, result.startNoteOffsetInSemitonesFromF0);
 			int windowSize = cqConstants.getWindowLengthForComponent(0) + 1; // the longest window
 			// need to make windows centered at the beat positions, so shift them to the left
-			double shift = getWindowsShift();
+			double shift = getWindowsShift(result);
 			for (int i = 0; i < result.beatTimes.length; i++) {
 				result.beatTimes[i] -= shift;
 			}
