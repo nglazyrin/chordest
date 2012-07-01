@@ -12,7 +12,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+/**
+ * Runs a repository and allows to run any query from /queries folder by
+ * entering query file name in the console and pressing Enter. Type 'exit' and
+ * press Enter to stop.
+ * 
+ * @author Nikolay
+ *
+ */
 public class QueryConsole {
 
 	private static final Logger LOG = LoggerFactory.getLogger(QueryConsole.class);

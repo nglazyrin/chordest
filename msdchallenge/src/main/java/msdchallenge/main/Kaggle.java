@@ -9,7 +9,13 @@ import msdchallenge.repository.SesameNativeRepositoryWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+/**
+ * Performs the actual MSD challenge task: loads the list of test users and
+ * looks for the tracks to recommend to each one, then saves this list as a
+ * text file in results directory.
+ * @author Nikolay
+ *
+ */
 public class Kaggle {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Kaggle.class);
@@ -28,7 +34,7 @@ public class Kaggle {
 		LOG.info(params.toString());
 
 //		IRepositoryWrapper wrapper = new OwlimRepositoryWrapper(params.getParameters());
-		IRepositoryWrapper wrapper = new SesameNativeRepositoryWrapper();
+		IRepositoryWrapper wrapper = SesameNativeRepositoryWrapper.getTestRepository();
 
 		Processor p = new Processor(wrapper);
 		p.doWork();

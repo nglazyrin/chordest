@@ -56,8 +56,7 @@ public class Processor implements IUserProcessor {
 			fw = new FileWriter(RESULT_FILE_NAME);
 			pw = new PrintWriter(fw);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("Error when opening file " + RESULT_FILE_NAME, e);
 			throw new IllegalArgumentException("Error opening file " + RESULT_FILE_NAME);
 		}
 	}
@@ -99,14 +98,12 @@ public class Processor implements IUserProcessor {
 					list.add(value.toString());
 				}
 			} catch (QueryEvaluationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				LOG.error("Error during query evaluation", e);
 			} finally {
 				try {
 					result.close();
 				} catch (QueryEvaluationException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					LOG.error("Error during query result close", e);
 				}
 			}
 		}
@@ -125,14 +122,12 @@ public class Processor implements IUserProcessor {
 					list.add(value.toString());
 				}
 			} catch (QueryEvaluationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				LOG.error("Error during query evaluation", e);
 			} finally {
 				try {
 					result.close();
 				} catch (QueryEvaluationException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					LOG.error("Error during query result close", e);
 				}
 			}
 		}
@@ -159,14 +154,12 @@ public class Processor implements IUserProcessor {
 					return ((Literal) value).intValue();
 				}
 			} catch (QueryEvaluationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				LOG.error("Error during query evaluation", e);
 			} finally {
 				try {
 					result.close();
 				} catch (QueryEvaluationException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					LOG.error("Error during query result close", e);
 				}
 			}
 		}

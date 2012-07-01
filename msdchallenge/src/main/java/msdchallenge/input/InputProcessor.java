@@ -5,6 +5,7 @@ import msdchallenge.input.ListeningsFileReader.IListeningProcessor;
 import msdchallenge.input.SongNumbersFileReader.ISongNumberProcessor;
 import msdchallenge.input.TracksFileReader.ITrackProcessor;
 import msdchallenge.input.UsersFileReader.IUserProcessor;
+import msdchallenge.main.RepositoryFiller;
 import msdchallenge.model.Listening;
 import msdchallenge.model.Track;
 
@@ -13,10 +14,14 @@ import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class InputProcessor implements IListeningProcessor, ITrackProcessor,
 ISongNumberProcessor, IUserProcessor {
+
+	private static final Logger LOG = LoggerFactory.getLogger(RepositoryFiller.class);
 
 	private final static String NS = "http://example.org/owlim#";
 
@@ -28,6 +33,8 @@ ISongNumberProcessor, IUserProcessor {
 	private final URI hasNumber;
 	private final URI isKaggleUser;
 	private final URI listens;
+
+	private int updatesCount = 0;
 
 	public InputProcessor(ValueFactory factory, RepositoryConnection connection) {
 		if (factory == null) { throw new NullPointerException(); }
@@ -48,9 +55,11 @@ ISongNumberProcessor, IUserProcessor {
 		URI trackId = factory.createURI(NS + listening.trackId);
 		try {
 			connection.add(userId, listens, trackId);
+			if (updatesCount++ >= 1000000) {
+				commit();
+			}
 		} catch (RepositoryException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("Error adding new listening to repository", e);
 		}
 	}
 
@@ -63,8 +72,7 @@ ISongNumberProcessor, IUserProcessor {
 			connection.add(trackId, hasAuthor, author);
 			connection.add(trackId, hasName, name);
 		} catch (RepositoryException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("Error adding new track to repository", e);
 		}
 	}
 
@@ -75,8 +83,7 @@ ISongNumberProcessor, IUserProcessor {
 		try {
 			connection.add(subj, hasNumber, obj);
 		} catch (RepositoryException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("Error adding new track number to repository", e);
 		}
 	}
 
@@ -87,8 +94,16 @@ ISongNumberProcessor, IUserProcessor {
 		try {
 			connection.add(subj, isKaggleUser, obj);
 		} catch (RepositoryException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("Error adding new user to repository", e);
+		}
+	}
+
+	private void commit() {
+		try {
+			connection.commit();
+			updatesCount = 0;
+		} catch (RepositoryException e) {
+			LOG.error("Error performing commit", e);
 		}
 	}
 

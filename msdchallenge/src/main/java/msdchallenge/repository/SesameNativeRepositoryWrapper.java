@@ -14,13 +14,24 @@ public class SesameNativeRepositoryWrapper implements IRepositoryWrapper {
 
 	private static final Logger LOG = LoggerFactory.getLogger(SesameNativeRepositoryWrapper.class);
 
+	private static final String MAIN_REPOSITORY_DIR = "sesame_repository/";
+	private static final String TEST_REPOSITORY_DIR = "sesame_test_repository/";
+
 	private final Repository repository;
 
 	private final RepositoryConnection repositoryConnection;
 
-	public SesameNativeRepositoryWrapper() {
-		File dataDir = new File("sesame_repository/");
-		String indexes = "spoc,posc,cosp";
+	public static SesameNativeRepositoryWrapper getMainRepository() {
+		return new SesameNativeRepositoryWrapper(MAIN_REPOSITORY_DIR);
+	}
+
+	public static SesameNativeRepositoryWrapper getTestRepository() {
+		return new SesameNativeRepositoryWrapper(TEST_REPOSITORY_DIR);
+	}
+
+	private SesameNativeRepositoryWrapper(String repositoryDir) {
+		final File dataDir = new File(repositoryDir);
+		final String indexes = "spoc,posc,cosp";
 		repository = new SailRepository(new NativeStore(dataDir, indexes));
 		try {
 			repository.initialize();

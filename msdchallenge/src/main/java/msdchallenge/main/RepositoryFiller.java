@@ -11,6 +11,7 @@ import msdchallenge.input.UsersFileReader;
 import msdchallenge.repository.IRepositoryWrapper;
 import msdchallenge.repository.OwlimRepositoryWrapper;
 import msdchallenge.repository.Parameters;
+import msdchallenge.repository.SesameNativeRepositoryWrapper;
 
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
@@ -18,16 +19,27 @@ import org.openrdf.repository.RepositoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+/**
+ * Creates a repository containing data from all available files including
+ * train_triplets.txt of ~3 Gb size. It may take a long time to run.
+ * @author Nikolay
+ *
+ */
 public class RepositoryFiller {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RepositoryFiller.class);
 
-	private final Repository repository;
+	private static final String KAGGLE_DIR = "kaggle" + File.separator;
+	private static final String VISIBLE_EVALUATION_TRIPLETS_FILE = 
+			KAGGLE_DIR + "kaggle_visible_evaluation_triplets.txt";
+	private static final String UNIQUE_TRACKS_FILE = KAGGLE_DIR + "unique_tracks_fixed.txt";
+	private static final String KAGGLE_USERS_FILE = KAGGLE_DIR + "kaggle_users.txt";
+	private static final String KAGGLE_SONGS_FILE = KAGGLE_DIR + "kaggle_songs.txt";
+	private static final String TRAIN_TRIPLETS_FILE = KAGGLE_DIR + "train_triplets.txt";
+
+	private final InputProcessor processor;
 
 	private final RepositoryConnection repositoryConnection;
-
-	private final String prefix;
 
 	public static void main(String[] args) {
 		// Parse all the parameters
@@ -42,51 +54,44 @@ public class RepositoryFiller {
 		LOG.info("Using parameters:");
 		LOG.info(params.toString());
 
-		IRepositoryWrapper m = new OwlimRepositoryWrapper(params.getParameters());
-		
-		RepositoryFiller rf = new RepositoryFiller(m.getRepository(), m.getRepositoryConnection(), "");
+//		IRepositoryWrapper wrapper = new OwlimRepositoryWrapper(params.getParameters());
+		IRepositoryWrapper wrapper = SesameNativeRepositoryWrapper.getTestRepository();
+
+		RepositoryFiller rf = new RepositoryFiller(wrapper.getRepository(), wrapper.getRepositoryConnection());
 		rf.fillRepository();
 		rf.readListenings();
 
-		m.shutdown();
+		wrapper.shutdown();
 	}
 
-	public RepositoryFiller(Repository repository, RepositoryConnection connection, String prefix) {
+	public RepositoryFiller(Repository repository, RepositoryConnection connection) {
 		if (repository == null) { throw new NullPointerException(); }
 		if (connection == null) { throw new NullPointerException(); }
-		if (prefix == null) { throw new NullPointerException(); }
-		this.repository = repository;
+		this.processor =  new InputProcessor(repository.getValueFactory(), connection);
 		this.repositoryConnection = connection;
-		this.prefix = prefix;
 	}
 
 	public void fillRepository() {
-		InputProcessor processor = new InputProcessor(
-				repository.getValueFactory(), repositoryConnection);
-		
-		File listenings = new File(prefix + "kaggle/kaggle_visible_evaluation_triplets.txt");
+		File listenings = new File(VISIBLE_EVALUATION_TRIPLETS_FILE);
 		ListeningsFileReader.process(listenings, processor);
 		commit();
 		
-		File tracks = new File(prefix + "kaggle/unique_tracks_fixed.txt");
+		File tracks = new File(UNIQUE_TRACKS_FILE);
 		TracksFileReader.process(tracks, processor);
 		commit();
 		
 		
-		File users = new File(prefix + "kaggle/kaggle_users.txt");
+		File users = new File(KAGGLE_USERS_FILE);
 		UsersFileReader.process(users, processor);
 		commit();
 		
-		File songNumbers = new File(prefix + "kaggle/kaggle_songs.txt");
+		File songNumbers = new File(KAGGLE_SONGS_FILE);
 		SongNumbersFileReader.process(songNumbers, processor);
 		commit();
 	}
 
 	public void readListenings() {
-		InputProcessor processor = new InputProcessor(
-				repository.getValueFactory(), repositoryConnection);
-		
-		File allListenings = new File(prefix + "kaggle/train_triplets.txt");
+		File allListenings = new File(TRAIN_TRIPLETS_FILE);
 		ListeningsFileReader.process(allListenings, processor);
 		commit();
 	}

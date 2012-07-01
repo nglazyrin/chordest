@@ -10,13 +10,19 @@ import org.openrdf.repository.RepositoryConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+/**
+ * Creates a repository containing the data from all available filex except
+ * train_triplets.txt . This repository may be used for fast evaluation of
+ * algorithm and queries.
+ * @author Nikolay
+ *
+ */
 public class TestRepositoryFiller extends RepositoryFiller {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RepositoryFiller.class);
 
-	public TestRepositoryFiller(Repository repository, RepositoryConnection connection, String prefix) {
-		super(repository, connection, prefix);
+	public TestRepositoryFiller(Repository repository, RepositoryConnection connection) {
+		super(repository, connection);
 	}
 
 	public static void main(String[] args) {
@@ -31,9 +37,9 @@ public class TestRepositoryFiller extends RepositoryFiller {
 		LOG.info(params.toString());
 
 //		IRepositoryWrapper wrapper = new OwlimRepositoryWrapper(params.getParameters());
-		IRepositoryWrapper wrapper = new SesameNativeRepositoryWrapper();
+		IRepositoryWrapper wrapper = SesameNativeRepositoryWrapper.getTestRepository();
 		
-		RepositoryFiller rf = new RepositoryFiller(wrapper.getRepository(), wrapper.getRepositoryConnection(), "");
+		RepositoryFiller rf = new RepositoryFiller(wrapper.getRepository(), wrapper.getRepositoryConnection());
 		rf.fillRepository();
 
 		wrapper.shutdown();
