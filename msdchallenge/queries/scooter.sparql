@@ -1,0 +1,12 @@
+^[SingleTrackListeners]
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ex:   <http://example.org/owlim#>
+SELECT DISTINCT ?user
+WHERE {
+       ?user ex:listens ?track .
+#       ?md ex:hasTrackId ?track .
+#       ?md ex:hasListenCount ?count .
+       ?track ex:hasAuthor "Scooter" .
+#       FILTER (?count >= 4)
+}
+LIMIT 10

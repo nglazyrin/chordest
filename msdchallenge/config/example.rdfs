@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<!DOCTYPE rdf:RDF [
+     <!ENTITY rdf  "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+     <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
+     <!ENTITY xsd  "http://www.w3.org/2001/XMLSchema#" >
+     <!ENTITY owl  "http://www.w3.org/2002/07/owl#" >
+     <!ENTITY example  "http://example.org/owlim#" >
+   ]>
+
+<rdf:RDF
+  xmlns     ="&example;"
+  xml:base  ="&example;"
+  xmlns:owl ="&owl;"
+  xmlns:rdf ="&rdf;"
+  xmlns:rdfs="&rdfs;"
+>
+
+<Ontology rdf:about="">
+  <imports rdf:resource="&owl;"/>
+  <rdfs:comment>This file specifies an example ontology with few classes
+  </rdfs:comment>
+  <versionInfo>28 March 2007</versionInfo>
+</Ontology>
+
+<rdfs:Class rdf:ID="Animal">
+  <rdfs:label>Animal</rdfs:label>
+</rdfs:Class>
+
+<rdfs:Class rdf:ID="Human">
+  <rdfs:label>Human</rdfs:label>
+  <rdfs:subClassOf rdf:resource="&example;Animal"/>
+</rdfs:Class>
+
+<rdfs:Class rdf:ID="Gender"/>
+
+<Gender rdf:ID="Male"/>
+<Gender rdf:ID="Female"/>
+
+<owl:ObjectProperty rdf:ID="hasGender"/>
+
+<rdfs:Class rdf:ID="Man">
+  <rdfs:label>Man</rdfs:label>
+  <owl:intersectionOf rdf:parseType="Collection">
+    <rdfs:Class rdf:about="#Human"/>
+    <owl:Restriction>
+	<owl:onProperty rdf:resource="&example;hasGender"/>
+	<owl:hasValue rdf:resource="&example;Male"/>
+    </owl:Restriction>
+  </owl:intersectionOf>
+</rdfs:Class>
+
+<rdfs:Class rdf:ID="Woman">
+  <rdfs:label>Woman</rdfs:label>
+  <owl:intersectionOf rdf:parseType="Collection">
+    <rdfs:Class rdf:about="#Human"/>
+    <owl:Restriction>
+	<owl:onProperty rdf:resource="&example;hasGender"/>
+	<owl:hasValue rdf:resource="&example;Female"/>
+    </owl:Restriction>
+  </owl:intersectionOf>
+</rdfs:Class>
+
+<Man rdf:ID="Damyan"/>
+<Woman rdf:ID="Silvia"/>
+<Human rdf:ID="John">
+	<hasGender rdf:resource="&example;Male"/>
+</Human>
+<Human rdf:ID="Mary">
+	<hasGender rdf:resource="&example;Female"/>
+</Human>
+
+</rdf:RDF>
+
+
