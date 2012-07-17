@@ -15,7 +15,7 @@ public class TemplateProducerTest {
 
 	@Test
 	public void testTemplateProducerSmoke() {
-		TemplateProducer p = new TemplateProducer(Note.A);
+		TemplateProducer p = new TemplateProducer(Note.A, true);
 		double[] template = p.getTemplateFor(Chord.major(Note.A));
 		Assert.assertEquals(12, template.length);
 		System.out.println(Arrays.toString(template));
