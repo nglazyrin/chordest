@@ -86,14 +86,14 @@ public class Key {
 
 	/**
 	 * Tries to recognize key using Krumhansl's key-finding algorithm
-	 * @param durations 12-dimensional array, first component corresponds to A
+	 * @param intensities 12-dimensional array, first component corresponds to A
 	 * @return
 	 */
-	public static Key recognizeKey(double[] durations, Note startNote) {
-		if (durations == null) {
+	public static Key recognizeKey(double[] intensities, Note startNote) {
+		if (intensities == null) {
 			throw new NullPointerException("durations is null");
 		}
-		if (durations.length != 12) {
+		if (intensities.length != 12) {
 			throw new IllegalArgumentException("durations.length != 12");
 		}
 		double[] template = new double[] { 6.35, 2.23, 3.48, 2.33, 4.38, 4.09,
@@ -101,7 +101,7 @@ public class Key {
 		double[] correlations = new double[12];
 		for (int i = 0; i < 12; i++) {
 			for (int j = 0; j < 12; j++) {
-				correlations[i] += durations[j] * template[j];
+				correlations[i] += intensities[j] * template[j];
 			}
 			double temp = template[11];
 			for (int k = 11; k > 0; k--) { template[k] = template[k - 1]; }
