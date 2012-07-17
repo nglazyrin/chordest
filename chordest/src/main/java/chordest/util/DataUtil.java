@@ -473,11 +473,11 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[][] getRecurrencePlot(double[][] selfSim, double theta, int minLength) {
+	public static double[][] getDiagonalMatrix(double[][] selfSim, double theta, int minLength) {
 		if (selfSim == null) {
 			throw new NullPointerException("self similarity matrix is null");
 		}
-		LOG.debug("Calculating the recurrence plot ...");
+		LOG.debug("Calculating the self-similarity matrix with only diagonals ...");
 		int size = selfSim.length;
 		int preserved = (int) (size * theta);
 		double[][] result = new double[size][];
@@ -525,7 +525,7 @@ public class DataUtil {
 		if (recurrencePlot == null) {
 			throw new NullPointerException("recurrencePlot is null");
 		}
-		LOG.debug("Smoothing the spectrum with recurrence plot ...");
+		LOG.debug("Smoothing the spectrum with diagonal self-similarity matrix ...");
 		int size = spectrum.length;
 		double[][] result = new double[size][];
 		for (int i = 0; i < size; i++) {
