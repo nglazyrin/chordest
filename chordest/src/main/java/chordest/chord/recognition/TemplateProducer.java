@@ -26,25 +26,41 @@ public class TemplateProducer {
 
 	private final Note startNote;
 
-	public TemplateProducer(Note startNote) {
+	private final boolean useModifiedTemplates;
+
+	public TemplateProducer(Note startNote, boolean useModifiedTemplates) {
 		this.startNote = startNote;
+		this.useModifiedTemplates = useModifiedTemplates;
 	}
 
 	public double[] getTemplateFor(Chord chord) {
 		double[] template = new double[12];
 		Note[] notes = chord.getNotes();
 		if (chord.isMajor() || chord.isMinor()) {
-			fillHarmonicsForPitchClass(template, notes[0], 1.3);	// step 5 1.3
-			fillHarmonicsForPitchClass(template, notes[1], 1.0);
-			fillHarmonicsForPitchClass(template, notes[2], 1.3);	// step 5 1.3
+			if (useModifiedTemplates) {
+				fillHarmonicsForPitchClass(template, notes[0], 1.3);	// step 5 1.3
+				fillHarmonicsForPitchClass(template, notes[1], 1.0);
+				fillHarmonicsForPitchClass(template, notes[2], 1.3);	// step 5 1.3
+			} else {
+				fillHarmonicsForPitchClass(template, notes[0], 1.0);
+				fillHarmonicsForPitchClass(template, notes[1], 1.0);
+				fillHarmonicsForPitchClass(template, notes[2], 1.0);
+			}
 		} else {
 			String shorthand = chord.getShortHand();
 			if (Chord.MAJ7.equals(shorthand) || Chord.DOM.equals(shorthand)
 					|| Chord.MIN7.equals(shorthand)) {
-				fillHarmonicsForPitchClass(template, notes[0], 1.3);
-				fillHarmonicsForPitchClass(template, notes[1], 1.0);
-				fillHarmonicsForPitchClass(template, notes[2], 1.15);
-				fillHarmonicsForPitchClass(template, notes[3], 1.0);
+				if (useModifiedTemplates) {
+					fillHarmonicsForPitchClass(template, notes[0], 1.3);
+					fillHarmonicsForPitchClass(template, notes[1], 1.0);
+					fillHarmonicsForPitchClass(template, notes[2], 1.15);
+					fillHarmonicsForPitchClass(template, notes[3], 1.0);
+				} else {
+					fillHarmonicsForPitchClass(template, notes[0], 1.0);
+					fillHarmonicsForPitchClass(template, notes[1], 1.0);
+					fillHarmonicsForPitchClass(template, notes[2], 1.0);
+					fillHarmonicsForPitchClass(template, notes[3], 1.0);
+				}
 			} else if (Chord.AUG.equals(shorthand) || Chord.DIM.equals(shorthand)
 					|| Chord.SUS2.equals(shorthand) || Chord.SUS4.equals(shorthand)) {
 				fillHarmonicsForPitchClass(template, notes[0], 1.0);

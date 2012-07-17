@@ -1,6 +1,7 @@
 package chordest.chord.recognition;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +27,7 @@ public class TemplatesRecognition {
 	private static final Logger LOG = LoggerFactory.getLogger(TemplatesRecognition.class);
 	
 	public static final IMetric metric = new KLMetric();			// step 4
-//	private static final IMetric metric = new EuclideanMetric();
+//	public static final IMetric metric = new CosineMetric();
 
 	static {
 		String[] shorthands = new String[] {
@@ -53,7 +54,7 @@ public class TemplatesRecognition {
 	 */
 	public TemplatesRecognition(Note pcpStartNote) {
 		startNote = pcpStartNote;
-		templateProducer = new TemplateProducer(pcpStartNote);
+		templateProducer = new TemplateProducer(pcpStartNote, true);
 		Map<Chord, double[]> map = getAllChords();
 		possibleChords = Collections.unmodifiableMap(map);
 	}
@@ -65,7 +66,7 @@ public class TemplatesRecognition {
 	 */
 	public TemplatesRecognition(Note pcpStartNote, Key key) {
 		startNote = pcpStartNote;
-		templateProducer = new TemplateProducer(pcpStartNote);
+		templateProducer = new TemplateProducer(pcpStartNote, true);
 		Map<Chord, double[]> map = new HashMap<Chord, double[]>();
 		if (key != null) {
 			for (Chord chord : key.getChords()) {
@@ -75,6 +76,17 @@ public class TemplatesRecognition {
 			map = getAllChords();
 		}
 		possibleChords = Collections.unmodifiableMap(map);
+	}
+
+	public TemplatesRecognition(Note pcpStartNote, Collection<Chord> possibleChords,
+			boolean useModifiedTemplates) {
+		startNote = pcpStartNote;
+		templateProducer = new TemplateProducer(pcpStartNote, useModifiedTemplates);
+		Map<Chord, double[]> map = new HashMap<Chord, double[]>();
+		for (Chord chord : possibleChords) {
+			map.put(chord, templateProducer.getTemplateFor(chord));
+		}
+		this.possibleChords = Collections.unmodifiableMap(map);
 	}
 
 	private Map<Chord, double[]> getAllChords() {
