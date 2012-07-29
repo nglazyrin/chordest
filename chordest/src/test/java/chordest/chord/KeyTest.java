@@ -12,7 +12,7 @@ import chordest.chord.Key;
 import chordest.chord.Note;
 
 
-public class ModeTest {
+public class KeyTest {
 
 	@Test
 	public void testCMajNoOffset() {

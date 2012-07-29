@@ -33,4 +33,21 @@ public class ChordTest {
 		Assert.assertTrue(c2.equals(c1));
 	}
 
+	@Test
+	public void testSameRootDifferentType() {
+		Chord c1 = Chord.major(Note.D);
+		Chord c2 = Chord.minor(Note.D);
+		Assert.assertTrue(c1.hasSameRootDifferentType(c2));
+		Assert.assertTrue(c2.hasSameRootDifferentType(c1));
+		Assert.assertFalse(c1.hasSameRootDifferentType(c1));
+		
+		c2 = new Chord(Note.D, Chord.AUG);
+		Assert.assertTrue(c1.hasSameRootDifferentType(c2));
+		Assert.assertTrue(c2.hasSameRootDifferentType(c1));
+		
+		c2 = Chord.minor(Note.E);
+		Assert.assertFalse(c1.hasSameRootDifferentType(c2));
+		Assert.assertFalse(c2.hasSameRootDifferentType(c1));
+	}
+
 }

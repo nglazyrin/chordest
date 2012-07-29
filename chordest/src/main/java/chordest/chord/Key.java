@@ -4,12 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class Key {
-
-	private static final Logger LOG = LoggerFactory.getLogger(Key.class);
 
 	private static final int[] majorOffsets = { 2, 2, 1, 2, 2, 2, 1 };
 	private static final int[] minorOffsets = { 2, 1, 2, 2, 1, 2, 2 };

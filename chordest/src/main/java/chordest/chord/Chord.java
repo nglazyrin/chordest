@@ -126,7 +126,7 @@ public class Chord {
 		return this.components;
 	}
 
-	private Note getRoot() {
+	public Note getRoot() {
 		return getNote(0);
 	}
 
@@ -257,4 +257,10 @@ public class Chord {
 	private boolean isShortHandDefined() {
 		return ! NO_SHORTHAND.equals(shorthand);
 	}
+
+	public boolean hasSameRootDifferentType(Chord other) {
+		return this.getRoot().equals(other.getRoot()) &&
+				! this.getShortHand().equals(other.getShortHand());
+	}
+
 }
