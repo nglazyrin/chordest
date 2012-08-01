@@ -1,8 +1,6 @@
-package msdchallenge.main;
+package msdchallenge.old.main;
 
 import msdchallenge.old.repository.IRepositoryWrapper;
-import msdchallenge.old.repository.OwlimRepositoryWrapper;
-import msdchallenge.old.repository.Parameters;
 import msdchallenge.old.repository.SesameNativeRepositoryWrapper;
 
 import org.openrdf.repository.Repository;

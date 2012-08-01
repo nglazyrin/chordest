@@ -1,12 +1,14 @@
-package msdchallenge.main;
+package msdchallenge.old.main;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import msdchallenge.input.ListeningsFileReader;
+import msdchallenge.input.reader.ListeningsFileReader;
 import msdchallenge.model.Listening;
 import msdchallenge.simple.AbstractMsdcWorker;
+import msdchallenge.simple.Constants;
+import msdchallenge.simple.IoUtil;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
@@ -22,9 +24,9 @@ public class ListenersCounter extends AbstractMsdcWorker {
 	private int[][] listenerCounts;
 
 	public static void main(String[] args) {
-		for (int i = 0; i < TOTAL_TRACKS / PROCESS_TRACKS; i ++) {
-			int lower = i * PROCESS_TRACKS;
-			int upper = (i + 1) * PROCESS_TRACKS;
+		for (int i = 0; i < Constants.TOTAL_TRACKS / Constants.PROCESS_TRACKS; i ++) {
+			int lower = i * Constants.PROCESS_TRACKS;
+			int upper = (i + 1) * Constants.PROCESS_TRACKS;
 			LOG.info("Processing tracks " + lower + " - " + upper);
 			ListenersCounter lc = new ListenersCounter(lower, upper);
 			lc.countListeners();
@@ -39,31 +41,31 @@ public class ListenersCounter extends AbstractMsdcWorker {
 		this.lowerBound = lowerBound;
 		this.upperBound = upperBound;
 		
-		String tracksFileName = DATA_DIR + "trackIds" + lowerBound + ".bin";
-		trackIds = deserialize(tracksFileName);
+		String tracksFileName = Constants.DATA_DIR + "trackIds" + lowerBound + ".bin";
+		trackIds = IoUtil.deserialize(tracksFileName);
 		
-		listenerCounts = new int[PROCESS_TRACKS][];
-		for (int i = 0; i < PROCESS_TRACKS; i++) {
+		listenerCounts = new int[Constants.PROCESS_TRACKS][];
+		for (int i = 0; i < Constants.PROCESS_TRACKS; i++) {
 			listenerCounts[i] = new int[trackIds[i].length];
 		}
 	}
 
 	public void countListeners() {
-		File allListenings = new File(TRAIN_TRIPLETS_FILE);
+		File allListenings = new File(Constants.TRAIN_TRIPLETS_FILE);
 		ListeningsFileReader.process(allListenings, this);
 		processUserListenings(lastUserListenings);
 		
 	}
 
 	public void correctSimilarities() {
-		String similaritiesFileName = DATA_DIR + "similarities" + lowerBound + ".bin";
-		similarities = deserialize(similaritiesFileName);
+		String similaritiesFileName = Constants.DATA_DIR + "similarities" + lowerBound + ".bin";
+		similarities = IoUtil.deserialize(similaritiesFileName);
 		for (int i = 0; i < similarities.length; i++) {
 			for (int j = 0; j < similarities[i].length; j++) {
 				similarities[i][j] /= listenerCounts[i][j];
 			}
 		}
-		serialize(similaritiesFileName, similarities);
+		IoUtil.serialize(similaritiesFileName, similarities);
 	}
 
 	@Override

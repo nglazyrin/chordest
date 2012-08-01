@@ -1,4 +1,4 @@
-package msdchallenge.main;
+package msdchallenge.main.generators;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -6,17 +6,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-import msdchallenge.input.ListeningsFileReader;
+import msdchallenge.input.reader.ListeningsFileReader;
 import msdchallenge.model.Listening;
 import msdchallenge.simple.AbstractMsdcWorker;
+import msdchallenge.simple.Constants;
+import msdchallenge.simple.IoUtil;
 import msdchallenge.simple.MapUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SimpleKaggle extends AbstractMsdcWorker{
+public class CommonlySimilarTracksFilesGenerator extends AbstractMsdcWorker{
 
-	private static final Logger LOG = LoggerFactory.getLogger(SimpleKaggle.class);
+	private static final Logger LOG = LoggerFactory.getLogger(CommonlySimilarTracksFilesGenerator.class);
 
 //	private int usersProcessed = 0;
 
@@ -27,11 +29,11 @@ public class SimpleKaggle extends AbstractMsdcWorker{
 	private HashMap<Integer, Integer>[] listenerCounts;
 
 	public static void main(String[] args) {
-		for (int i = 0; i < TOTAL_TRACKS / PROCESS_TRACKS; i ++) {
-			int lower = i * PROCESS_TRACKS;
-			int upper = (i + 1) * PROCESS_TRACKS;
+		for (int i = 0; i < Constants.TOTAL_TRACKS / Constants.PROCESS_TRACKS; i ++) {
+			int lower = i * Constants.PROCESS_TRACKS;
+			int upper = (i + 1) * Constants.PROCESS_TRACKS;
 			LOG.info("Processing tracks " + lower + " - " + upper);
-			SimpleKaggle sk = new SimpleKaggle(lower, upper);
+			CommonlySimilarTracksFilesGenerator sk = new CommonlySimilarTracksFilesGenerator(lower, upper);
 			sk.fillSimilarities();
 			sk.cleanupSimilarity();
 			sk.serializeSimilarities();
@@ -42,23 +44,23 @@ public class SimpleKaggle extends AbstractMsdcWorker{
 	}
 
 	@SuppressWarnings("unchecked")
-	private SimpleKaggle(int lowerBound, int upperBound) {
+	private CommonlySimilarTracksFilesGenerator(int lowerBound, int upperBound) {
 		this.lowerBound = lowerBound;
 		this.upperBound = upperBound;
-		listenerCounts = new HashMap[PROCESS_TRACKS];
-		similarTracks = new HashMap[PROCESS_TRACKS];
-		for (int i = 0; i < PROCESS_TRACKS; i++) {
-			listenerCounts[i] = new HashMap<Integer, Integer>(PROCESS_TRACKS);
-			similarTracks[i] = new HashMap<Integer, Double>(PROCESS_TRACKS);
+		listenerCounts = new HashMap[Constants.PROCESS_TRACKS];
+		similarTracks = new HashMap[Constants.PROCESS_TRACKS];
+		for (int i = 0; i < Constants.PROCESS_TRACKS; i++) {
+			listenerCounts[i] = new HashMap<Integer, Integer>(Constants.PROCESS_TRACKS);
+			similarTracks[i] = new HashMap<Integer, Double>(Constants.PROCESS_TRACKS);
 		}
 	}
 
 	public void fillSimilarities() {
-		File allListenings = new File(TRAIN_TRIPLETS_FILE);
+		File allListenings = new File(Constants.TRAIN_TRIPLETS_FILE);
 		ListeningsFileReader.process(allListenings, this);
 		calculateSimilarity(lastUserListenings); // call manually for the last user's listenings
 		
-		File testListenings = new File(TEST_TRIPLETS_FILE);
+		File testListenings = new File(Constants.TEST_TRIPLETS_FILE);
 		ListeningsFileReader.process(testListenings, this);
 		calculateSimilarity(lastUserListenings); // call manually for the last user's listenings
 	}
@@ -66,18 +68,18 @@ public class SimpleKaggle extends AbstractMsdcWorker{
 	private void cleanupSimilarity() {
 //		int maxSize = 0;
 		
-		for (int i = 0; i < PROCESS_TRACKS; i++) {
+		for (int i = 0; i < Constants.PROCESS_TRACKS; i++) {
 			HashMap<Integer, Double> tracks = similarTracks[i];
 			List<Entry<Integer, Double>> sorted = MapUtil.sortMapByValue(tracks, false);
 			similarTracks[i] = null;
-			int[] trackIdsI = new int[MEANINGFUL_TRACKS];
-			double[] similaritiesI = new double[MEANINGFUL_TRACKS];
+			int[] trackIdsI = new int[Constants.MEANINGFUL_TRACKS];
+			double[] similaritiesI = new double[Constants.MEANINGFUL_TRACKS];
 //			if (sorted.size() > maxSize) { maxSize = sorted.size(); }
-			int limit = Math.min(MEANINGFUL_TRACKS, sorted.size());
+			int limit = Math.min(Constants.MEANINGFUL_TRACKS, sorted.size());
 			for (int j = 0; j < limit; j++) {
 				Entry<Integer, Double> entry = sorted.get(j);
 				trackIdsI[j] = entry.getKey();
-				similaritiesI[j] = entry.getValue() / listenerCounts[i].get(entry.getKey()); // XXX normalization
+				similaritiesI[j] = entry.getValue();
 			}
 			trackIds[i] = trackIdsI;
 			similarities[i] = similaritiesI;
@@ -88,11 +90,11 @@ public class SimpleKaggle extends AbstractMsdcWorker{
 	}
 
 	public void serializeSimilarities() {
-		String similarTracksFileName = DATA_DIR + "trackIds" + lowerBound + ".bin";
-		String similaritiesFileName = DATA_DIR + "similarities" + lowerBound + ".bin";
+		String similarTracksFileName = Constants.DATA_DIR + "trackIds" + lowerBound + ".bin";
+		String similaritiesFileName = Constants.DATA_DIR + "similarities" + lowerBound + ".bin";
 		
-		serialize(similarTracksFileName, trackIds);
-		serialize(similaritiesFileName, similarities);
+		IoUtil.serialize(similarTracksFileName, trackIds);
+		IoUtil.serialize(similaritiesFileName, similarities);
 		
 		this.similarities = null;
 		this.trackIds = null;

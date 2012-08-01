@@ -44,4 +44,18 @@ public class MapUtil {
 		return sorted.subList(0, modesWithTopValue);
 	}
 
+	public static <K> void addValue(Map<K, Double> map, K key, Double value) {
+		if (map.containsKey(key)) {
+			value += map.get(key);
+		}
+		map.put(key, value);
+	}
+
+	public static <K> void addValue(Map<K, Integer> map, K key, Integer value) {
+		if (map.containsKey(key)) {
+			value += map.get(key);
+		}
+		map.put(key, value);
+	}
+
 }

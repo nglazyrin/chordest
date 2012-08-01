@@ -9,8 +9,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import msdchallenge.input.UsersFileReader;
-import msdchallenge.input.UsersFileReader.IUserProcessor;
+import msdchallenge.input.reader.UsersFileReader;
+import msdchallenge.input.reader.UsersFileReader.IUserProcessor;
 import msdchallenge.old.query.QueryCollector;
 import msdchallenge.old.query.QueryEvaluator;
 import msdchallenge.old.repository.IRepositoryWrapper;

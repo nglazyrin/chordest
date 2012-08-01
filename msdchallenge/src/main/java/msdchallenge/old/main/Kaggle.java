@@ -1,4 +1,4 @@
-package msdchallenge.main;
+package msdchallenge.old.main;
 
 import msdchallenge.old.Processor;
 import msdchallenge.old.repository.IRepositoryWrapper;

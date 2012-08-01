@@ -1,16 +1,14 @@
-package msdchallenge.main;
+package msdchallenge.old.main;
 
 
 import java.io.File;
 
-import msdchallenge.input.InputProcessor;
-import msdchallenge.input.ListeningsFileReader;
-import msdchallenge.input.SongNumbersFileReader;
-import msdchallenge.input.TracksFileReader;
-import msdchallenge.input.UsersFileReader;
+import msdchallenge.input.reader.ListeningsFileReader;
+import msdchallenge.input.reader.SongNumbersFileReader;
+import msdchallenge.input.reader.TracksFileReader;
+import msdchallenge.input.reader.UsersFileReader;
+import msdchallenge.old.input.InputProcessor;
 import msdchallenge.old.repository.IRepositoryWrapper;
-import msdchallenge.old.repository.OwlimRepositoryWrapper;
-import msdchallenge.old.repository.Parameters;
 import msdchallenge.old.repository.SesameNativeRepositoryWrapper;
 
 import org.openrdf.repository.Repository;

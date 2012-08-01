@@ -1,9 +1,10 @@
-package msdchallenge.input;
+package msdchallenge.input.provider;
 
 import java.io.File;
 import java.util.HashMap;
 
-import msdchallenge.input.UsersFileReader.IUserProcessor;
+import msdchallenge.input.reader.UsersFileReader;
+import msdchallenge.input.reader.UsersFileReader.IUserProcessor;
 
 public class UsersProvider implements IUserProcessor {
 

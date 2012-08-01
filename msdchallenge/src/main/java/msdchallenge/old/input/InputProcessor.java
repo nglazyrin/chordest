@@ -1,13 +1,13 @@
-package msdchallenge.input;
+package msdchallenge.old.input;
 
 
-import msdchallenge.input.ListeningsFileReader.IListeningProcessor;
-import msdchallenge.input.SongNumbersFileReader.ISongNumberProcessor;
-import msdchallenge.input.TracksFileReader.ITrackProcessor;
-import msdchallenge.input.UsersFileReader.IUserProcessor;
-import msdchallenge.main.RepositoryFiller;
+import msdchallenge.input.reader.ListeningsFileReader.IListeningProcessor;
+import msdchallenge.input.reader.SongNumbersFileReader.ISongNumberProcessor;
+import msdchallenge.input.reader.TracksFileReader.ITrackProcessor;
+import msdchallenge.input.reader.UsersFileReader.IUserProcessor;
 import msdchallenge.model.Listening;
 import msdchallenge.model.Track;
+import msdchallenge.old.main.RepositoryFiller;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;

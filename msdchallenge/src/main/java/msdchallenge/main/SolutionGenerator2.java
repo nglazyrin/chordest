@@ -8,12 +8,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-import msdchallenge.input.ListenersProvider;
-import msdchallenge.input.ListeningsFileReader;
-import msdchallenge.input.ListeningsProvider;
-import msdchallenge.input.UsersProvider;
+import msdchallenge.input.provider.ListenersProvider;
+import msdchallenge.input.provider.ListeningsProvider;
+import msdchallenge.input.provider.UsersProvider;
+import msdchallenge.input.reader.ListeningsFileReader;
 import msdchallenge.model.Listening;
 import msdchallenge.simple.AbstractMsdcWorker;
+import msdchallenge.simple.Constants;
+import msdchallenge.simple.IoUtil;
 import msdchallenge.simple.MapUtil;
 
 import org.slf4j.Logger;
@@ -25,8 +27,6 @@ public class SolutionGenerator2 extends AbstractMsdcWorker {
 
 	private static final String RESULT_DIR = "result" + File.separator;
 	private static final String RESULT_FILE = RESULT_DIR + "result.txt";
-
-	private static final String ALL_USERS_FILE = KAGGLE_DIR + "all_users.txt";
 
 	private FileWriter writer;
 
@@ -45,8 +45,8 @@ public class SolutionGenerator2 extends AbstractMsdcWorker {
 
 	private SolutionGenerator2() {
 		super();
-		users = new UsersProvider(ALL_USERS_FILE).getUsers();
-		ListeningsProvider lp = new ListeningsProvider(users, tracks);
+		users = new UsersProvider(Constants.ALL_USERS_FILE).getUsers();
+		ListeningsProvider lp = new ListeningsProvider();
 		tracksByUser = lp.getTracks();
 		countsByUser = lp.getCounts();
 		listeners = new ListenersProvider().getListeners();
@@ -58,19 +58,11 @@ public class SolutionGenerator2 extends AbstractMsdcWorker {
 	}
 
 	public void findMatchingSongs() {
-		File allListenings = new File(TEST_TRIPLETS_FILE);
+		File allListenings = new File(Constants.TEST_TRIPLETS_FILE);
 		ListeningsFileReader.process(allListenings, this);
 		findSongsByListenings(lastUserListenings);
 		
-		closeWriter();
-	}
-
-	private void closeWriter() {
-		try {
-			writer.close();
-		} catch (IOException e) {
-			LOG.error("Error closing result file", e);
-		}
+		IoUtil.closeWriter(writer);
 	}
 
 	@Override
@@ -98,13 +90,13 @@ public class SolutionGenerator2 extends AbstractMsdcWorker {
 			int track = tracks.get(l.trackId);
 			String[] usersWhoListen = listeners[track];
 			for (String user : usersWhoListen) {
-				addValue(similarUsers, user, 1);
+				MapUtil.addValue(similarUsers, user, 1);
 			}
 		}
 		
 		// for each user: get listenings of this user
 		// 		calculate additions to the ranks of tracks
-		HashMap<Integer, Double> ranks = new HashMap<Integer, Double>(MEANINGFUL_TRACKS);
+		HashMap<Integer, Double> ranks = new HashMap<Integer, Double>(Constants.MEANINGFUL_TRACKS);
 		for (Entry<String, Integer> entry : similarUsers.entrySet()) {
 			if (entry.getValue() <= 1) {
 				continue; // skip almost dissimilar users
@@ -120,7 +112,7 @@ public class SolutionGenerator2 extends AbstractMsdcWorker {
 			
 			for (int i = 0; i < countsForUser.length; i++) {
 				double value = wc * countsForUser[i];
-				addValue(ranks, tracksForUser[i], value);
+				MapUtil.addValue(ranks, tracksForUser[i], value);
 			}
 		}
 		

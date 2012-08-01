@@ -9,9 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import msdchallenge.input.ListeningsFileReader;
+import msdchallenge.input.reader.ListeningsFileReader;
 import msdchallenge.model.Listening;
 import msdchallenge.simple.AbstractMsdcWorker;
+import msdchallenge.simple.Constants;
+import msdchallenge.simple.IoUtil;
 import msdchallenge.simple.MapUtil;
 
 import org.slf4j.Logger;
@@ -35,8 +37,8 @@ public class SolutionGenerator extends AbstractMsdcWorker {
 
 	private SolutionGenerator() {
 		super();
-		trackIds = new int[TOTAL_TRACKS][];
-		similarities = new double[TOTAL_TRACKS][];
+		trackIds = new int[Constants.TOTAL_TRACKS][];
+		similarities = new double[Constants.TOTAL_TRACKS][];
 		readData();
 		try {
 			writer = new FileWriter(RESULT_FILE);
@@ -47,12 +49,12 @@ public class SolutionGenerator extends AbstractMsdcWorker {
 
 	private void readData() {
 		for (int i = 0; i < 78; i++) {
-			int number = i * PROCESS_TRACKS;
-			String tracksFileName = DATA_DIR + "trackIds" + number + ".bin";
-			String similaritiesFileName = DATA_DIR + "similarities" + number + ".bin";
-			int[][] trackIdsLocal = deserialize(tracksFileName);
-			double[][] similaritiesLocal = deserialize(similaritiesFileName);
-			for (int j = 0; j < PROCESS_TRACKS; j++) {
+			int number = i * Constants.PROCESS_TRACKS;
+			String tracksFileName = Constants.DATA_DIR + "trackIds" + number + ".bin";
+			String similaritiesFileName = Constants.DATA_DIR + "similarities" + number + ".bin";
+			int[][] trackIdsLocal = IoUtil.deserialize(tracksFileName);
+			double[][] similaritiesLocal = IoUtil.deserialize(similaritiesFileName);
+			for (int j = 0; j < Constants.PROCESS_TRACKS; j++) {
 				trackIds[j + number] = trackIdsLocal[j];
 				similarities[j + number] = similaritiesLocal[j];
 			}
@@ -60,7 +62,7 @@ public class SolutionGenerator extends AbstractMsdcWorker {
 	}
 
 	public void findMatchingSongs() {
-		File allListenings = new File(TRAIN_TRIPLETS_FILE);
+		File allListenings = new File(Constants.TRAIN_TRIPLETS_FILE);
 		ListeningsFileReader.process(allListenings, this);
 		findSongsByListenings(lastUserListenings);
 		
@@ -111,7 +113,7 @@ public class SolutionGenerator extends AbstractMsdcWorker {
 			for (int i = 0; i < similarTracks.length; i++) {
 				double value = cl * similarSimilarities[i];
 				Integer key = similarTracks[i];
-				addValue(candidates, key, value);
+				MapUtil.addValue(candidates, key, value);
 			}
 		}
 		

@@ -1,4 +1,4 @@
-package msdchallenge.input;
+package msdchallenge.input.reader;
 
 import java.io.File;
 import java.io.FileNotFoundException;
