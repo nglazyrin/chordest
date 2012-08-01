@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
-import msdchallenge.repository.Parameters;
+import msdchallenge.old.repository.Parameters;
 
 import org.openrdf.OpenRDFException;
 import org.openrdf.model.Graph;

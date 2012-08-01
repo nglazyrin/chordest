@@ -8,10 +8,10 @@ import msdchallenge.input.ListeningsFileReader;
 import msdchallenge.input.SongNumbersFileReader;
 import msdchallenge.input.TracksFileReader;
 import msdchallenge.input.UsersFileReader;
-import msdchallenge.repository.IRepositoryWrapper;
-import msdchallenge.repository.OwlimRepositoryWrapper;
-import msdchallenge.repository.Parameters;
-import msdchallenge.repository.SesameNativeRepositoryWrapper;
+import msdchallenge.old.repository.IRepositoryWrapper;
+import msdchallenge.old.repository.OwlimRepositoryWrapper;
+import msdchallenge.old.repository.Parameters;
+import msdchallenge.old.repository.SesameNativeRepositoryWrapper;
 
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
@@ -35,7 +35,7 @@ public class RepositoryFiller {
 	private static final String UNIQUE_TRACKS_FILE = KAGGLE_DIR + "unique_tracks_fixed.txt";
 	private static final String KAGGLE_USERS_FILE = KAGGLE_DIR + "kaggle_users.txt";
 	private static final String KAGGLE_SONGS_FILE = KAGGLE_DIR + "kaggle_songs.txt";
-	private static final String TRAIN_TRIPLETS_FILE = KAGGLE_DIR + "train_triplets.txt";
+	private static final String TRAIN_TRIPLETS_FILE = KAGGLE_DIR + "train_triplets0.txt";
 
 	private final InputProcessor processor;
 
@@ -43,19 +43,19 @@ public class RepositoryFiller {
 
 	public static void main(String[] args) {
 		// Parse all the parameters
-		Parameters params = new Parameters(args);
-		params.setDefaultValue(OwlimRepositoryWrapper.PARAM_CONFIG, "config/owlim.ttl");
-		params.setDefaultValue(OwlimRepositoryWrapper.PARAM_SHOWRESULTS, "true");
-		params.setDefaultValue(OwlimRepositoryWrapper.PARAM_SHOWSTATS, "false");
-		params.setDefaultValue(OwlimRepositoryWrapper.PARAM_UPDATES, "false");
+//		Parameters params = new Parameters(args);
+//		params.setDefaultValue(OwlimRepositoryWrapper.PARAM_CONFIG, "config/owlim.ttl");
+//		params.setDefaultValue(OwlimRepositoryWrapper.PARAM_SHOWRESULTS, "true");
+//		params.setDefaultValue(OwlimRepositoryWrapper.PARAM_SHOWSTATS, "false");
+//		params.setDefaultValue(OwlimRepositoryWrapper.PARAM_UPDATES, "false");
 //		params.setDefaultValue(RepositoryWrapper.PARAM_PRELOAD, PREFIX + "preload");
 //		params.setDefaultValue(OwlimRepositoryWrapper.PARAM_QUERYFILE, "scooter");
 
-		LOG.info("Using parameters:");
-		LOG.info(params.toString());
+//		LOG.info("Using parameters:");
+//		LOG.info(params.toString());
 
 //		IRepositoryWrapper wrapper = new OwlimRepositoryWrapper(params.getParameters());
-		IRepositoryWrapper wrapper = SesameNativeRepositoryWrapper.getTestRepository();
+		IRepositoryWrapper wrapper = SesameNativeRepositoryWrapper.getMainRepository();
 
 		RepositoryFiller rf = new RepositoryFiller(wrapper.getRepository(), wrapper.getRepositoryConnection());
 		rf.fillRepository();

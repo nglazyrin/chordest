@@ -1,4 +1,4 @@
-package msdchallenge.core;
+package msdchallenge.old;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -11,9 +11,9 @@ import java.util.Set;
 
 import msdchallenge.input.UsersFileReader;
 import msdchallenge.input.UsersFileReader.IUserProcessor;
-import msdchallenge.query.QueryCollector;
-import msdchallenge.query.QueryEvaluator;
-import msdchallenge.repository.IRepositoryWrapper;
+import msdchallenge.old.query.QueryCollector;
+import msdchallenge.old.query.QueryEvaluator;
+import msdchallenge.old.repository.IRepositoryWrapper;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.Value;

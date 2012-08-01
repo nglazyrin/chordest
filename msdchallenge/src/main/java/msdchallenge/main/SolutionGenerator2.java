@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
+import msdchallenge.input.ListenersProvider;
 import msdchallenge.input.ListeningsFileReader;
+import msdchallenge.input.ListeningsProvider;
+import msdchallenge.input.UsersProvider;
 import msdchallenge.model.Listening;
 import msdchallenge.simple.AbstractMsdcWorker;
 import msdchallenge.simple.MapUtil;
@@ -17,27 +19,37 @@ import msdchallenge.simple.MapUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SolutionGenerator extends AbstractMsdcWorker {
+public class SolutionGenerator2 extends AbstractMsdcWorker {
 
-	private static final Logger LOG = LoggerFactory.getLogger(SolutionGenerator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SolutionGenerator2.class);
 
 	private static final String RESULT_DIR = "result" + File.separator;
 	private static final String RESULT_FILE = RESULT_DIR + "result.txt";
+
+	private static final String ALL_USERS_FILE = KAGGLE_DIR + "all_users.txt";
 
 	private FileWriter writer;
 
 	private int usersProcessed = 0;
 
+	private String[][] listeners;
+	private int[][] tracksByUser;
+	private short[][] countsByUser;
+
+	private HashMap<String, Integer> users;
+
 	public static void main(String[] args) {
-		SolutionGenerator sg = new SolutionGenerator();
-		sg.findMatchingSongs();
+		SolutionGenerator2 sg2 = new SolutionGenerator2();
+		sg2.findMatchingSongs();
 	}
 
-	private SolutionGenerator() {
+	private SolutionGenerator2() {
 		super();
-		trackIds = new int[TOTAL_TRACKS][];
-		similarities = new double[TOTAL_TRACKS][];
-		readData();
+		users = new UsersProvider(ALL_USERS_FILE).getUsers();
+		ListeningsProvider lp = new ListeningsProvider(users, tracks);
+		tracksByUser = lp.getTracks();
+		countsByUser = lp.getCounts();
+		listeners = new ListenersProvider().getListeners();
 		try {
 			writer = new FileWriter(RESULT_FILE);
 		} catch (IOException e) {
@@ -45,22 +57,8 @@ public class SolutionGenerator extends AbstractMsdcWorker {
 		}
 	}
 
-	private void readData() {
-		for (int i = 0; i < 78; i++) {
-			int number = i * PROCESS_TRACKS;
-			String tracksFileName = DATA_DIR + "trackIds" + number + ".bin";
-			String similaritiesFileName = DATA_DIR + "similarities" + number + ".bin";
-			int[][] trackIdsLocal = deserialize(tracksFileName);
-			double[][] similaritiesLocal = deserialize(similaritiesFileName);
-			for (int j = 0; j < PROCESS_TRACKS; j++) {
-				trackIds[j + number] = trackIdsLocal[j];
-				similarities[j + number] = similaritiesLocal[j];
-			}
-		}
-	}
-
 	public void findMatchingSongs() {
-		File allListenings = new File(TRAIN_TRIPLETS_FILE);
+		File allListenings = new File(TEST_TRIPLETS_FILE);
 		ListeningsFileReader.process(allListenings, this);
 		findSongsByListenings(lastUserListenings);
 		
@@ -94,46 +92,58 @@ public class SolutionGenerator extends AbstractMsdcWorker {
 	}
 
 	private void findSongsByListenings(List<Listening> listenings) {
-		double c = 0;
+		// get users who listen to the same tracks
+		HashMap<String, Integer> similarUsers = new HashMap<String, Integer>();
 		for (Listening l : listenings) {
-			c += l.count;
-		}
-		double cSquared = c*c;
-		
-		// find most similar tracks
-		Map<Integer, Double> candidates = new HashMap<Integer, Double>();
-		for (Listening listening : listenings) {
-			double cl = listening.count / cSquared;
-			
-			int track = tracks.get(listening.trackId);
-			int[] similarTracks = trackIds[track];
-			double[] similarSimilarities = similarities[track];
-			for (int i = 0; i < similarTracks.length; i++) {
-				double value = cl * similarSimilarities[i];
-				Integer key = similarTracks[i];
-				addValue(candidates, key, value);
+			int track = tracks.get(l.trackId);
+			String[] usersWhoListen = listeners[track];
+			for (String user : usersWhoListen) {
+				addValue(similarUsers, user, 1);
 			}
 		}
 		
-		// remove already known songs
-		for (Listening l : listenings) {
-			int track = tracks.get(l.trackId);
-			candidates.remove(track);
+		// for each user: get listenings of this user
+		// 		calculate additions to the ranks of tracks
+		HashMap<Integer, Double> ranks = new HashMap<Integer, Double>(MEANINGFUL_TRACKS);
+		for (Entry<String, Integer> entry : similarUsers.entrySet()) {
+			if (entry.getValue() <= 1) {
+				continue; // skip almost dissimilar users
+			}
+			int userIndex = users.get(entry.getKey());
+			short[] countsForUser = countsByUser[userIndex];
+			int[] tracksForUser = tracksByUser[userIndex];
+			double c = 0;
+			for (int i = 0; i < countsForUser.length; i++) {
+				c += countsForUser[i];
+			}
+			double wc = entry.getValue() / c;
+			
+			for (int i = 0; i < countsForUser.length; i++) {
+				double value = wc * countsForUser[i];
+				addValue(ranks, tracksForUser[i], value);
+			}
 		}
-		candidates.remove(0); // just in case
+		
+		// remove tracks already listened by the user
+		for (Listening l : listenings) {
+			Integer track = tracks.get(l.trackId);
+			ranks.remove(track);
+		}
+		ranks.remove(0);
 		
 		// add dummy entries if size < 500
-		if (candidates.size() < 500) {
+		if (ranks.size() < 500) {
 			int dummy = 1;
-			while (candidates.size() < 500) {
-				if (! candidates.containsKey(dummy)) {
-					candidates.put(dummy, 0.0);
+			while (ranks.size() < 500) {
+				if (! ranks.containsKey(dummy)) {
+					ranks.put(dummy, 0.0);
 				}
 				dummy++;
 			}
 		}
 		
-		List<Entry<Integer, Double>> sorted = MapUtil.sortMapByValue(candidates, false);
+		// sort tracks by rank, select top-500 and output
+		List<Entry<Integer, Double>> sorted = MapUtil.sortMapByValue(ranks, false);
 		writeResultLine(sorted);
 	}
 

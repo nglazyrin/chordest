@@ -1,10 +1,10 @@
 package msdchallenge.main;
 
-import msdchallenge.core.Processor;
-import msdchallenge.repository.IRepositoryWrapper;
-import msdchallenge.repository.OwlimRepositoryWrapper;
-import msdchallenge.repository.Parameters;
-import msdchallenge.repository.SesameNativeRepositoryWrapper;
+import msdchallenge.old.Processor;
+import msdchallenge.old.repository.IRepositoryWrapper;
+import msdchallenge.old.repository.OwlimRepositoryWrapper;
+import msdchallenge.old.repository.Parameters;
+import msdchallenge.old.repository.SesameNativeRepositoryWrapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

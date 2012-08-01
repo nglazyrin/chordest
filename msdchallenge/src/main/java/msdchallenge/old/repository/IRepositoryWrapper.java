@@ -1,4 +1,4 @@
-package msdchallenge.repository;
+package msdchallenge.old.repository;
 
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;

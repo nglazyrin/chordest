@@ -1,4 +1,4 @@
-package msdchallenge.query;
+package msdchallenge.old.query;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

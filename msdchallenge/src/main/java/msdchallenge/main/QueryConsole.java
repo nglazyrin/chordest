@@ -2,11 +2,11 @@ package msdchallenge.main;
 
 import java.util.Scanner;
 
-import msdchallenge.query.QueryCollector;
-import msdchallenge.query.QueryEvaluator;
-import msdchallenge.repository.IRepositoryWrapper;
-import msdchallenge.repository.OwlimRepositoryWrapper;
-import msdchallenge.repository.Parameters;
+import msdchallenge.old.query.QueryCollector;
+import msdchallenge.old.query.QueryEvaluator;
+import msdchallenge.old.repository.IRepositoryWrapper;
+import msdchallenge.old.repository.OwlimRepositoryWrapper;
+import msdchallenge.old.repository.Parameters;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;

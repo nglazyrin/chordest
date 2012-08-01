@@ -1,9 +1,9 @@
 package msdchallenge.main;
 
-import msdchallenge.repository.IRepositoryWrapper;
-import msdchallenge.repository.OwlimRepositoryWrapper;
-import msdchallenge.repository.Parameters;
-import msdchallenge.repository.SesameNativeRepositoryWrapper;
+import msdchallenge.old.repository.IRepositoryWrapper;
+import msdchallenge.old.repository.OwlimRepositoryWrapper;
+import msdchallenge.old.repository.Parameters;
+import msdchallenge.old.repository.SesameNativeRepositoryWrapper;
 
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
@@ -27,14 +27,14 @@ public class TestRepositoryFiller extends RepositoryFiller {
 
 	public static void main(String[] args) {
 		// Parse all the parameters
-		Parameters params = new Parameters(args);
-		params.setDefaultValue(OwlimRepositoryWrapper.PARAM_CONFIG, "config/owlim_test.ttl");
-		params.setDefaultValue(OwlimRepositoryWrapper.PARAM_SHOWRESULTS, "true");
-		params.setDefaultValue(OwlimRepositoryWrapper.PARAM_SHOWSTATS, "false");
-		params.setDefaultValue(OwlimRepositoryWrapper.PARAM_UPDATES, "false");
-
-		LOG.info("Using parameters:");
-		LOG.info(params.toString());
+//		Parameters params = new Parameters(args);
+//		params.setDefaultValue(OwlimRepositoryWrapper.PARAM_CONFIG, "config/owlim_test.ttl");
+//		params.setDefaultValue(OwlimRepositoryWrapper.PARAM_SHOWRESULTS, "true");
+//		params.setDefaultValue(OwlimRepositoryWrapper.PARAM_SHOWSTATS, "false");
+//		params.setDefaultValue(OwlimRepositoryWrapper.PARAM_UPDATES, "false");
+//
+//		LOG.info("Using parameters:");
+//		LOG.info(params.toString());
 
 //		IRepositoryWrapper wrapper = new OwlimRepositoryWrapper(params.getParameters());
 		IRepositoryWrapper wrapper = SesameNativeRepositoryWrapper.getTestRepository();
