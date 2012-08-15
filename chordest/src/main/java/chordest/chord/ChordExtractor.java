@@ -130,7 +130,7 @@ public class ChordExtractor {
 		pcp = DataUtil.reduceTo12Notes(pcp);
 //		Visualizer.visualizeSpectrum(pcp, originalBeatTimes, labels1, "PCP");
 		double[][] rp = DataUtil.getSelfSimilarity(pcp);		// step 6
-		rp = DataUtil.getDiagonalMatrix(rp, c.process.recurrencePlotTheta, c.process.recurrencePlotMinLength);					// step 6
+		rp = DataUtil.getDiagonalMatrix(rp, c.process.selfSimilarityTheta, c.process.selfSimilarityMinLength);					// step 6
 //		Visualizer.visualizeSelfSimilarity(rp, originalBeatTimes);
 		pcp = DataUtil.smoothWithRecurrencePlot(pcp, rp);		// step 6
 //		Visualizer.visualizeSpectrum(pcp, originalBeatTimes, labels1, "PCP with RP");

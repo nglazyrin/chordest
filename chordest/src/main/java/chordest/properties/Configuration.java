@@ -80,22 +80,22 @@ public class Configuration {
 		private static final int THREAD_POOL_SIZE_DEFAULT = 4;
 		private static final int MEDIAN_FILTER_1_WINDOW_DEFAULT = 17;
 		private static final int MEDIAN_FILTER_2_WINDOW_DEFAULT = 3;
-		private static final double RECURRENCE_PLOT_THETA_DEFAULT = 0.15;
-		private static final int RECURRENCE_PLOT_MIN_LENGTH_DEFAULT = 3;
+		private static final double SELF_SIMILARITY_THETA_DEFAULT = 0.15;
+		private static final int SELF_SIMILARITY_MIN_LENGTH_DEFAULT = 3;
 
 		public final int threadPoolSize;
 		public final int medianFilter1Window;
 		public final int medianFilter2Window;
-		public final double recurrencePlotTheta;
-		public final int recurrencePlotMinLength;
+		public final double selfSimilarityTheta;
+		public final int selfSimilarityMinLength;
 
 		private ProcessProperties(int threadPoolSize, int window1, int window2,
 				double rpTheta, int rpMinLength) {
 			this.threadPoolSize = threadPoolSize > 0 ? threadPoolSize : THREAD_POOL_SIZE_DEFAULT;
 			this.medianFilter1Window = window1 > 0 ? window1 : MEDIAN_FILTER_1_WINDOW_DEFAULT;
 			this.medianFilter2Window = window2 > 0 ? window2 : MEDIAN_FILTER_2_WINDOW_DEFAULT;
-			this.recurrencePlotTheta = rpTheta > 0 ? rpTheta : RECURRENCE_PLOT_THETA_DEFAULT;
-			this.recurrencePlotMinLength = rpMinLength > 0 ? rpMinLength : RECURRENCE_PLOT_MIN_LENGTH_DEFAULT;
+			this.selfSimilarityTheta = rpTheta > 0 ? rpTheta : SELF_SIMILARITY_THETA_DEFAULT;
+			this.selfSimilarityMinLength = rpMinLength > 0 ? rpMinLength : SELF_SIMILARITY_MIN_LENGTH_DEFAULT;
 		}
 	}
 

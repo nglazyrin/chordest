@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import chordest.beat.BeatRootAdapter;
 import chordest.chord.ChordExtractor;
 import chordest.lab.CsvFileWriter;
 import chordest.lab.LabFileReader;
@@ -48,12 +49,17 @@ public class Roundtrip {
 			final String csvFileName = labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_CSV);
 			final String spectrumFileName = SPECTRUM_DIR + 
 					labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_BIN);
-//			final String beatFileName = PathConstants.BEAT_DIR +
-//					labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_BEAT);
-//			final String wavFileName = c.directory.wav + 
-//					labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_WAV);
 //			BeatRootAdapter beatRoot = new BeatRootAdapter(wavFileName, beatFileName);
-			ChordExtractor ce = new ChordExtractor(c, spectrumFileName);
+			ChordExtractor ce;
+			if (new File(spectrumFileName).exists()) {
+				ce = new ChordExtractor(c, spectrumFileName);
+			} else {
+				final String beatFileName = PathConstants.BEAT_DIR +
+						labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_BEAT);
+				final String wavFileName = PathConstants.WAV_DIR + 
+						labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_WAV);
+				ce = new ChordExtractor(c, wavFileName, new BeatRootAdapter(wavFileName, beatFileName));
+			}
 
 			double[] beatTimes = ce.getOriginalBeatTimes();
 			LabFileWriter labWriter = new LabFileWriter(ce.getChords(), beatTimes);

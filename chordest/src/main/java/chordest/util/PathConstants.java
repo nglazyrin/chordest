@@ -17,7 +17,7 @@ public class PathConstants {
 	public static final String CSV_DIR = "csv" + SEP;
 	public static final String SPECTRUM_DIR = "spectrum" + SEP;
 	public static final String LAB_DIR = "lab" + SEP;
-	public static final String WAV_DIR = ".." + SEP + "samples" + SEP;
+	public static final String WAV_DIR = ".." + SEP +  ".." + SEP +  ".." + SEP +  "workspace" + SEP + "samples" + SEP;
 	public static final String OUTPUT_DIR = "result" + SEP;
 
 }

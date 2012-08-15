@@ -12,32 +12,34 @@ import org.slf4j.LoggerFactory;
 import chordest.lab.LabFileReader;
 import chordest.lab.LabSimilarity;
 import chordest.util.MapUtil;
-import chordest.util.PathConstants;
 import chordest.util.TracklistCreator;
 
 public class AccuracyCalculator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Roundtrip.class);
 
-	private static final String EXPECTED_DIR = PathConstants.LAB_DIR + "Beatles" + PathConstants.SEP;
-
-	private static final String ACTUAL_DIR = "result" + PathConstants.SEP + "toCheck" + PathConstants.SEP;
-
 	public static void main(String[] args) {
-		List<String> tracklist = TracklistCreator.createTracklist(new File(EXPECTED_DIR), "");
+		if (args.length < 2) {
+			LOG.error("Usage: AccuracyCalculator /path/to/expectedFileList.txt /path/to/actualFileList.txt");
+			System.exit(1);
+		}
+		List<String> expectedTracklist = TracklistCreator.readTrackList(args[0]);
+		List<String> actualTracklist = TracklistCreator.readTrackList(args[1]);
+		if (expectedTracklist.size() != actualTracklist.size()) {
+			LOG.error("Expected and actual file lists have different lengths");
+			System.exit(2);
+		}
+		
 		double totalOverlap = 0;
 		double totalWeightedOverlap = 0;
 		int totalTracks = 0;
 		double totalLength = 0;
 		final Map<String, Double> errors = new HashMap<String, Double>();
 		
-		for (final String labFileName : tracklist) {
-			LabFileReader expectedReader = new LabFileReader(new File(EXPECTED_DIR + labFileName));
-			File actual = new File(ACTUAL_DIR + labFileName);
-			if (! actual.exists()) {
-				continue;
-			}
-			LabFileReader actualReader = new LabFileReader(actual);
+		for (int i = 0; i < expectedTracklist.size(); i++) {
+			File expected = new File(expectedTracklist.get(i));
+			LabFileReader expectedReader = new LabFileReader(expected);
+			LabFileReader actualReader = new LabFileReader(new File(actualTracklist.get(i)));
 			
 			LabSimilarity sim = new LabSimilarity(
 					expectedReader.getChords(), expectedReader.getTimestamps(),
@@ -59,7 +61,7 @@ public class AccuracyCalculator {
 				errors.put(key, value);
 			}
 			LOG.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-			LOG.info(labFileName + ": " + overlap);
+			LOG.info(expected.getName() + ": " + overlap);
 			LOG.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 //			SIM_LOG.info(labFileName.replace(',', '_').replace('\\', '/') + "," + ce.getKey() + "," +
 //					overlap + "," + effectiveSeconds + "," + ce.getTotalSeconds());

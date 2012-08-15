@@ -27,8 +27,8 @@ public class BatchChordEst {
 		}
 		args[1] = addTrailingSeparatorIfMissing(args[1]);
 		args[2] = addTrailingSeparatorIfMissing(args[2]);
-		boolean saveSpectra = args[3] != null && args[3].contains("s");
-		boolean saveBeats = args[3] != null && args[3].contains("b");
+		boolean saveSpectra = args.length > 3 && args[3] != null && args[3].contains("s");
+		boolean saveBeats = args.length > 3 && args[3] != null && args[3].contains("b");
 		
 		List<String> tracklist = TracklistCreator.readTrackList(args[0]);
 		
