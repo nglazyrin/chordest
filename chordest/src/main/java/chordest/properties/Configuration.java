@@ -12,16 +12,14 @@ public class Configuration {
 	private static final String SPECTRUM_OFFSET_FROM_F0_IN_SEMITONES_KEY = "spectrum.offsetFromF0InSemitones";
 	private static final String SPECTRUM_FRAMES_PER_BEAT_KEY = "spectrum.framesPerBeat";
 
+	private static final String PROCESS_THREAD_POOL_SIZE_KEY = "process.threadPoolSize";
 	private static final String PROCESS_MEDIAN_FILTER_1_WINDOW_KEY = "process.medianFilter1Window";
 	private static final String PROCESS_MEDIAN_FILTER_2_WINDOW_KEY = "process.medianFilter2Window";
-	private static final String PROCESS_RECURRNCE_PLOT_THETA_KEY = "process.recurrencePlotTheta";
-	private static final String PROCESS_RECURRNCE_PLOT_MIN_LENGTH_KEY = "process.recurrencePlotMinLength";
-
-	private static final String DIRECTORY_WAV_KEY = "directory.wav";
+	private static final String PROCESS_SELF_SIMILARITY_THETA_KEY = "process.recurrencePlotTheta";
+	private static final String PROCESS_SELF_SIMILARITY_MIN_LENGTH_KEY = "process.recurrencePlotMinLength";
 
 	public final SpectrumProperties spectrum;
 	public final ProcessProperties process;
-	public final DirectoryProperties directory;
 
 	public Configuration(String propertiesFile) {
 		Properties prop = new Properties();
@@ -49,14 +47,12 @@ public class Configuration {
         int framesPerBeat = Integer.parseInt(prop.getProperty(SPECTRUM_FRAMES_PER_BEAT_KEY));
         this.spectrum = new SpectrumProperties(octaves, notesPerOctave, offsetFromF0, framesPerBeat);
 
+        int threadPoolSize = Integer.parseInt(prop.getProperty(PROCESS_THREAD_POOL_SIZE_KEY));
         int window1 = Integer.parseInt(prop.getProperty(PROCESS_MEDIAN_FILTER_1_WINDOW_KEY));
         int window2 = Integer.parseInt(prop.getProperty(PROCESS_MEDIAN_FILTER_2_WINDOW_KEY));
-        double theta = Double.parseDouble(prop.getProperty(PROCESS_RECURRNCE_PLOT_THETA_KEY));
-        int minLength = Integer.parseInt(prop.getProperty(PROCESS_RECURRNCE_PLOT_MIN_LENGTH_KEY));
-        this.process = new ProcessProperties(window1, window2, theta, minLength);
-
-        String wavDirectory = prop.getProperty(DIRECTORY_WAV_KEY);
-        this.directory = new DirectoryProperties(wavDirectory);
+        double theta = Double.parseDouble(prop.getProperty(PROCESS_SELF_SIMILARITY_THETA_KEY));
+        int minLength = Integer.parseInt(prop.getProperty(PROCESS_SELF_SIMILARITY_MIN_LENGTH_KEY));
+        this.process = new ProcessProperties(threadPoolSize, window1, window2, theta, minLength);
 	};
 
 	public class SpectrumProperties {
@@ -81,31 +77,25 @@ public class Configuration {
 	}
 
 	public class ProcessProperties {
+		private static final int THREAD_POOL_SIZE_DEFAULT = 4;
 		private static final int MEDIAN_FILTER_1_WINDOW_DEFAULT = 17;
 		private static final int MEDIAN_FILTER_2_WINDOW_DEFAULT = 3;
 		private static final double RECURRENCE_PLOT_THETA_DEFAULT = 0.15;
 		private static final int RECURRENCE_PLOT_MIN_LENGTH_DEFAULT = 3;
 
+		public final int threadPoolSize;
 		public final int medianFilter1Window;
 		public final int medianFilter2Window;
 		public final double recurrencePlotTheta;
 		public final int recurrencePlotMinLength;
 
-		private ProcessProperties(int window1, int window2, double rpTheta, int rpMinLength) {
+		private ProcessProperties(int threadPoolSize, int window1, int window2,
+				double rpTheta, int rpMinLength) {
+			this.threadPoolSize = threadPoolSize > 0 ? threadPoolSize : THREAD_POOL_SIZE_DEFAULT;
 			this.medianFilter1Window = window1 > 0 ? window1 : MEDIAN_FILTER_1_WINDOW_DEFAULT;
 			this.medianFilter2Window = window2 > 0 ? window2 : MEDIAN_FILTER_2_WINDOW_DEFAULT;
 			this.recurrencePlotTheta = rpTheta > 0 ? rpTheta : RECURRENCE_PLOT_THETA_DEFAULT;
 			this.recurrencePlotMinLength = rpMinLength > 0 ? rpMinLength : RECURRENCE_PLOT_MIN_LENGTH_DEFAULT;
-		}
-	}
-
-	public class DirectoryProperties {
-		private static final String WAV_DIRECTORY_DEFAULT = "wav";
-
-		public final String wav;
-
-		private DirectoryProperties(String wavDirectory) {
-			this.wav = wavDirectory != null ? wavDirectory : WAV_DIRECTORY_DEFAULT;
 		}
 	}
 

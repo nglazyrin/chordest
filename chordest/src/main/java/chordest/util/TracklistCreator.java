@@ -2,12 +2,21 @@ package chordest.util;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Scanner;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class TracklistCreator {
+
+	private static final Logger LOG = LoggerFactory.getLogger(TracklistCreator.class);
 
 	public static List<String> createTracklist(File root, String prefix) {
 		return createTracklist(root, prefix, PathConstants.EXT_LAB);
@@ -35,6 +44,39 @@ public class TracklistCreator {
 			for (File subDir : subDirs) {
 				result.addAll(createTracklist(
 						subDir, prefix + subDir.getName() + PathConstants.SEP));
+			}
+		}
+		return result;
+	}
+
+	public static List<String> readTrackList(String fileName) {
+		List<String> result = new LinkedList<String>();
+		Scanner scanner = null;
+		FileInputStream fis = null;
+		try {
+			LOG.info("Processing " + fileName);
+			fis = new FileInputStream(fileName);
+			scanner = new Scanner(fis);
+			
+			int total = 0;
+			while (scanner.hasNextLine()) {
+				String line = scanner.nextLine();
+				result.add(line);
+				total++;
+			}
+			LOG.info(total + " file names have been read from " + fileName);
+		} catch (FileNotFoundException e) {
+			LOG.error("File not found: " + fileName, e);
+		} finally {
+			if (scanner != null) {
+				scanner.close();
+			}
+			if (fis != null) {
+				try {
+					fis.close();
+				} catch (IOException e) {
+					LOG.error("Error when closing " + fileName, e);
+				}
 			}
 		}
 		return result;

@@ -157,7 +157,7 @@ public class ChordExtractor {
 			int frames = (int) wavFile.getNumFrames();
 			result.totalSeconds = frames * 1.0 / result.samplingRate;
 			
-			result.f0 = TuningFrequencyFinder.getTuningFrequency(waveFileName);
+			result.f0 = TuningFrequencyFinder.getTuningFrequency(waveFileName, c.process.threadPoolSize);
 //				result.f0 = CQConstants.F0_DEFAULT;
 			CQConstants cqConstants = CQConstants.getInstance(result.samplingRate,
 					result.scaleInfo, result.f0, result.startNoteOffsetInSemitonesFromF0);
@@ -169,20 +169,22 @@ public class ChordExtractor {
 			}
 			WaveReader reader = new WaveReader(wavFile, result.beatTimes, windowSize);
 			PooledTransformer transformer = new PooledTransformer(
-					reader, result.beatTimes.length, result.scaleInfo, cqConstants);
+					reader, c.process.threadPoolSize, result.beatTimes.length, result.scaleInfo, cqConstants);
 			result.spectrum = transformer.run();
-			return result;
 		} catch (WavFileException e) {
-			throw new IllegalArgumentException("Error when reading wave file " + waveFileName, e);
+			LOG.error("Error when reading wave file " + waveFileName, e);
 		} catch (IOException e) {
-			throw new IllegalArgumentException("Error when reading wave file " + waveFileName, e);
+			LOG.error("Error when reading wave file " + waveFileName, e);
 		} catch (InterruptedException e) {
-			throw new IllegalArgumentException("Error when reading wave file " + waveFileName, e);
+			LOG.error("Error when reading wave file " + waveFileName, e);
 		} finally {
 			if (wavFile != null) { try {
 				wavFile.close();
-			} catch (IOException ignore) {} }
+			} catch (IOException e) {
+				LOG.error("Error when closing file " + waveFileName, e);
+			} }
 		}
+		return result;
 	}
 
 	private SpectrumData readSpectrum(String spectrumFileName) {

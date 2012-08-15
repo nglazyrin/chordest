@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import chordest.beat.BeatRootAdapter;
 import chordest.chord.ChordExtractor;
-import chordest.lab.CsvFileWriter;
 import chordest.lab.LabFileReader;
 import chordest.lab.LabFileWriter;
 import chordest.lab.LabSimilarity;
@@ -24,25 +23,28 @@ public class SingleFile {
 //	private static final String ALBUM = "05_-_Help!";
 //	private static final String TRACK = "08_-_Act_Naturally";
 //	private static final String TRACK_PATH = ARTIST + SEP + ALBUM + SEP + TRACK + PathConstants.EXT_WAV;
-	private static final String TRACK_PATH = "yellow.wav";
-	
-	private static final String LAB_FILENAME = PathConstants.LAB_DIR + 
-			TRACK_PATH.replace(PathConstants.EXT_WAV, PathConstants.EXT_LAB);
-	private static final String SPECTRUM_DIR = "spectrum_tuning" + SEP;
-	private static final String SPECTRUM_FILENAME = SPECTRUM_DIR + 
-			TRACK_PATH.replace(PathConstants.EXT_WAV, PathConstants.EXT_BIN);
 	private static final Logger LOG = LoggerFactory.getLogger(SingleFile.class);
 
 	public static void main(String[] args) {
+		if (args.length != 4) {
+			LOG.error("Usage: SingleFile /path/to/testFile.wav /path/to/testFileSpectrum.bin /path/to/testFile.lab /path/to/results/");
+			System.exit(-1);
+		}
+		String WAV_FILENAME = args[0];
+		String SPECTRUM_FILENAME = args[1];
+		String LAB_FILENAME = args[2];
+		String RESULT_PATH = args[3];
+		File wavFile = new File(WAV_FILENAME);
+		String RESULT_FILENAME = RESULT_PATH + wavFile.getName() + ".txt";
+		
 		Configuration c = new Configuration("config" + SEP + "parameters.properties");
-		String FILENAME = c.directory.wav + TRACK_PATH;
 		File spectrumFile = new File(SPECTRUM_FILENAME);
 		ChordExtractor ce;
 		if (spectrumFile.exists()) {
 			ce = new ChordExtractor(c, SPECTRUM_FILENAME);
 		} else {
-			BeatRootAdapter beatRoot = new BeatRootAdapter(FILENAME, null);
-			ce = new ChordExtractor(c, FILENAME, beatRoot);
+			BeatRootAdapter beatRoot = new BeatRootAdapter(WAV_FILENAME, null);
+			ce = new ChordExtractor(c, WAV_FILENAME, beatRoot);
 		}
 
 		File labFile = new File(LAB_FILENAME);
@@ -54,26 +56,23 @@ public class SingleFile {
 		}
 		
 		int startOffset = ce.getStartNoteOffsetInSemitonesFromF0();
-		Visualizer.visualizeChords(ce.getChords(), ce.getOriginalBeatTimes(), FILENAME, startOffset);
+		Visualizer.visualizeChords(ce.getChords(), ce.getOriginalBeatTimes(), WAV_FILENAME, startOffset);
 		
-		String wavFileName = FILENAME.substring(FILENAME.lastIndexOf(File.separator) + 1);
-		String labFileName = wavFileName.substring(0, wavFileName.lastIndexOf(".")) + PathConstants.EXT_LAB;
-		String csvFileName = wavFileName.substring(0, wavFileName.lastIndexOf(".")) + PathConstants.EXT_CSV;
 		double[] beatTimes = ce.getOriginalBeatTimes();
 		
 		LabFileWriter labWriter = new LabFileWriter(ce.getChords(), beatTimes);
 		try {
-			labWriter.writeTo(new File(PathConstants.OUTPUT_DIR + labFileName));
+			labWriter.writeTo(new File(RESULT_FILENAME));
 		} catch (IOException e) {
 			LOG.error("Error when writing lab file", e);
 		}
 		
-		CsvFileWriter csvWriter = new CsvFileWriter(ce.getChords(), beatTimes);
-		try {
-			csvWriter.writeTo(new File(PathConstants.OUTPUT_DIR + csvFileName));
-		} catch (IOException e) {
-			LOG.error("Error when writing csv file", e);
-		}
+//		CsvFileWriter csvWriter = new CsvFileWriter(ce.getChords(), beatTimes);
+//		try {
+//			csvWriter.writeTo(new File(PathConstants.OUTPUT_DIR + csvFileName));
+//		} catch (IOException e) {
+//			LOG.error("Error when writing csv file", e);
+//		}
 	}
 
 }

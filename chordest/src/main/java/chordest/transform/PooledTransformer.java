@@ -19,8 +19,6 @@ import chordest.wave.ITaskProvider;
 public class PooledTransformer {
 
 	private static final Logger LOG = LoggerFactory.getLogger(PooledTransformer.class);
-	private static final int POOL_SIZE = 4;
-	private static final int THREADPOOL_QUEUE_SIZE = 3 * POOL_SIZE;
 	private static final int SLEEP_MS = 100;
 
 	private final ITaskProvider provider;
@@ -30,10 +28,11 @@ public class PooledTransformer {
 	private final int transformsInTotal;
 	private final CountDownLatch latch;
 	private final ThreadPoolExecutor threadPool;
+	private final int threadPoolQueueSize;
 	
 	private boolean isCancelRequested = false;
 
-	public PooledTransformer(ITaskProvider provider, int transforms, 
+	public PooledTransformer(ITaskProvider provider, int threadPoolSize, int transforms, 
 			ScaleInfo scaleInfo, CQConstants cqConstants) {
 		if (provider == null) {
 			throw new NullPointerException("Task provider is null");
@@ -43,7 +42,8 @@ public class PooledTransformer {
 		this.cqConstants = cqConstants;
 		this.transformsInTotal = transforms;
 		this.latch = new CountDownLatch(transforms);
-		this.threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(POOL_SIZE);
+		this.threadPoolQueueSize = 3 * threadPoolSize;
+		this.threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadPoolSize);
 	}
 
 	public double[][] run() throws InterruptedException {
@@ -56,7 +56,7 @@ public class PooledTransformer {
 				final ITransform transform = new DummyConstantQTransform(
 						buffer, scaleInfo, latch, cqConstants);
 				// simplest way to limit the queue size of the thread pool
-				while (threadPool.getQueue().size() > THREADPOOL_QUEUE_SIZE) {
+				while (threadPool.getQueue().size() > threadPoolQueueSize) {
 					Thread.sleep(SLEEP_MS);
 				}
 				futures.add(threadPool.submit(transform));

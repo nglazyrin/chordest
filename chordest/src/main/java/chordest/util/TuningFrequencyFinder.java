@@ -23,11 +23,11 @@ public class TuningFrequencyFinder {
 	public static final int NOTES_IN_OCTAVE = 12 * BINS_PER_NOTE;
 	public static final double BASIC_FREQUENCY = 440;
 
-	public static double getTuningFrequency(String fileName) {
-		return getTuningFrequency(fileName, BASIC_FREQUENCY);
+	public static double getTuningFrequency(String fileName, int threadPoolSize) {
+		return getTuningFrequency(fileName, BASIC_FREQUENCY, threadPoolSize);
 	}
 
-	public static double getTuningFrequency(String filename, double basicFrequency) {
+	public static double getTuningFrequency(String filename, double basicFrequency, int threadPoolSize) {
 		WavFile wavFile = null;
 		try {
 			wavFile = WavFile.openWavFile(new File(filename));
@@ -45,7 +45,7 @@ public class TuningFrequencyFinder {
 			
 			WaveReader reader = new WaveReader(wavFile, beatTimes, windowSize);
 			PooledTransformer transformer = new PooledTransformer(
-					reader, beatTimes.length, scaleInfo, cqc);
+					reader, threadPoolSize, beatTimes.length, scaleInfo, cqc);
 			double[][] spectrum = transformer.run();
 			int[] tunes = new int[BINS_PER_NOTE];
 			for (double[] data : spectrum) {
