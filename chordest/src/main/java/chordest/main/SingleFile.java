@@ -11,14 +11,13 @@ import chordest.lab.LabFileReader;
 import chordest.lab.LabFileWriter;
 import chordest.lab.LabSimilarity;
 import chordest.properties.Configuration;
-import chordest.util.PathConstants;
 import chordest.util.Visualizer;
 
 
 
 public class SingleFile {
 
-	private static final String SEP = PathConstants.SEP;
+//	private static final String SEP = PathConstants.SEP;
 //	private static final String ARTIST = "Beatles";
 //	private static final String ALBUM = "05_-_Help!";
 //	private static final String TRACK = "08_-_Act_Naturally";
@@ -37,7 +36,7 @@ public class SingleFile {
 		File wavFile = new File(WAV_FILENAME);
 		String RESULT_FILENAME = RESULT_PATH + wavFile.getName() + ".txt";
 		
-		Configuration c = new Configuration("config" + SEP + "parameters.properties");
+		Configuration c = new Configuration();
 		File spectrumFile = new File(SPECTRUM_FILENAME);
 		ChordExtractor ce;
 		if (spectrumFile.exists()) {

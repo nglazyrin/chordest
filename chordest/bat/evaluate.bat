@@ -1,0 +1,1 @@
+java -cp chordest.jar chordest.main.AccuracyCalculator %*

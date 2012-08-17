@@ -31,7 +31,7 @@ public class LabViewer {
 	public static void main(String[] args) {
 		LabFileReader eReader = new LabFileReader(new File(LAB_EXPECTED_FILENAME));
 		LabFileReader aReader = new LabFileReader(new File(LAB_ACTUAL_FILENAME));
-		Configuration c = new Configuration("config/paremeters.properties");
+		Configuration c = new Configuration();
 		try {
 			String[] labels = NoteLabelProvider.getNoteLabels(c.spectrum.offsetFromF0InSemitones,
 					new ScaleInfo(c.spectrum.octaves, c.spectrum.notesPerOctave));

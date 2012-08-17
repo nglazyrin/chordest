@@ -38,7 +38,7 @@ public class Roundtrip {
 
 	public static void main(String[] args) {
 		List<String> tracklist = TracklistCreator.createTracklist(new File(LAB_DIR), "");
-		Configuration c = new Configuration("config" + SEP + "parameters.properties");
+		Configuration c = new Configuration();
 		double totalOverlap = 0;
 		double totalWeightedOverlap = 0;
 		int totalTracks = 0;

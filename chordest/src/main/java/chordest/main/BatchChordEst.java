@@ -32,7 +32,7 @@ public class BatchChordEst {
 		
 		List<String> tracklist = TracklistCreator.readTrackList(args[0]);
 		
-		Configuration c = new Configuration("parameters.properties");
+		Configuration c = new Configuration();
 		for (final String wavFileName : tracklist) {
 			String labFileName = new File(wavFileName).getName() + ".txt";
 			BeatRootAdapter beatRoot = new BeatRootAdapter(wavFileName, null);

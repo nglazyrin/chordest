@@ -1,5 +1,6 @@
 package chordest.properties;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -18,8 +19,14 @@ public class Configuration {
 	private static final String PROCESS_SELF_SIMILARITY_THETA_KEY = "process.recurrencePlotTheta";
 	private static final String PROCESS_SELF_SIMILARITY_MIN_LENGTH_KEY = "process.recurrencePlotMinLength";
 
+	public static final String DEFAULT_CONFIG_FILE_LOCATION = "config" + File.separator + "chordest.properties";
+
 	public final SpectrumProperties spectrum;
 	public final ProcessProperties process;
+
+	public Configuration() {
+		this(DEFAULT_CONFIG_FILE_LOCATION);
+	}
 
 	public Configuration(String propertiesFile) {
 		Properties prop = new Properties();

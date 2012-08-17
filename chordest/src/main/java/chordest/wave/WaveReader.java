@@ -89,7 +89,7 @@ public class WaveReader implements ITaskProvider {
 	}
 
 	private void skipDataBeforeFirstTimeStamp() throws IOException {
-		if (times[0] > 0) {
+		if (times != null && times.length > 0 && times[0] > 0) {
 			final int firstOffset = offsets[0];
 			final double[][] ignore = createArray(channels, firstOffset);
 			wavFile.readFrames(ignore, firstOffset);

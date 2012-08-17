@@ -121,8 +121,11 @@ public class DataUtil {
 		if (data == null) {
 			throw new NullPointerException("data is null");
 		}
-		if (window < 0 || window > data.length) {
-			throw new IllegalArgumentException("bad window size: " + window);
+		if (window < 0) {
+			throw new IllegalArgumentException("Window size must be >= 0 but was: " + window);
+		} else if (window > data.length) {
+			LOG.warn("Window is too large: " + window + ", only " + data.length + " values are available. Skip smoothing.");
+			return data;
 		}
 		LOG.debug("Performing horizontal smooth with window size: " + window);
 		int cols = data.length;
@@ -596,9 +599,9 @@ public class DataUtil {
 			if (v < d) { left[l++] = v; }
 			else if (v > d) { right[r++] = v; }
 		}
-		if (k <= l) {
+		if (k <= l && l > 0) {
 			return findKthSmallest(left, 0, l, k);
-		} else if (k > size - r) {
+		} else if (k > size - r && r > 0) {
 			return findKthSmallest(right, 0, r,  k - (size - r));
 		} else {
 			return d;

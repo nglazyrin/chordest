@@ -4,7 +4,7 @@
 	<groupId>usu.ru</groupId>
 	<artifactId>chordest</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>similarity</name>
+	<name>chordest</name>
 	<description>This project allows you to recognize chords in a wave file
 	</description>
 	<url>urfu.ru</url>
@@ -18,9 +18,12 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.2-beta-5</version>
 				<configuration>
 					<archive>
 						<manifest>
+							<addClasspath>true</addClasspath>
+							<classpathPrefix>config/</classpathPrefix>
 							<mainClass>chordest.main.BatchChordEst</mainClass>
 						</manifest>
 						<manifestEntries>
@@ -30,27 +33,64 @@
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
 					</descriptorRefs>
-					<finalName>chordest</finalName>
+					<finalName>${project.name}</finalName>
 					<appendAssemblyId>false</appendAssemblyId>
 				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.5.1</version>
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>com.github.goldin</groupId>
+				<artifactId>copy-maven-plugin</artifactId>
+				<version>0.2.5</version>
+				<executions>
+					<execution>
+						<id>create-archive</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<resources>
+								<resource>
+									<targetPath>${project.build.directory}/dist</targetPath>
+									<directory>bat</directory>
+									<include>doChordID.bat</include>
+								</resource>
+								<resource>
+									<targetPath>${project.build.directory}/dist/config</targetPath>
+									<directory>config</directory>
+									<includes>
+										<include>logback.xml</include>
+										<include>chordest.properties</include>
+									</includes>
+								</resource>
+								<resource>
+									<targetPath>${project.build.directory}/dist</targetPath>
+									<directory>${project.build.directory}</directory>
+									<include>${project.name}.jar</include>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
-		<resources>
-			<resource>
-				<directory>.</directory>
-				<includes>
-					<include>config/**/*.*</include>
-				</includes>
-			</resource>
-		</resources>
 	</build>
 	<repositories>
 		<repository>
