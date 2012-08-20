@@ -44,14 +44,11 @@ public class BeatRootAdapter {
 			LOG.debug("Reading beats from " + beatFilePath + "...");
 			this.beatTimes = readBeats(beatFile);
 		} else {
-			LOG.info("Processing " + wavFilePath + " with BeatRoot...");
+			LOG.info("Performing beat detection for " + wavFilePath + " ...");
 			this.beatTimes = findBeats(wavFilePath);
 			if (beatFile != null) {
 				writeBeats(beatFile, true);
 			}
-		}
-		if (this.beatTimes.length == 0) {
-			LOG.warn("BeatRoot beat detection error");
 		}
 		double mean = getMeanBeatLengthInSeconds(this.beatTimes);
 		this.bpm = 60 / mean;
@@ -92,19 +89,19 @@ public class BeatRootAdapter {
 			}
 			return result;
 		} catch (WavFileException e) {
-			LOG.error("Error when reading wave file to generate default beat sequence");
+			LOG.error("Error when reading wave file to generate default beat sequence", e);
 		} catch (IOException e) {
-			LOG.error("Error when reading wave file to generate default beat sequence");
+			LOG.error("Error when reading wave file to generate default beat sequence", e);
 		} finally {
 			if (wavFile != null) {
 				try {
 					wavFile.close();
-				} catch (IOException ignore) {
-					LOG.warn("Error when closing wave file after generation of default beat sequence");
+				} catch (IOException e) {
+					LOG.error("Error when closing wave file after generation of default beat sequence", e);
 				}
 			}
 		}
-		return new double[] { 1, 2, 3, 4, 5 };
+		return new double[] { 0 };
 	}
 
 	public double getBPM() {

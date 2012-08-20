@@ -411,7 +411,7 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[][] toSplSpectrum(double[][] data) {
+	public static double[][] toLogSpectrum(double[][] data) {
 		if (data == null) {
 			throw new NullPointerException("data is null");
 		}
@@ -420,7 +420,7 @@ public class DataUtil {
 		for (int i = 0; i < data.length; i++) {
 			result[i] = new double[data[i].length];
 			for (int j = 0; j < data[i].length; j++) {
-				result[i][j] = Math.log10(1 + data[i][j] * data[i][j]);
+				result[i][j] = Math.log10(1 + data[i][j] * 1000);
 			}
 		}
 		return result;
@@ -476,7 +476,7 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[][] getDiagonalMatrix(double[][] selfSim, double theta, int minLength) {
+	public static double[][] toDiagonalMatrix(double[][] selfSim, double theta, int minLength) {
 		if (selfSim == null) {
 			throw new NullPointerException("self similarity matrix is null");
 		}
@@ -521,7 +521,7 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[][] smoothWithRecurrencePlot(double[][] spectrum, double[][] recurrencePlot) {
+	public static double[][] smoothWithSelfSimilarity(double[][] spectrum, double[][] recurrencePlot) {
 		if (spectrum == null) {
 			throw new NullPointerException("spectrum is null");
 		}

@@ -70,7 +70,10 @@
 								<resource>
 									<targetPath>${project.build.directory}/dist</targetPath>
 									<directory>bat</directory>
-									<include>doChordID.bat</include>
+									<includes>
+										<include>doChordID.bat</include>
+										<include>doChordID.sh</include>
+									</includes>
 								</resource>
 								<resource>
 									<targetPath>${project.build.directory}/dist/config</targetPath>

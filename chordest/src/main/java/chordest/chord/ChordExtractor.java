@@ -98,48 +98,34 @@ public class ChordExtractor {
 	private void doChordExtraction(Configuration c) {
 		double[][] result = spectrum.spectrum;
 		DataUtil.scaleTo01(result);
+		result = DataUtil.toLogSpectrum(result);
 		
 //		String[] labels = NoteLabelProvider.getNoteLabels(startNoteOffsetInSemitonesFromF0, scaleInfo);
 //		String[] labels1 = NoteLabelProvider.getNoteLabels(startNoteOffsetInSemitonesFromF0, new ScaleInfo(1, 12));
 //		Visualizer.visualizeSpectrum(result, beatTimes, labels, "Spectrum as is");
-		
-//		double[][] whitened = DataUtil.smoothHorizontally(result, 16);
 //		whitened = DataUtil.whitenSpectrum(result, scaleInfo.getNotesInOctaveCount());
-//		whitened = DataUtil.removeShortLines(whitened, 8);
-//		Visualizer.visualizeSpectrum(whitened, beatTimes, labels, "Whitened spectrum after short lines removal");
 
 		result = DataUtil.smoothHorizontallyMedian(result, c.process.medianFilter1Window); // step 1
 		result = DataUtil.filterHorizontal3(result);			// step 2
 //		result = DataUtil.removeShortLines(result, 20);			// step 2
-		
-//		Visualizer.visualizeSpectrum(result, beatTimes, labels, "Prewitt filtered spectrum");
 
 //		double[] e = DataUtil.getSoundEnergyByFrequencyDistribution(result);
 //		Visualizer.visualizeXByFrequencyDistribution(e, scaleInfo, startNoteOffsetInSemitonesFromF0);
 
 		result = DataUtil.shrink(result, c.spectrum.framesPerBeat);
-//		whitened = DataUtil.shrink(whitened, c.spectrum.framesPerBeat);
 		
-//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Prewitt after shrink");
-		result = DataUtil.smoothHorizontallyMedian(result, c.process.medianFilter2Window);	// step 3
-//		whitened = DataUtil.smoothHorizontally(whitened, 2);
-//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Prewitt after smooth 2");
-
+//		result = DataUtil.smoothHorizontallyMedian(result, c.process.medianFilter2Window);	// step 3
+		
 		double[][] pcp = DataUtil.toPitchClassProfiles(result, c.spectrum.notesPerOctave);
-//		double[][] pcp = DataUtil.toPitchClassProfiles(whitened, c.spectrum.notesPerOctave);
+		double[][] selfSim = DataUtil.getSelfSimilarity(pcp);		// step 6
+		selfSim = DataUtil.toDiagonalMatrix(selfSim, c.process.selfSimilarityTheta, c.process.selfSimilarityMinLength);					// step 6
+		pcp = DataUtil.smoothWithSelfSimilarity(pcp, selfSim);		// step 6
 		pcp = DataUtil.reduceTo12Notes(pcp);
-//		Visualizer.visualizeSpectrum(pcp, originalBeatTimes, labels1, "PCP");
-		double[][] rp = DataUtil.getSelfSimilarity(pcp);		// step 6
-		rp = DataUtil.getDiagonalMatrix(rp, c.process.selfSimilarityTheta, c.process.selfSimilarityMinLength);					// step 6
-//		Visualizer.visualizeSelfSimilarity(rp, originalBeatTimes);
-		pcp = DataUtil.smoothWithRecurrencePlot(pcp, rp);		// step 6
-//		Visualizer.visualizeSpectrum(pcp, originalBeatTimes, labels1, "PCP with RP");
 
 		Note startNote = Note.byNumber(startNoteOffsetInSemitonesFromF0);
 //		key = Key.recognizeKey(getTonalProfile(pcp, 0, pcp.length), startNote);
 		key = null;
 		TemplatesRecognition second = new TemplatesRecognition(startNote, key);
-//		chords = second.recognize(pcp, scaleInfo);
 		chords = second.recognize(pcp, new ScaleInfo(1, 12));
 	}
 
