@@ -15,9 +15,8 @@ public class Configuration {
 
 	private static final String PROCESS_THREAD_POOL_SIZE_KEY = "process.threadPoolSize";
 	private static final String PROCESS_MEDIAN_FILTER_1_WINDOW_KEY = "process.medianFilter1Window";
-	private static final String PROCESS_MEDIAN_FILTER_2_WINDOW_KEY = "process.medianFilter2Window";
-	private static final String PROCESS_SELF_SIMILARITY_THETA_KEY = "process.recurrencePlotTheta";
-	private static final String PROCESS_SELF_SIMILARITY_MIN_LENGTH_KEY = "process.recurrencePlotMinLength";
+	private static final String PROCESS_SELF_SIMILARITY_THETA_KEY = "process.selfSimilarityTheta";
+	private static final String PROCESS_SELF_SIMILARITY_MIN_LENGTH_KEY = "process.selfSimilarityMinLength";
 
 	public static final String DEFAULT_CONFIG_FILE_LOCATION = "config" + File.separator + "chordest.properties";
 
@@ -56,10 +55,9 @@ public class Configuration {
 
         int threadPoolSize = Integer.parseInt(prop.getProperty(PROCESS_THREAD_POOL_SIZE_KEY));
         int window1 = Integer.parseInt(prop.getProperty(PROCESS_MEDIAN_FILTER_1_WINDOW_KEY));
-        int window2 = Integer.parseInt(prop.getProperty(PROCESS_MEDIAN_FILTER_2_WINDOW_KEY));
         double theta = Double.parseDouble(prop.getProperty(PROCESS_SELF_SIMILARITY_THETA_KEY));
         int minLength = Integer.parseInt(prop.getProperty(PROCESS_SELF_SIMILARITY_MIN_LENGTH_KEY));
-        this.process = new ProcessProperties(threadPoolSize, window1, window2, theta, minLength);
+        this.process = new ProcessProperties(threadPoolSize, window1, theta, minLength);
 	};
 
 	public class SpectrumProperties {
@@ -86,21 +84,17 @@ public class Configuration {
 	public class ProcessProperties {
 		private static final int THREAD_POOL_SIZE_DEFAULT = 4;
 		private static final int MEDIAN_FILTER_1_WINDOW_DEFAULT = 17;
-		private static final int MEDIAN_FILTER_2_WINDOW_DEFAULT = 3;
 		private static final double SELF_SIMILARITY_THETA_DEFAULT = 0.15;
 		private static final int SELF_SIMILARITY_MIN_LENGTH_DEFAULT = 3;
 
 		public final int threadPoolSize;
 		public final int medianFilter1Window;
-		public final int medianFilter2Window;
 		public final double selfSimilarityTheta;
 		public final int selfSimilarityMinLength;
 
-		private ProcessProperties(int threadPoolSize, int window1, int window2,
-				double rpTheta, int rpMinLength) {
+		private ProcessProperties(int threadPoolSize, int window1, double rpTheta, int rpMinLength) {
 			this.threadPoolSize = threadPoolSize > 0 ? threadPoolSize : THREAD_POOL_SIZE_DEFAULT;
 			this.medianFilter1Window = window1 > 0 ? window1 : MEDIAN_FILTER_1_WINDOW_DEFAULT;
-			this.medianFilter2Window = window2 > 0 ? window2 : MEDIAN_FILTER_2_WINDOW_DEFAULT;
 			this.selfSimilarityTheta = rpTheta > 0 ? rpTheta : SELF_SIMILARITY_THETA_DEFAULT;
 			this.selfSimilarityMinLength = rpMinLength > 0 ? rpMinLength : SELF_SIMILARITY_MIN_LENGTH_DEFAULT;
 		}

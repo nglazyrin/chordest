@@ -373,12 +373,13 @@ public class DataUtil {
 		double[][] result = new double[resultLength][];
 		for (int i = 0; i < data.length; i += step) {
 			int left = i;
-			int right = Math.min(i + step, data.length);
+//			int right = Math.min(i + step / 2, data.length);
 			double[] temp = data[left];
-			for (int col = left + 1; col < right; col++) {
-				temp = add(temp, data[col]);
-			}
-			temp = multiply(temp, 1.0 / (right - left));
+//			for (int col = left + 1; col < right; col++) {
+//				double c = (right - col) * 1.0 / (right - left);
+//				temp = add(temp, multiply(data[col], c));
+//			}
+//			temp = multiply(temp, 1.0 / (right - left));
 			result[i / step] = temp;
 		}
 		return result;
@@ -415,7 +416,7 @@ public class DataUtil {
 		if (data == null) {
 			throw new NullPointerException("data is null");
 		}
-		LOG.debug("Calculating the SPL spectrum ...");
+		LOG.debug("Calculating the log spectrum ...");
 		double[][] result = new double[data.length][];
 		for (int i = 0; i < data.length; i++) {
 			result[i] = new double[data[i].length];
@@ -476,11 +477,11 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[][] toDiagonalMatrix(double[][] selfSim, double theta, int minLength) {
+	public static double[][] removeDissimilar(double[][] selfSim, double theta) {
 		if (selfSim == null) {
 			throw new NullPointerException("self similarity matrix is null");
 		}
-		LOG.debug("Calculating the self-similarity matrix with only diagonals ...");
+		LOG.debug("Removing similarity information for dissimilar elements ...");
 		int size = selfSim.length;
 		int preserved = (int) (size * theta);
 		double[][] result = new double[size][];
@@ -488,45 +489,34 @@ public class DataUtil {
 			result[i] = new double[size];
 		}
 		for (int i = 0; i < size; i++) {
-			double[] col = Arrays.copyOf(selfSim[i], size);
-			double eps = findKthSmallest(col, 0, size, preserved);
-//			Arrays.sort(col);
-//			double eps = col[theta];
-//			double eps = col[size - 1];
-			for (int j = i; j < size; j++) {
+			double eps = findKthSmallest(selfSim[i], 0, size, preserved);
+//			double eps = theta;
+			for (int j = 0; j < size; j++) {
 				double value = selfSim[i][j] < eps ? selfSim[i][j] : 1;
 				result[i][j] = value;
-				result[j][i] = value;
+//				result[j][i] = value;
 			}
 		}
 		
-//		int minLength = 3;
+		// if i similar to j, but j is not similar to j then they are dissimilar
 		for (int i = 0; i < size; i++) {
-			for (int j = 0; j < size; j++) {
-				if (i > 0 && j > 0 && result[i][j] < 1 && result[i-1][j-1] < 1) {
-					continue;
-				}
-				int k = 0;
-				while (result[i+k][j+k] < 1 && i+k+1 < size && j+k+1 < size && k < minLength) {
-					k++;
-				}
-				if (k < minLength) {
-					while (--k >= 0) {
-						result[i+k][j+k] = 1;
-						result[j+k][i+k] = 1;
-					}
+			for (int j = i + 1; j < size; j++) {
+				if (result[i][j] == 1 && result[j][i] < 1) {
+					result[j][i] = 1;
+				} else if (result[i][j] < 1 && result[j][i] == 1) {
+					result[i][j] = 1;
 				}
 			}
 		}
 		return result;
 	}
 
-	public static double[][] smoothWithSelfSimilarity(double[][] spectrum, double[][] recurrencePlot) {
+	public static double[][] smoothWithSelfSimilarity(double[][] spectrum, double[][] selfSimilarity) {
 		if (spectrum == null) {
 			throw new NullPointerException("spectrum is null");
 		}
-		if (recurrencePlot == null) {
-			throw new NullPointerException("recurrencePlot is null");
+		if (selfSimilarity == null) {
+			throw new NullPointerException("Self-similarity matrix is null");
 		}
 		LOG.debug("Smoothing the spectrum with diagonal self-similarity matrix ...");
 		int size = spectrum.length;
@@ -535,8 +525,8 @@ public class DataUtil {
 			double[] temp = new double[spectrum[i].length];
 			double sumOfWeights = 0;
 			for (int j = 0; j < size; j++) {
-				double weight = 1 - recurrencePlot[i][j];
-				weight *= weight;
+				double weight = 1 - selfSimilarity[i][j];
+				weight = weight * weight * weight;
 				temp = add(temp, multiply(spectrum[j], weight));
 				sumOfWeights += weight;
 			}
@@ -584,8 +574,8 @@ public class DataUtil {
 	/**
 	 * Modification of QSort
 	 * @param a - array
-	 * @param start - index of 1st element in the array
-	 * @param end - index of last element in the array
+	 * @param start - index of 1st element in the array (inclusive)
+	 * @param end - index of last element in the array (exclusive)
 	 * @param k - the order of value
 	 * @return k-th smallest element in the given array
 	 */

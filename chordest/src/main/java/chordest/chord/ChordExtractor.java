@@ -15,6 +15,7 @@ import chordest.properties.Configuration;
 import chordest.spectrum.SpectrumData;
 import chordest.spectrum.SpectrumFileReader;
 import chordest.transform.CQConstants;
+import chordest.transform.DiscreteCosineTransform;
 import chordest.transform.PooledTransformer;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
@@ -98,7 +99,6 @@ public class ChordExtractor {
 	private void doChordExtraction(Configuration c) {
 		double[][] result = spectrum.spectrum;
 		DataUtil.scaleTo01(result);
-		result = DataUtil.toLogSpectrum(result);
 		
 //		String[] labels = NoteLabelProvider.getNoteLabels(startNoteOffsetInSemitonesFromF0, scaleInfo);
 //		String[] labels1 = NoteLabelProvider.getNoteLabels(startNoteOffsetInSemitonesFromF0, new ScaleInfo(1, 12));
@@ -106,19 +106,17 @@ public class ChordExtractor {
 //		whitened = DataUtil.whitenSpectrum(result, scaleInfo.getNotesInOctaveCount());
 
 		result = DataUtil.smoothHorizontallyMedian(result, c.process.medianFilter1Window); // step 1
-		result = DataUtil.filterHorizontal3(result);			// step 2
-//		result = DataUtil.removeShortLines(result, 20);			// step 2
+		result = DataUtil.shrink(result, c.spectrum.framesPerBeat);
 
 //		double[] e = DataUtil.getSoundEnergyByFrequencyDistribution(result);
 //		Visualizer.visualizeXByFrequencyDistribution(e, scaleInfo, startNoteOffsetInSemitonesFromF0);
 
-		result = DataUtil.shrink(result, c.spectrum.framesPerBeat);
-		
-//		result = DataUtil.smoothHorizontallyMedian(result, c.process.medianFilter2Window);	// step 3
-		
+		result = DataUtil.toLogSpectrum(result);
+		result = DiscreteCosineTransform.doChromaReduction(result);
 		double[][] pcp = DataUtil.toPitchClassProfiles(result, c.spectrum.notesPerOctave);
+		
 		double[][] selfSim = DataUtil.getSelfSimilarity(pcp);		// step 6
-		selfSim = DataUtil.toDiagonalMatrix(selfSim, c.process.selfSimilarityTheta, c.process.selfSimilarityMinLength);					// step 6
+		selfSim = DataUtil.removeDissimilar(selfSim, c.process.selfSimilarityTheta);		// step 6
 		pcp = DataUtil.smoothWithSelfSimilarity(pcp, selfSim);		// step 6
 		pcp = DataUtil.reduceTo12Notes(pcp);
 
@@ -126,7 +124,9 @@ public class ChordExtractor {
 //		key = Key.recognizeKey(getTonalProfile(pcp, 0, pcp.length), startNote);
 		key = null;
 		TemplatesRecognition second = new TemplatesRecognition(startNote, key);
-		chords = second.recognize(pcp, new ScaleInfo(1, 12));
+		Chord[] temp = second.recognize(pcp, new ScaleInfo(1, 12));
+//		chords = temp;
+		chords = Harmony.smoothUsingHarmony(pcp, temp, new ScaleInfo(1, 12), startNote);
 	}
 
 	private SpectrumData readSpectrum(Configuration c, String waveFileName,
