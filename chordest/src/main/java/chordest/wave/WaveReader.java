@@ -7,6 +7,8 @@ import java.util.concurrent.BlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import chordest.util.DataUtil;
+
 import uk.co.labbookpages.WavFile;
 
 public class WaveReader implements ITaskProvider {
@@ -68,6 +70,12 @@ public class WaveReader implements ITaskProvider {
 			// create and fill temporary buffer
 			double[][] current = createArray(channels, currentSize);
 			wavFile.readFrames(current, 0, currentSize);
+			double[] data = current[0];
+			for (int j = 1; j < channels; j++) {
+				data = DataUtil.add(data, current[j]);
+			}
+			data = DataUtil.multiply(data, 1.0 / channels);
+			current = null;
 			
 			// create new buffer for this timestamp
 			// use put instead of add because it is a blocking queue
@@ -76,10 +84,9 @@ public class WaveReader implements ITaskProvider {
 			// append the data from temporary buffer to all buffers
 			for (Buffer buffer : buffers) {
 				if (! buffer.isFull()) {
-					buffer.append(current[0]); // use only one channel
+					buffer.append(data);
 				}
 			}
-			current = null;
 		}
 		// close all remaining buffers
 		for (Buffer buffer : buffers) {
