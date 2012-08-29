@@ -2,9 +2,11 @@ package chordest.lab;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.Locale;
 
 import chordest.chord.Chord;
+import chordest.chord.ChordExtractor;
 
 
 public class LabFileWriter extends AbstractWriter {
@@ -35,6 +37,33 @@ public class LabFileWriter extends AbstractWriter {
 		this.timestamps = timestamps;
 	}
 
+	/**
+	 * Appends one more timestamp that marks end of the last chord played.
+	 * The segment between that timestamp and the end of the file is treated as
+	 * containing N (no chord).
+	 * @param ce
+	 */
+	public LabFileWriter(ChordExtractor ce) {
+		if (ce == null) {
+			throw new NullPointerException("Chord extractor is null");
+		}
+		if (ce.getChords().length + 1 != ce.getOriginalBeatTimes().length) {
+			throw new IllegalArgumentException(String.format(
+					"timestamps.length = %d is not equal to chords.length + 1 = %d",
+					ce.getOriginalBeatTimes().length, ce.getChords().length + 1));
+		}
+		chords = Arrays.copyOf(ce.getChords(), ce.getChords().length + 1);
+		chords[chords.length - 1] = Chord.empty();
+		double[] beatTimes = Arrays.copyOf(ce.getOriginalBeatTimes(), ce.getOriginalBeatTimes().length + 1);
+		if (beatTimes.length > 2) {
+			double beatLength = beatTimes[1] - beatTimes[0];
+			double lastSound = beatTimes[beatTimes.length - 3] + beatLength;
+			beatTimes[beatTimes.length - 1] = beatTimes[beatTimes.length - 2];
+			beatTimes[beatTimes.length - 2] = lastSound;
+		}
+		this.timestamps = beatTimes;
+	}
+
 	@Override
 	public void writeTo(Writer writer) throws IOException {
 		Chord previous = Chord.empty();
@@ -49,7 +78,7 @@ public class LabFileWriter extends AbstractWriter {
 				start = currentTime;
 			}
 		}
-		writer.write(getResultLine(start, this.timestamps[chords.length], previous));
+		writer.write(getResultLine(start, timestamps[timestamps.length - 1], previous));
 	}
 
 	@Override

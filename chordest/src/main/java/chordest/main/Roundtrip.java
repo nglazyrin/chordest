@@ -27,14 +27,10 @@ public class Roundtrip {
 	private static final Logger SIM_LOG = LoggerFactory.getLogger("Similarity");
 
 	private static final String SEP = PathConstants.SEP;
-//	private static final String ARTIST = "Beatles";
-//	private static final String ALBUM = "10CD1_-_The_Beatles";
-//	private static final String PREFIX = ARTIST + SEP + ALBUM + SEP;
-//	private static final String PREFIX = ARTIST + SEP;
 	private static final String CSV_ACTUAL_DIR = PathConstants.CSV_DIR + "actual" + SEP;
 	private static final String CSV_EXPECTED_DIR = PathConstants.CSV_DIR + "expected" + SEP;
 	private static final String LAB_DIR = PathConstants.LAB_DIR;
-	private static final String SPECTRUM_DIR = "spectrum_tuning" + SEP; // step 0
+	private static final String SPECTRUM_DIR = "spectrum_tuning" + SEP;
 
 	public static void main(String[] args) {
 		List<String> tracklist = TracklistCreator.createTracklist(new File(LAB_DIR), "");
@@ -48,8 +44,7 @@ public class Roundtrip {
 		for (final String labFileName : tracklist) {
 			final String csvFileName = labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_CSV);
 			final String spectrumFileName = SPECTRUM_DIR + 
-					labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_BIN);
-//			BeatRootAdapter beatRoot = new BeatRootAdapter(wavFileName, beatFileName);
+					labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_WAV) + PathConstants.EXT_BIN;
 			ChordExtractor ce;
 			if (new File(spectrumFileName).exists()) {
 				ce = new ChordExtractor(c, spectrumFileName);
@@ -61,14 +56,13 @@ public class Roundtrip {
 				ce = new ChordExtractor(c, wavFileName, new BeatRootAdapter(wavFileName, beatFileName));
 			}
 
-			double[] beatTimes = ce.getOriginalBeatTimes();
-			LabFileWriter labWriter = new LabFileWriter(ce.getChords(), beatTimes);
+			LabFileWriter labWriter = new LabFileWriter(ce);
 			try {
 				labWriter.writeTo(new File(PathConstants.OUTPUT_DIR + labFileName));
 			} catch (IOException e) {
 				LOG.error("Error when saving lab file", e);
 			}
-			CsvFileWriter csvWriter = new CsvFileWriter(ce.getChords(), beatTimes);
+			CsvFileWriter csvWriter = new CsvFileWriter(ce.getChords(), ce.getOriginalBeatTimes());
 			try {
 				csvWriter.writeTo(new File(CSV_ACTUAL_DIR + csvFileName));
 			} catch (IOException e) {

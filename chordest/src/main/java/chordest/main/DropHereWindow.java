@@ -66,7 +66,7 @@ public class DropHereWindow extends Component implements Runnable {
 						ChordExtractor ce = new ChordExtractor(c, wavFileName, beatRoot);
 						
 						String labFileName = wavFileName.substring(0, wavFileName.lastIndexOf(".")) + PathConstants.EXT_LAB;
-						LabFileWriter labWriter = new LabFileWriter(ce.getChords(), ce.getOriginalBeatTimes());
+						LabFileWriter labWriter = new LabFileWriter(ce);
 						try {
 							labWriter.writeTo(new File(labFileName));
 						} catch (IOException e) {

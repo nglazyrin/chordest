@@ -73,6 +73,7 @@
 									<includes>
 										<include>doChordID.bat</include>
 										<include>doChordID.sh</include>
+										<include>README.txt</include>
 									</includes>
 								</resource>
 								<resource>

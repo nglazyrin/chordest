@@ -4,7 +4,7 @@ import chordest.chord.Chord;
 import chordest.chord.Note;
 
 
-public class TemplateProducer {
+public class TemplateProducer implements ITemplateProducer {
 
 	private static final int HARMONICS_COUNT = 3;
 	private static final double[] HARMONIC_CONTRIBUTIONS = new double[HARMONICS_COUNT];

@@ -1,5 +1,6 @@
 package chordest.transform;
 
+
 public class DiscreteCosineTransform {
 
 	public static double[] transform(double[] data) {
@@ -32,19 +33,19 @@ public class DiscreteCosineTransform {
 		return result;
 	}
 
-	public static double[] doChromaReduction(double[] data) {
-		int N = 15;
+	public static double[] doChromaReduction(double[] data, int firstNonZero) {
 		double[] dct = transform(data);
-		for (int i = 0; i < N; i++) {
+		firstNonZero = Math.min(firstNonZero, dct.length);
+		for (int i = 0; i < firstNonZero; i++) {
 			dct[i] = 0;
 		}
 		return inverse(dct);
 	}
 
-	public static double[][] doChromaReduction(double[][] data) {
+	public static double[][] doChromaReduction(double[][] data, int firstNonZero) {
 		double[][] result = new double[data.length][];
 		for (int i = 0; i < data.length; i++) {
-			result[i] = doChromaReduction(data[i]);
+			result[i] = doChromaReduction(data[i], firstNonZero);
 		}
 		return result;
 	}

@@ -36,7 +36,9 @@ public class Visualizer {
 
 	public static final void visualizeSpectrum(double[][] spectrum, double[] beatTimes, String[] labels, String title) {
 		try {
-			XYZDataset d3 = DatasetUtil.toXYZDataset(beatTimes, labels, spectrum);
+			double[][] data = copy2dArray(spectrum);
+			DataUtil.scaleTo01(data);
+			XYZDataset d3 = DatasetUtil.toXYZDataset(beatTimes, labels, data);
 			JFreeChartUtils.visualizeStringY(title, "Time", "Frequency", d3, 1000, 400, labels);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -67,6 +69,14 @@ public class Visualizer {
 		XYDataset ds = DatasetUtil.toXYDataset(array);
 		JFreeChartUtils.visualizeStringY("Energy by frequency distribution", "Energy", 
 				"Frequency", ds, 1000, 800, NoteLabelProvider.getNoteLabels(startNoteOffset, scaleInfo));
+	}
+
+	private static final double[][] copy2dArray(double[][] source) {
+		double[][] result = new double[source.length][];
+		for (int i = 0; i < source.length; i++) {
+			result[i] = Arrays.copyOf(source[i], source[i].length);
+		}
+		return result;
 	}
 
 }

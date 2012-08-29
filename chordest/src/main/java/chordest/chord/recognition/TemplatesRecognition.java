@@ -46,7 +46,6 @@ public class TemplatesRecognition {
 	}
 
 	private final Map<Chord, double[]> possibleChords;
-	protected final TemplateProducer templateProducer;
 	protected final Note startNote;
 
 	/**
@@ -54,8 +53,7 @@ public class TemplatesRecognition {
 	 */
 	public TemplatesRecognition(Note pcpStartNote) {
 		startNote = pcpStartNote;
-		templateProducer = new TemplateProducer(pcpStartNote, true);
-		Map<Chord, double[]> map = getAllChords();
+		Map<Chord, double[]> map = getAllChords(new TemplateProducer(pcpStartNote, true));
 		possibleChords = Collections.unmodifiableMap(map);
 	}
 
@@ -66,30 +64,29 @@ public class TemplatesRecognition {
 	 */
 	public TemplatesRecognition(Note pcpStartNote, Key key) {
 		startNote = pcpStartNote;
-		templateProducer = new TemplateProducer(pcpStartNote, true);
+		ITemplateProducer templateProducer = new TemplateProducer(pcpStartNote, true);
 		Map<Chord, double[]> map = new HashMap<Chord, double[]>();
 		if (key != null) {
 			for (Chord chord : key.getChords()) {
 				map.put(chord, templateProducer.getTemplateFor(chord));
 			}
 		} else {
-			map = getAllChords();
+			map = getAllChords(templateProducer);
 		}
 		possibleChords = Collections.unmodifiableMap(map);
 	}
 
 	public TemplatesRecognition(Note pcpStartNote, Collection<Chord> possibleChords,
-			boolean useModifiedTemplates) {
+			ITemplateProducer producer) {
 		startNote = pcpStartNote;
-		templateProducer = new TemplateProducer(pcpStartNote, useModifiedTemplates);
 		Map<Chord, double[]> map = new HashMap<Chord, double[]>();
 		for (Chord chord : possibleChords) {
-			map.put(chord, templateProducer.getTemplateFor(chord));
+			map.put(chord, producer.getTemplateFor(chord));
 		}
 		this.possibleChords = Collections.unmodifiableMap(map);
 	}
 
-	private Map<Chord, double[]> getAllChords() {
+	private Map<Chord, double[]> getAllChords(ITemplateProducer templateProducer) {
 		Map<Chord, double[]> map = new HashMap<Chord, double[]>();
 		for (Chord chord : knownChords) {
 			map.put(chord, templateProducer.getTemplateFor(chord));
@@ -105,7 +102,7 @@ public class TemplatesRecognition {
 			throw new NullPointerException("scaleInfo is null");
 		}
 		final int notesInOctave = scaleInfo.getNotesInOctaveCount();
-		final double[] pcp = DataUtil.toPitchClassProfiles(cqtSpectrum, notesInOctave);
+		final double[] pcp = DataUtil.toSingleOctave(cqtSpectrum, notesInOctave);
 		if (isSmall(pcp)) {
 			return Chord.empty();
 		}
@@ -114,8 +111,7 @@ public class TemplatesRecognition {
 		Map<Chord, Double> distances = new HashMap<Chord, Double>();
 		Map<Chord, double[]> chords = possibleChords;
 		for (Entry<Chord, double[]> entry : chords.entrySet()) {
-			distances.put(entry.getKey(), metric.distance(
-					metric.normalize(entry.getValue()), vector));
+			distances.put(entry.getKey(), metric.distance(metric.normalize(entry.getValue()), vector));
 		}
 		
 		// find element with minimal distance
@@ -143,19 +139,6 @@ public class TemplatesRecognition {
 			result[i] = recognize(cqtSpectrum[i], scaleInfo);
 		}
 		return result;
-	}
-
-	private Note getMaxNote(double[] octave) {
-		double[] vector = metric.normalize(DataUtil.reduceTo12Notes(octave));
-		int maxPos = 0;
-		double max = vector[0];
-		for (int i = 1; i < vector.length; i++) {
-			if (vector[i] > max) {
-				maxPos = i;
-				max = vector[i];
-			}
-		}
-		return startNote.withOffset(maxPos);
 	}
 
 	protected boolean isSmall(double[] vector) {

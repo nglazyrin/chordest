@@ -57,9 +57,7 @@ public class SingleFile {
 		int startOffset = ce.getStartNoteOffsetInSemitonesFromF0();
 		Visualizer.visualizeChords(ce.getChords(), ce.getOriginalBeatTimes(), WAV_FILENAME, startOffset);
 		
-		double[] beatTimes = ce.getOriginalBeatTimes();
-		
-		LabFileWriter labWriter = new LabFileWriter(ce.getChords(), beatTimes);
+		LabFileWriter labWriter = new LabFileWriter(ce);
 		try {
 			labWriter.writeTo(new File(RESULT_FILENAME));
 		} catch (IOException e) {

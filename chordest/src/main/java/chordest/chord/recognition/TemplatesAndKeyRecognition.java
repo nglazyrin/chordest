@@ -20,8 +20,11 @@ public class TemplatesAndKeyRecognition extends TemplatesRecognition {
 	
 	private static final int KEY_WINDOW_SIZE = 64;
 	
-	public TemplatesAndKeyRecognition(Note pcpStartNote) {
+	private ITemplateProducer templateProducer;
+	
+	public TemplatesAndKeyRecognition(Note pcpStartNote, ITemplateProducer producer) {
 		super(pcpStartNote);
+		this.templateProducer = producer;
 	}
 
 	public Chord[] recognize(double[][] cqtSpectrum, ScaleInfo scaleInfo) {
@@ -49,7 +52,7 @@ public class TemplatesAndKeyRecognition extends TemplatesRecognition {
 			throw new NullPointerException("scaleInfo is null");
 		}
 		final int notesInOctave = scaleInfo.getNotesInOctaveCount();
-		final double[] pcp = DataUtil.toPitchClassProfiles(cqtSpectrum, notesInOctave);
+		final double[] pcp = DataUtil.toSingleOctave(cqtSpectrum, notesInOctave);
 		if (isSmall(pcp)) {
 			return Chord.empty();
 		}

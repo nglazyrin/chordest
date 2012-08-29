@@ -251,7 +251,7 @@ public class DataUtil {
 	 * @param notesInOctave Number of spectral components per one octave
 	 * @return
 	 */
-	public static double[] toPitchClassProfiles(double[] cqtSpectrum, int notesInOctave) {
+	public static double[] toSingleOctave(double[] cqtSpectrum, int notesInOctave) {
 		if (cqtSpectrum == null || cqtSpectrum.length == 0) {
 			throw new NullPointerException("cqtSpectrum is null or empty");
 		}
@@ -279,7 +279,7 @@ public class DataUtil {
 	 * @param notesInOctave Number of spectral components per one octave
 	 * @return array of PCP vectors
 	 */
-	public static double[][] toPitchClassProfiles(double[][] cqtSpectrum, int notesInOctave) {
+	public static double[][] toSingleOctave(double[][] cqtSpectrum, int notesInOctave) {
 		if (cqtSpectrum == null) {
 			throw new NullPointerException("data is null");
 		}
@@ -289,7 +289,7 @@ public class DataUtil {
 		LOG.debug("Converting to Pitch Class Profiles ...");
 		double[][] result = new double[cqtSpectrum.length][];
 		for (int i = 0; i < cqtSpectrum.length; i++) {
-			result[i] = DataUtil.toPitchClassProfiles(cqtSpectrum[i], notesInOctave);
+			result[i] = DataUtil.toSingleOctave(cqtSpectrum[i], notesInOctave);
 		}
 		return result;
 	}
@@ -449,6 +449,28 @@ public class DataUtil {
 		return result;
 	}
 
+	public static double[] getSpectralFlatness(double[][] data) {
+		if (data == null) {
+			throw new NullPointerException("data is null");
+		}
+		LOG.debug("Calculating spectral flatness ...");
+		double[] result = new double[data.length];
+		for (int i = 0; i < data.length; i++) {
+			double[] bin = data[i];
+			double sumLogs = 0;
+			double sum = 0;
+			for (int j = 0; j < bin.length; j++) {
+				sum += bin[j];
+				if (bin[j] > 0) {
+					sumLogs += Math.log(bin[j]);
+				}
+			}
+			double flatness = Math.exp(sumLogs / bin.length) / (sum / bin.length);
+			result[i] = 10 * Math.log10(flatness);
+		}
+		return result;
+	}
+
 	public static double[] getFirstOctave(double[] cqtSpectrum, ScaleInfo scaleInfo) {
 		return Arrays.copyOf(cqtSpectrum, scaleInfo.getNotesInOctaveCount());
 	}
@@ -547,7 +569,7 @@ public class DataUtil {
 		return result;
 	}
 
-	private static double[] multiply(double[] a, double c) {
+	public static double[] multiply(double[] a, double c) {
 		double[] result = new double[a.length];
 		if (c != 0) {
 			for (int i = 0; i < a.length; i++) {

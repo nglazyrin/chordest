@@ -12,6 +12,7 @@ import chordest.beat.BeatRootAdapter;
 import chordest.chord.ChordExtractor;
 import chordest.lab.LabFileWriter;
 import chordest.properties.Configuration;
+import chordest.properties.LogConfiguration;
 import chordest.spectrum.SpectrumFileWriter;
 import chordest.util.TracklistCreator;
 
@@ -21,8 +22,7 @@ public class BatchChordEst {
 
 	public static void main(String[] args) {
 		if (args.length < 3) {
-			LOG.error("Usage: BatchChordEst /path/to/testFileList.txt /path/to/scratch/dir /path/to/results/dir");
-			LOG.error("Second argument will be ignored for now, but must be present");
+			System.err.println("Usage: java -jar chordest.jar /path/to/testFileList.txt /path/to/scratch/dir /path/to/results/dir");
 			System.exit(-1);
 		}
 		args[1] = addTrailingSeparatorIfMissing(args[1]);
@@ -30,6 +30,7 @@ public class BatchChordEst {
 		boolean saveSpectra = args.length > 3 && args[3] != null && args[3].contains("s");
 		boolean saveBeats = args.length > 3 && args[3] != null && args[3].contains("b");
 		
+		LogConfiguration.setLogFileDirectory(args[1]);
 		List<String> tracklist = TracklistCreator.readTrackList(args[0]);
 		
 		Configuration c = new Configuration();
@@ -38,7 +39,7 @@ public class BatchChordEst {
 			BeatRootAdapter beatRoot = new BeatRootAdapter(wavFileName, null);
 			ChordExtractor ce = new ChordExtractor(c, wavFileName, beatRoot);
 
-			LabFileWriter labWriter = new LabFileWriter(ce.getChords(), ce.getOriginalBeatTimes());
+			LabFileWriter labWriter = new LabFileWriter(ce);
 			try {
 				labWriter.writeTo(new File(args[2] + labFileName));
 			} catch (IOException e) {
