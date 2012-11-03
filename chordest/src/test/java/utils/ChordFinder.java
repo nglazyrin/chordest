@@ -6,8 +6,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.chord.Chord;
-import chordest.lab.LabFileReader;
+import chordest.io.lab.LabFileReader;
+import chordest.model.Chord;
 import chordest.util.PathConstants;
 import chordest.util.TracklistCreator;
 

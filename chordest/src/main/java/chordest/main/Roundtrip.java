@@ -10,13 +10,14 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.beat.BeatRootAdapter;
 import chordest.chord.ChordExtractor;
-import chordest.lab.CsvFileWriter;
-import chordest.lab.LabFileReader;
-import chordest.lab.LabFileWriter;
-import chordest.lab.LabSimilarity;
-import chordest.properties.Configuration;
+import chordest.chord.ChordListsComparison;
+import chordest.configuration.Configuration;
+import chordest.io.csv.CsvFileWriter;
+import chordest.io.lab.LabFileReader;
+import chordest.io.lab.LabFileWriter;
+import chordest.spectrum.FileSpectrumDataProvider;
+import chordest.spectrum.WaveFileSpectrumDataProvider;
 import chordest.util.MapUtil;
 import chordest.util.PathConstants;
 import chordest.util.TracklistCreator;
@@ -47,13 +48,11 @@ public class Roundtrip {
 					labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_WAV) + PathConstants.EXT_BIN;
 			ChordExtractor ce;
 			if (new File(spectrumFileName).exists()) {
-				ce = new ChordExtractor(c, spectrumFileName);
+				ce = new ChordExtractor(c, new FileSpectrumDataProvider(spectrumFileName));
 			} else {
-				final String beatFileName = PathConstants.BEAT_DIR +
-						labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_BEAT);
 				final String wavFileName = PathConstants.WAV_DIR + 
 						labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_WAV);
-				ce = new ChordExtractor(c, wavFileName, new BeatRootAdapter(wavFileName, beatFileName));
+				ce = new ChordExtractor(c, new WaveFileSpectrumDataProvider(wavFileName, c));
 			}
 
 			LabFileWriter labWriter = new LabFileWriter(ce);
@@ -78,7 +77,7 @@ public class Roundtrip {
 				LOG.error("Error when saving expected csv file", e);
 			}
 			
-			LabSimilarity sim = new LabSimilarity(labReader.getChords(),
+			ChordListsComparison sim = new ChordListsComparison(labReader.getChords(),
 					labReader.getTimestamps(), ce.getChords(), ce.getOriginalBeatTimes());
 			double overlap = sim.getOverlapMeasure();
 			double effectiveSeconds = sim.getTotalSeconds();

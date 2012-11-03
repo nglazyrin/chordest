@@ -1,6 +1,6 @@
 package chordest.util;
 
-import chordest.chord.Note;
+import chordest.model.Note;
 import chordest.transform.ScaleInfo;
 
 public class NoteLabelProvider {

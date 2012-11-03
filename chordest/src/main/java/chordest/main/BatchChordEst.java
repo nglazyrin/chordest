@@ -7,13 +7,13 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.beat.BeatFileWriter;
-import chordest.beat.BeatRootAdapter;
 import chordest.chord.ChordExtractor;
-import chordest.lab.LabFileWriter;
-import chordest.properties.Configuration;
-import chordest.properties.LogConfiguration;
-import chordest.spectrum.SpectrumFileWriter;
+import chordest.configuration.Configuration;
+import chordest.configuration.LogConfiguration;
+import chordest.io.beat.BeatFileWriter;
+import chordest.io.lab.LabFileWriter;
+import chordest.io.spectrum.SpectrumFileWriter;
+import chordest.spectrum.WaveFileSpectrumDataProvider;
 import chordest.util.TracklistCreator;
 
 public class BatchChordEst {
@@ -36,8 +36,7 @@ public class BatchChordEst {
 		Configuration c = new Configuration();
 		for (final String wavFileName : tracklist) {
 			String labFileName = new File(wavFileName).getName() + ".txt";
-			BeatRootAdapter beatRoot = new BeatRootAdapter(wavFileName, null);
-			ChordExtractor ce = new ChordExtractor(c, wavFileName, beatRoot);
+			ChordExtractor ce = new ChordExtractor(c, new WaveFileSpectrumDataProvider(wavFileName, c));
 
 			LabFileWriter labWriter = new LabFileWriter(ce);
 			try {

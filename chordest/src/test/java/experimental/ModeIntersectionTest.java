@@ -6,9 +6,9 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.chord.Chord;
-import chordest.chord.Key;
-import chordest.chord.Note;
+import chordest.model.Chord;
+import chordest.model.Key;
+import chordest.model.Note;
 
 
 public class ModeIntersectionTest {

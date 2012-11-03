@@ -5,12 +5,13 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.beat.BeatRootAdapter;
 import chordest.chord.ChordExtractor;
-import chordest.lab.LabFileReader;
-import chordest.lab.LabFileWriter;
-import chordest.lab.LabSimilarity;
-import chordest.properties.Configuration;
+import chordest.chord.ChordListsComparison;
+import chordest.configuration.Configuration;
+import chordest.io.lab.LabFileReader;
+import chordest.io.lab.LabFileWriter;
+import chordest.spectrum.FileSpectrumDataProvider;
+import chordest.spectrum.WaveFileSpectrumDataProvider;
 import chordest.util.Visualizer;
 
 
@@ -40,16 +41,15 @@ public class SingleFile {
 		File spectrumFile = new File(SPECTRUM_FILENAME);
 		ChordExtractor ce;
 		if (spectrumFile.exists()) {
-			ce = new ChordExtractor(c, SPECTRUM_FILENAME);
+			ce = new ChordExtractor(c, new FileSpectrumDataProvider(SPECTRUM_FILENAME));
 		} else {
-			BeatRootAdapter beatRoot = new BeatRootAdapter(WAV_FILENAME, null);
-			ce = new ChordExtractor(c, WAV_FILENAME, beatRoot);
+			ce = new ChordExtractor(c, new WaveFileSpectrumDataProvider(WAV_FILENAME, c));
 		}
 
 		File labFile = new File(LAB_FILENAME);
 		if (labFile.exists()) {
 			LabFileReader labReader = new LabFileReader(labFile);
-			LabSimilarity sim = new LabSimilarity(labReader.getChords(),
+			ChordListsComparison sim = new ChordListsComparison(labReader.getChords(),
 					labReader.getTimestamps(), ce.getChords(), ce.getOriginalBeatTimes());
 			LOG.info("Overlap measure: " + sim.getOverlapMeasure());
 		}

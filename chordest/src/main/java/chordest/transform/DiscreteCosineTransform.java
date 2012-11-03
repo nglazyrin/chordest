@@ -3,7 +3,7 @@ package chordest.transform;
 
 public class DiscreteCosineTransform {
 
-	public static double[] transform(double[] data) {
+	private static double[] transform(double[] data) {
 		int size = data.length;
 		double[] result = new double[size];
 		double PS = Math.PI / size;
@@ -18,7 +18,7 @@ public class DiscreteCosineTransform {
 		return result;
 	}
 
-	public static double[] inverse(double[] data) {
+	private static double[] inverse(double[] data) {
 		int size = data.length;
 		double[] result = new double[size];
 		double PS = Math.PI / size;
@@ -33,7 +33,7 @@ public class DiscreteCosineTransform {
 		return result;
 	}
 
-	public static double[] doChromaReduction(double[] data, int firstNonZero) {
+	private static double[] doChromaReduction(double[] data, int firstNonZero) {
 		double[] dct = transform(data);
 		firstNonZero = Math.min(firstNonZero, dct.length);
 		for (int i = 0; i < firstNonZero; i++) {

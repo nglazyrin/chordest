@@ -5,9 +5,9 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import chordest.chord.Chord;
-import chordest.chord.Note;
-import chordest.chord.parser.ChordParser;
+import chordest.io.lab.chordparser.ChordParser;
+import chordest.model.Chord;
+import chordest.model.Note;
 
 
 

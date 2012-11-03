@@ -4,9 +4,9 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import chordest.chord.Chord;
-import chordest.chord.Note;
-import chordest.lab.LabSimilarity;
+import chordest.chord.ChordListsComparison;
+import chordest.model.Chord;
+import chordest.model.Note;
 
 
 public class LabSimilarityTest {
@@ -18,7 +18,7 @@ public class LabSimilarityTest {
 		double[] actualTimestamps = new double[] {0.0, 0.6, 1.2, 2.0};
 		Chord[] actualChords = new Chord[] { Chord.major(Note.C), Chord.major(Note.F), Chord.major(Note.A) };
 		
-		LabSimilarity sim = new LabSimilarity(expectedChords, expectedTimestamps, 
+		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
 				actualChords, actualTimestamps);
 		Assert.assertTrue(Math.abs(sim.getOverlapMeasure() - 0.7) < 0.00001);
 	}
@@ -30,7 +30,7 @@ public class LabSimilarityTest {
 		double[] actualTimestamps = new double[] {0.0, 1.1, 2.0};
 		Chord[] actualChords = new Chord[] { Chord.minor(Note.C), Chord.major(Note.A) };
 		
-		LabSimilarity sim = new LabSimilarity(expectedChords, expectedTimestamps, 
+		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
 				actualChords, actualTimestamps);
 		Assert.assertTrue(sim.getOverlapMeasure() < 0.00001);
 	}
@@ -42,7 +42,7 @@ public class LabSimilarityTest {
 		double[] actualTimestamps = new double[] {0.1, 1.1, 2.0};
 		Chord[] actualChords = new Chord[] { Chord.major(Note.C), Chord.minor(Note.A) };
 		
-		LabSimilarity sim = new LabSimilarity(expectedChords, expectedTimestamps, 
+		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
 				actualChords, actualTimestamps);
 		Assert.assertTrue(Math.abs(sim.getOverlapMeasure() - 1.0) < 0.00001);
 	}
@@ -54,7 +54,7 @@ public class LabSimilarityTest {
 		double[] actualTimestamps = new double[] {0.4, 1.1, 1.9};
 		Chord[] actualChords = new Chord[] { Chord.minor(Note.C), Chord.minor(Note.A) };
 		
-		LabSimilarity sim = new LabSimilarity(expectedChords, expectedTimestamps, 
+		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
 				actualChords, actualTimestamps);
 		Assert.assertTrue(Math.abs(sim.getOverlapMeasure() - 0.5) < 0.00001);
 	}
@@ -66,7 +66,7 @@ public class LabSimilarityTest {
 		double[] actualTimestamps = new double[] {0.5, 1.5, 1.5};
 		Chord[] actualChords = new Chord[] { Chord.major(Note.C), Chord.minor(Note.A) };
 		
-		LabSimilarity sim = new LabSimilarity(expectedChords, expectedTimestamps, 
+		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
 				actualChords, actualTimestamps);
 		Assert.assertTrue(Math.abs(sim.getOverlapMeasure() - 0.5) < 0.00001);
 	}
@@ -78,7 +78,7 @@ public class LabSimilarityTest {
 		double[] actualTimestamps = new double[] {0.0, 1.0, 2.0};
 		Chord[] actualChords = new Chord[] { new Chord(Note.C, Chord.MAJ7), new Chord(Note.A, Chord.MIN7) };
 		
-		LabSimilarity sim = new LabSimilarity(expectedChords, expectedTimestamps, 
+		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
 				actualChords, actualTimestamps);
 		Assert.assertTrue(Math.abs(sim.getOverlapMeasure() - 0.0) < 0.00001);
 	}
@@ -90,7 +90,7 @@ public class LabSimilarityTest {
 		double[] actualTimestamps = new double[] {0.0, 1.0, 2.0};
 		Chord[] actualChords = new Chord[] { new Chord(Note.C, Chord.MAJ), new Chord(Note.A, Chord.MAJ7) };
 		
-		LabSimilarity sim = new LabSimilarity(expectedChords, expectedTimestamps, 
+		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
 				actualChords, actualTimestamps);
 		Assert.assertTrue(Math.abs(sim.getOverlapMeasure() - 0.5) < 0.00001);
 	}
@@ -102,7 +102,7 @@ public class LabSimilarityTest {
 		double[] actualTimestamps = new double[] {0.2, 1.0, 2.0};
 		Chord[] actualChords = new Chord[] { Chord.minor(Note.C), Chord.minor(Note.A) };
 		
-		LabSimilarity sim = new LabSimilarity(expectedChords, expectedTimestamps, 
+		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
 				actualChords, actualTimestamps);
 		Assert.assertTrue(Math.abs(sim.getOverlapMeasure() - 0.05) < 0.00001);
 	}
@@ -114,7 +114,7 @@ public class LabSimilarityTest {
 		double[] actualTimestamps = new double[] {0.0, 1.0, 2.0};
 		Chord[] actualChords = new Chord[] { Chord.major(Note.C), Chord.minor(Note.A) };
 		
-		LabSimilarity sim = new LabSimilarity(expectedChords, expectedTimestamps, 
+		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
 				actualChords, actualTimestamps);
 		Assert.assertTrue(Math.abs(sim.getOverlapMeasure() - 0.75) < 0.00001);
 	}

@@ -5,8 +5,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import chordest.chord.recognition.TemplateProducer;
-import chordest.chord.recognition.TemplatesRecognition;
+import chordest.chord.templates.TemplateProducer;
+import chordest.chord.templates.TemplatesRecognition;
+import chordest.model.Chord;
+import chordest.model.Note;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
 

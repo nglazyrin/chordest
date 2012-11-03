@@ -19,7 +19,7 @@ public class TuningFrequencyFinder {
 	private static final Logger LOG = LoggerFactory.getLogger(TuningFrequencyFinder.class);
 	
 	public static final int OCTAVES = 4;
-	public static final int BINS_PER_NOTE = 10;
+	public static final int BINS_PER_NOTE = 20;
 	public static final int NOTES_IN_OCTAVE = 12 * BINS_PER_NOTE;
 	public static final double BASIC_FREQUENCY = 440;
 
@@ -47,26 +47,27 @@ public class TuningFrequencyFinder {
 			PooledTransformer transformer = new PooledTransformer(
 					reader, threadPoolSize, beatTimes.length, scaleInfo, cqc);
 			double[][] spectrum = transformer.run();
-			int[] tunes = new int[BINS_PER_NOTE];
+			double[] tunes = new double[BINS_PER_NOTE];
 			for (double[] data : spectrum) {
-				double[] fold = new double[BINS_PER_NOTE];
+//				double[] fold = new double[BINS_PER_NOTE];
 				int subnote = 0;
 				for (double value : data) {
-					fold[subnote++ % BINS_PER_NOTE] += value;
+					tunes[subnote++ % BINS_PER_NOTE] += value;
 				}
-				int maxPos = 0; double max = fold[0];
-				for (int i = 1; i < fold.length; i++) {
-					if (fold[i] > max) { max = fold[i]; maxPos = i; }
-				}
-				tunes[maxPos]++;
+//				int maxPos = 0; double max = fold[0];
+//				for (int i = 1; i < fold.length; i++) {
+//					if (fold[i] > max) { max = fold[i]; maxPos = i; }
+//				}
+//				tunes[maxPos]++;
 			}
-			int maxPos = 0; int max = tunes[0];
+			int maxPos = 0; double max = tunes[0];
 			for (int i = 1; i < tunes.length; i++) {
 				if (tunes[i] > max) { max = tunes[i]; maxPos = i; }
 			}
 			if (maxPos >= BINS_PER_NOTE/2) {
 				maxPos = maxPos - BINS_PER_NOTE;
 			}
+//			Visualizer.visualizeSpectrumEnergy(tunes, new double[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 });
 			double power = maxPos / (12.0 * BINS_PER_NOTE);
 			double result = Math.pow(2.0, power) * basicFrequency;
 			LOG.info(String.format("Tuning frequency: %f Hz", result));

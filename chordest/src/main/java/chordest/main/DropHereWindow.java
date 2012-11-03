@@ -16,10 +16,10 @@ import net.iharder.filedrop.FileDrop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.beat.BeatRootAdapter;
 import chordest.chord.ChordExtractor;
-import chordest.lab.LabFileWriter;
-import chordest.properties.Configuration;
+import chordest.configuration.Configuration;
+import chordest.io.lab.LabFileWriter;
+import chordest.spectrum.WaveFileSpectrumDataProvider;
 import chordest.util.PathConstants;
 
 public class DropHereWindow extends Component implements Runnable {
@@ -61,9 +61,8 @@ public class DropHereWindow extends Component implements Runnable {
 						String wavFileName = file.getAbsolutePath();
 						LOG.info(wavFileName);
 						Configuration c = new Configuration();
-						BeatRootAdapter beatRoot = new BeatRootAdapter(wavFileName, null);
 						progressBar.setValue(10);
-						ChordExtractor ce = new ChordExtractor(c, wavFileName, beatRoot);
+						ChordExtractor ce = new ChordExtractor(c, new WaveFileSpectrumDataProvider(wavFileName, c));
 						
 						String labFileName = wavFileName.substring(0, wavFileName.lastIndexOf(".")) + PathConstants.EXT_LAB;
 						LabFileWriter labWriter = new LabFileWriter(ce);

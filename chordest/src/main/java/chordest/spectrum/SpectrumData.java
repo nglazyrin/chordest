@@ -8,6 +8,7 @@ import chordest.transform.ScaleInfo;
 
 
 
+
 public class SpectrumData implements Serializable {
 
 	private static final long serialVersionUID = 6953384572465365607L;

@@ -6,10 +6,10 @@ import java.util.concurrent.ExecutionException;
 
 import org.jfree.data.xy.XYZDataset;
 
-import chordest.chord.Note;
+import chordest.configuration.Configuration;
 import chordest.gui.JFreeChartUtils;
-import chordest.lab.LabFileReader;
-import chordest.properties.Configuration;
+import chordest.io.lab.LabFileReader;
+import chordest.model.Note;
 import chordest.transform.ScaleInfo;
 import chordest.util.DatasetUtil;
 import chordest.util.NoteLabelProvider;

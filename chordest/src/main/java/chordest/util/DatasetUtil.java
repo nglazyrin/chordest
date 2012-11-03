@@ -9,8 +9,8 @@ import org.jfree.data.xy.XYZDataset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.chord.Chord;
-import chordest.chord.Note;
+import chordest.model.Chord;
+import chordest.model.Note;
 
 
 

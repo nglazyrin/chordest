@@ -4,12 +4,12 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import chordest.chord.Chord;
-import chordest.chord.Note;
-import chordest.chord.parser.ChordParser;
-import chordest.chord.parser.ParseException;
-import chordest.chord.parser.TokenMgrError;
-import chordest.chord.recognition.TemplatesRecognition;
+import chordest.chord.templates.TemplatesRecognition;
+import chordest.io.lab.chordparser.ChordParser;
+import chordest.io.lab.chordparser.ParseException;
+import chordest.io.lab.chordparser.TokenMgrError;
+import chordest.model.Chord;
+import chordest.model.Note;
 
 
 public class TemplatesRecognitionTest {

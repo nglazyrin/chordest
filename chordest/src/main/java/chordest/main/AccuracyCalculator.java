@@ -9,8 +9,8 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.lab.LabFileReader;
-import chordest.lab.LabSimilarity;
+import chordest.chord.ChordListsComparison;
+import chordest.io.lab.LabFileReader;
 import chordest.util.MapUtil;
 import chordest.util.TracklistCreator;
 
@@ -41,7 +41,7 @@ public class AccuracyCalculator {
 			LabFileReader expectedReader = new LabFileReader(expected);
 			LabFileReader actualReader = new LabFileReader(new File(actualTracklist.get(i)));
 			
-			LabSimilarity sim = new LabSimilarity(
+			ChordListsComparison sim = new ChordListsComparison(
 					expectedReader.getChords(), expectedReader.getTimestamps(),
 					actualReader.getChords(), actualReader.getTimestamps());
 			double overlap = sim.getOverlapMeasure();

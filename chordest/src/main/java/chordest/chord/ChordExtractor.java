@@ -1,26 +1,21 @@
 package chordest.chord;
 
-import java.io.File;
-import java.io.IOException;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import uk.co.labbookpages.WavFile;
-import uk.co.labbookpages.WavFileException;
-import chordest.beat.BeatRootAdapter;
-import chordest.chord.recognition.TemplatesRecognition;
-import chordest.properties.Configuration;
+import chordest.chord.templates.TemplatesRecognition;
+import chordest.configuration.Configuration;
+import chordest.model.Chord;
+import chordest.model.Key;
+import chordest.model.Note;
+import chordest.spectrum.ISpectrumDataProvider;
 import chordest.spectrum.SpectrumData;
-import chordest.spectrum.SpectrumFileReader;
 import chordest.transform.CQConstants;
 import chordest.transform.DiscreteCosineTransform;
-import chordest.transform.PooledTransformer;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
-import chordest.util.TuningFrequencyFinder;
-import chordest.wave.WaveReader;
+import chordest.util.NoteLabelProvider;
 
 /**
  * This class incapsulates all the chord extraction logic. All you need is to
@@ -46,19 +41,8 @@ public class ChordExtractor {
 	private Chord[] chords;
 	private Key key;
 
-	public ChordExtractor(Configuration c, String wavFilePath, BeatRootAdapter beatRoot) {
-		originalBeatTimes = beatRoot.getBeatTimes();
-		expandedBeatTimes = DataUtil.makeMoreFrequent(originalBeatTimes, c.spectrum.framesPerBeat);
-		LOG.debug("Transforms: " + expandedBeatTimes.length);
-		
-		spectrum = readSpectrum(c, wavFilePath, expandedBeatTimes);
-		totalSeconds = spectrum.totalSeconds;
-		startNoteOffsetInSemitonesFromF0 = spectrum.startNoteOffsetInSemitonesFromF0;
-		doChordExtraction(c);
-	}
-
-	public ChordExtractor(Configuration c, String spectrumFilePath) {
-		spectrum = readSpectrum(spectrumFilePath);
+	public ChordExtractor(Configuration c, ISpectrumDataProvider spectrumProvider) {
+		spectrum = spectrumProvider.getSpectrumData();
 		totalSeconds = spectrum.totalSeconds;
 		startNoteOffsetInSemitonesFromF0 = spectrum.startNoteOffsetInSemitonesFromF0;
 		expandedBeatTimes = restoreBeatTimes();
@@ -99,7 +83,7 @@ public class ChordExtractor {
 	private void doChordExtraction(Configuration c) {
 		double[][] result = spectrum.spectrum;
 		
-//		String[] labels = NoteLabelProvider.getNoteLabels(startNoteOffsetInSemitonesFromF0, spectrum.scaleInfo);
+		String[] labels = NoteLabelProvider.getNoteLabels(startNoteOffsetInSemitonesFromF0, spectrum.scaleInfo);
 //		String[] labels1 = NoteLabelProvider.getNoteLabels(startNoteOffsetInSemitonesFromF0, new ScaleInfo(1, 12));
 //		whitened = DataUtil.whitenSpectrum(result, scaleInfo.getNotesInOctaveCount());
 
@@ -113,11 +97,16 @@ public class ChordExtractor {
 //		Visualizer.visualizeXByFrequencyDistribution(e, scaleInfo, startNoteOffsetInSemitonesFromF0);
 
 		result = DataUtil.toLogSpectrum(result);
-		result = DiscreteCosineTransform.doChromaReduction(result, c.process.crpFirstNonZero);
-//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Chroma reduced spectrum");
-		
-		double[][] selfSim = DataUtil.getSelfSimilarity(result);
+
+//		double[][] red50 = DiscreteCosineTransform.doChromaReduction(result, 50);
+//		Visualizer.visualizeSpectrum(red50, originalBeatTimes, labels, "Reduced 50");
+		double[][] red30 = DiscreteCosineTransform.doChromaReduction(result, 30);
+//		Visualizer.visualizeSpectrum(red30, originalBeatTimes, labels, "Reduced 30");
+		double[][] selfSim = DataUtil.getSelfSimilarity(red30);
 		selfSim = DataUtil.removeDissimilar(selfSim, c.process.selfSimilarityTheta);
+		
+		result = DiscreteCosineTransform.doChromaReduction(result, c.process.crpFirstNonZero);
+//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Reduced 10");
 		result = DataUtil.smoothWithSelfSimilarity(result, selfSim);
 		
 		result = DataUtil.toSingleOctave(result, c.spectrum.notesPerOctave);
@@ -141,65 +130,9 @@ public class ChordExtractor {
 		chords = Harmony.smoothUsingHarmony(chromas, temp, new ScaleInfo(1, 12), startNote);
 	}
 
-	private SpectrumData readSpectrum(Configuration c, String waveFileName,
-			 double[] expandedBeatTimes) {
-		SpectrumData result = new SpectrumData();
-		result.beatTimes = expandedBeatTimes;
-		result.scaleInfo = new ScaleInfo(c.spectrum.octaves, c.spectrum.notesPerOctave);
-		result.startNoteOffsetInSemitonesFromF0 = c.spectrum.offsetFromF0InSemitones;
-		result.wavFilePath = waveFileName;
-		WavFile wavFile = null;
-		try {
-			wavFile = WavFile.openWavFile(new File(waveFileName));
-			result.samplingRate = (int) wavFile.getSampleRate();
-			int frames = (int) wavFile.getNumFrames();
-			result.totalSeconds = frames * 1.0 / result.samplingRate;
-			
-			result.f0 = TuningFrequencyFinder.getTuningFrequency(waveFileName, c.process.threadPoolSize);
-//				result.f0 = CQConstants.F0_DEFAULT;
-			CQConstants cqConstants = CQConstants.getInstance(result.samplingRate,
-					result.scaleInfo, result.f0, result.startNoteOffsetInSemitonesFromF0);
-			int windowSize = cqConstants.getWindowLengthForComponent(0) + 1; // the longest window
-			// need to make windows centered at the beat positions, so shift them to the left
-			double shift = getWindowsShift(result);
-			for (int i = 0; i < result.beatTimes.length; i++) {
-				result.beatTimes[i] -= shift;
-			}
-			WaveReader reader = new WaveReader(wavFile, result.beatTimes, windowSize);
-			PooledTransformer transformer = new PooledTransformer(
-					reader, c.process.threadPoolSize, result.beatTimes.length, result.scaleInfo, cqConstants);
-			result.spectrum = transformer.run();
-		} catch (WavFileException e) {
-			LOG.error("Error when reading wave file " + waveFileName, e);
-		} catch (IOException e) {
-			LOG.error("Error when reading wave file " + waveFileName, e);
-		} catch (InterruptedException e) {
-			LOG.error("Error when reading wave file " + waveFileName, e);
-		} finally {
-			if (wavFile != null) { try {
-				wavFile.close();
-			} catch (IOException e) {
-				LOG.error("Error when closing file " + waveFileName, e);
-			} }
-		}
-		return result;
-	}
-
-	private SpectrumData readSpectrum(String spectrumFileName) {
-		SpectrumData serialized = SpectrumFileReader.read(spectrumFileName);
-		if (serialized != null) {
-			LOG.info("Spectrum was read from " + spectrumFileName);
-		}
-		return serialized;
-	}
-
 	public double[] getOriginalBeatTimes() {
 		return ArrayUtils.add(originalBeatTimes, totalSeconds);
 //		return originalBeatTimes;
-	}
-
-	public double[] getBeatTimes() {
-		return expandedBeatTimes;
 	}
 
 	public Chord[] getChords() {

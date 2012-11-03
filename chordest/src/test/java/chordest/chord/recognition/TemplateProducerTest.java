@@ -6,9 +6,9 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import chordest.chord.Chord;
-import chordest.chord.Note;
-import chordest.chord.recognition.TemplateProducer;
+import chordest.chord.templates.TemplateProducer;
+import chordest.model.Chord;
+import chordest.model.Note;
 
 
 public class TemplateProducerTest {

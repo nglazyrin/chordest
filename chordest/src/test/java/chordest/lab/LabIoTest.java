@@ -8,9 +8,9 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import chordest.chord.Chord;
-import chordest.lab.LabFileReader;
-import chordest.lab.LabFileWriter;
+import chordest.io.lab.LabFileReader;
+import chordest.io.lab.LabFileWriter;
+import chordest.model.Chord;
 import chordest.util.PathConstants;
 
 
