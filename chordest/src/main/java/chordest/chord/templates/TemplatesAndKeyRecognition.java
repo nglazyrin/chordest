@@ -77,6 +77,7 @@ public class TemplatesAndKeyRecognition extends TemplatesRecognition {
 				minKey = entry.getKey();
 			}
 		}
+		LOG.info("Recognized key: " + minKey.toString());
 		return minKey;
 	}
 

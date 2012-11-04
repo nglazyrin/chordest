@@ -79,8 +79,8 @@ public class Roundtrip {
 			
 			ChordListsComparison sim = new ChordListsComparison(labReader.getChords(),
 					labReader.getTimestamps(), ce.getChords(), ce.getOriginalBeatTimes());
-			double overlap = sim.getOverlapMeasure();
-			double effectiveSeconds = sim.getTotalSeconds();
+			final double overlap = sim.getOverlapMeasure();
+			final double effectiveSeconds = sim.getTotalSeconds();
 			totalOverlap += overlap;
 			totalWeightedOverlap += (overlap * effectiveSeconds);
 			totalLength += effectiveSeconds;
@@ -99,7 +99,7 @@ public class Roundtrip {
 			LOG.info(labFileName + ": " + overlap);
 			LOG.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 			SIM_LOG.info(labFileName.replace(',', '_').replace('\\', '/') + "," + ce.getKey() + "," +
-					overlap + "," + effectiveSeconds + "," + ce.getTotalSeconds());
+					overlap + "," + effectiveSeconds + "," + ce.getSpectrum().totalSeconds);
 		}
 		
 		LOG.info("Test finished");

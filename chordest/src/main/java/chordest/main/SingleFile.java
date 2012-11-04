@@ -54,7 +54,7 @@ public class SingleFile {
 			LOG.info("Overlap measure: " + sim.getOverlapMeasure());
 		}
 		
-		int startOffset = ce.getStartNoteOffsetInSemitonesFromF0();
+		int startOffset = ce.getSpectrum().startNoteOffsetInSemitonesFromF0;
 		Visualizer.visualizeChords(ce.getChords(), ce.getOriginalBeatTimes(), WAV_FILENAME, startOffset);
 		
 		LabFileWriter labWriter = new LabFileWriter(ce);

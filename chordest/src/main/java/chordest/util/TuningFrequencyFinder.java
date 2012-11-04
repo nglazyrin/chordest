@@ -27,7 +27,7 @@ public class TuningFrequencyFinder {
 		return getTuningFrequency(fileName, BASIC_FREQUENCY, threadPoolSize);
 	}
 
-	public static double getTuningFrequency(String filename, double basicFrequency, int threadPoolSize) {
+	private static double getTuningFrequency(String filename, double basicFrequency, int threadPoolSize) {
 		WavFile wavFile = null;
 		try {
 			wavFile = WavFile.openWavFile(new File(filename));

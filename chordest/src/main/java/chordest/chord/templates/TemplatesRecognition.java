@@ -16,6 +16,7 @@ import chordest.model.Key;
 import chordest.model.Note;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
+import chordest.util.MapUtil;
 import chordest.util.metric.IMetric;
 import chordest.util.metric.KLMetric;
 
@@ -28,6 +29,9 @@ public class TemplatesRecognition {
 	
 	public static final IMetric metric = new KLMetric();			// step 4
 //	public static final IMetric metric = new CosineMetric();
+
+	private double diff = 0;
+	private double vectorsProcessed = 0;
 
 	static {
 		String[] shorthands = new String[] {
@@ -94,7 +98,7 @@ public class TemplatesRecognition {
 		return map;
 	}
 
-	public Chord recognize(double[] cqtSpectrum, ScaleInfo scaleInfo) {
+	public Chord recognize(final double[] cqtSpectrum, final ScaleInfo scaleInfo) {
 		if (cqtSpectrum == null) {
 			throw new NullPointerException("spectrum is null");
 		}
@@ -103,30 +107,34 @@ public class TemplatesRecognition {
 		}
 		final int notesInOctave = scaleInfo.getNotesInOctaveCount();
 		final double[] pcp = DataUtil.toSingleOctave(cqtSpectrum, notesInOctave);
-		if (isSmall(pcp)) {
-			return Chord.empty();
-		}
+//		if (isSmall(pcp)) {
+//			return Chord.empty();
+//		}
 		final double[] vector = metric.normalize(DataUtil.reduceTo12Notes(pcp));
 		
-		Map<Chord, Double> distances = new HashMap<Chord, Double>();
-		Map<Chord, double[]> chords = possibleChords;
+		final Map<Chord, Double> distances = new HashMap<Chord, Double>();
+		final Map<Chord, double[]> chords = possibleChords;
 		for (Entry<Chord, double[]> entry : chords.entrySet()) {
 			distances.put(entry.getKey(), metric.distance(metric.normalize(entry.getValue()), vector));
 		}
 		
 		// find element with minimal distance
-		Chord minKey = new Chord();
-		double minValue = Double.MAX_VALUE;
-		for (Entry<Chord, Double> entry : distances.entrySet()) {
-			if (entry.getValue() < minValue) {
-				minValue = entry.getValue();
-				minKey = entry.getKey();
-			}
-		}
-		return minKey;
+		List<Entry<Chord, Double>> sorted = MapUtil.sortMapByValue(distances, true);
+		diff += (sorted.get(1).getValue() - sorted.get(0).getValue());
+		vectorsProcessed++;
+		return sorted.get(0).getKey();
+//		Chord minKey = new Chord();
+//		double minValue = Double.MAX_VALUE;
+//		for (Entry<Chord, Double> entry : distances.entrySet()) {
+//			if (entry.getValue() < minValue) {
+//				minValue = entry.getValue();
+//				minKey = entry.getKey();
+//			}
+//		}
+//		return minKey;
 	}
 
-	public Chord[] recognize(double[][] cqtSpectrum, ScaleInfo scaleInfo) {
+	public Chord[] recognize(final double[][] cqtSpectrum, final ScaleInfo scaleInfo) {
 		if (cqtSpectrum == null) {
 			throw new NullPointerException("spectrum is null");
 		}
@@ -141,7 +149,11 @@ public class TemplatesRecognition {
 		return result;
 	}
 
-	protected boolean isSmall(double[] vector) {
+	public double getDiffNormalized() {
+		return diff / vectorsProcessed;
+	}
+
+	protected boolean isSmall(final double[] vector) {
 //		return metric.distance(vector, new double[12]) < 0.05;
 		return false;
 	}

@@ -85,7 +85,7 @@ public class DataUtil {
 	 * @param window Size of smoothing window
 	 * @return
 	 */
-	public static double[][] smoothHorizontally(double[][] data, int window) {
+	public static double[][] smoothHorizontally(final double[][] data, final int window) {
 		if (data == null) {
 			throw new NullPointerException("data is null");
 		}
@@ -122,7 +122,7 @@ public class DataUtil {
 	 * @param window Size of smoothing window
 	 * @return
 	 */
-	public static double[][] smoothHorizontallyMedian(double[][] data, int window) {
+	public static double[][] smoothHorizontallyMedian(final double[][] data, final int window) {
 		if (data == null) {
 			throw new NullPointerException("data is null");
 		}
@@ -173,7 +173,7 @@ public class DataUtil {
 	 * @param data
 	 * @return
 	 */
-	public static double[][] filterHorizontal3(double[][] data) {
+	public static double[][] filterHorizontal3(final double[][] data) {
 		if (data == null) {
 			throw new NullPointerException("data is null");
 		}
@@ -217,7 +217,7 @@ public class DataUtil {
 	 * @param tooShort Threshold value for the segment length
 	 * @return
 	 */
-	public static double[][] removeShortLines(double[][] data, int tooShort) {
+	public static double[][] removeShortLines(final double[][] data, final int tooShort) {
 		if (data == null) {
 			throw new NullPointerException("data is null");
 		}
@@ -256,7 +256,7 @@ public class DataUtil {
 	 * @param notesInOctave Number of spectral components per one octave
 	 * @return
 	 */
-	public static double[] toSingleOctave(double[] cqtSpectrum, int notesInOctave) {
+	public static double[] toSingleOctave(final double[] cqtSpectrum, final int notesInOctave) {
 		if (cqtSpectrum == null || cqtSpectrum.length == 0) {
 			throw new NullPointerException("cqtSpectrum is null or empty");
 		}
@@ -284,7 +284,7 @@ public class DataUtil {
 	 * @param notesInOctave Number of spectral components per one octave
 	 * @return array of PCP vectors
 	 */
-	public static double[][] toSingleOctave(double[][] cqtSpectrum, int notesInOctave) {
+	public static double[][] toSingleOctave(final double[][] cqtSpectrum, final int notesInOctave) {
 		if (cqtSpectrum == null) {
 			throw new NullPointerException("data is null");
 		}
@@ -308,7 +308,7 @@ public class DataUtil {
 	 * @param pcp 12*N-dimensional vector
 	 * @return 12-dimensional vector
 	 */
-	public static double[] reduceTo12Notes(double[] pcp) {
+	public static double[] reduceTo12Notes(final double[] pcp) {
 		if (pcp.length % 12 != 0) {
 			throw new IllegalArgumentException("There must be 12 * N subnotes. " 
 					+ pcp.length + " is not multiple of 12");
@@ -344,7 +344,7 @@ public class DataUtil {
 	 * @param data array of PCP vectors
 	 * @return array of 12-dimensional vectors
 	 */
-	public static double[][] reduceTo12Notes(double[][] data) {
+	public static double[][] reduceTo12Notes(final double[][] data) {
 		if (data == null) {
 			throw new NullPointerException("data is null");
 		}
@@ -366,7 +366,7 @@ public class DataUtil {
 	 * @param step Region size
 	 * @return An array of columns
 	 */
-	public static double[][] shrink(double[][] data, int step) {
+	public static double[][] shrink(final double[][] data, final int step) {
 		if (data == null) {
 			throw new NullPointerException("data is null");
 		}
@@ -398,7 +398,7 @@ public class DataUtil {
 	 * @param times
 	 * @return
 	 */
-	public static double[] makeMoreFrequent(double[] array, int times) {
+	public static double[] makeMoreFrequent(final double[] array, final int times) {
 		if (array == null) {
 			throw new NullPointerException("beatTimes is null");
 		}
@@ -417,7 +417,7 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[][] toLogSpectrum(double[][] data) {
+	public static double[][] toLogSpectrum(final double[][] data) {
 		if (data == null) {
 			throw new NullPointerException("data is null");
 		}
@@ -432,7 +432,7 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[][] whitenSpectrum(double[][] data, int octaveSize) {
+	public static double[][] whitenSpectrum(final double[][] data, final int octaveSize) {
 		if (data == null) {
 			throw new NullPointerException("data is null");
 		}
@@ -454,7 +454,7 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[] getSpectralFlatness(double[][] data) {
+	public static double[] getSpectralFlatness(final double[][] data) {
 		if (data == null) {
 			throw new NullPointerException("data is null");
 		}
@@ -476,11 +476,11 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[] getFirstOctave(double[] cqtSpectrum, ScaleInfo scaleInfo) {
+	public static double[] getFirstOctave(final double[] cqtSpectrum, final ScaleInfo scaleInfo) {
 		return Arrays.copyOf(cqtSpectrum, scaleInfo.getNotesInOctaveCount());
 	}
 
-	public static double[][] getSelfSimilarity(double[][] spectrum) {
+	public static double[][] getSelfSimilarity(final double[][] spectrum) {
 		if (spectrum == null) {
 			throw new NullPointerException("spectrum is null");
 		}
@@ -504,7 +504,7 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[][] removeDissimilar(double[][] selfSim, double theta) {
+	public static double[][] removeDissimilar(final double[][] selfSim, final double theta) {
 		if (selfSim == null) {
 			throw new NullPointerException("self similarity matrix is null");
 		}
@@ -538,7 +538,7 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[][] smoothWithSelfSimilarity(double[][] spectrum, double[][] selfSimilarity) {
+	public static double[][] smoothWithSelfSimilarity(final double[][] spectrum, final double[][] selfSimilarity) {
 		if (spectrum == null) {
 			throw new NullPointerException("spectrum is null");
 		}
@@ -553,7 +553,7 @@ public class DataUtil {
 			double sumOfWeights = 0;
 			for (int j = 0; j < size; j++) {
 				double weight = 1 - selfSimilarity[i][j];
-				weight = weight * weight * weight;
+//				weight = weight * weight * weight;
 				temp = add(temp, multiply(spectrum[j], weight));
 				sumOfWeights += weight;
 			}
@@ -563,7 +563,7 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[] add(double[] a1, double[] a2) {
+	public static double[] add(final double[] a1, final double[] a2) {
 		if (a1.length != a2.length) {
 			throw new IllegalArgumentException("Arrays have different lengths");
 		}
@@ -574,7 +574,7 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[] multiply(double[] a, double c) {
+	public static double[] multiply(final double[] a, final double c) {
 		double[] result = new double[a.length];
 		if (c != 0) {
 			for (int i = 0; i < a.length; i++) {
@@ -584,7 +584,7 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[] sumVectors(double[][] pcps, int from, int to) {
+	public static double[] sumVectors(final double[][] pcps, final int from, final int to) {
 		if (pcps == null) {
 			throw new NullPointerException("pcps is null");
 		}
@@ -606,7 +606,7 @@ public class DataUtil {
 	 * @param k - the order of value
 	 * @return k-th smallest element in the given array
 	 */
-	private static double findKthSmallest(double[] a, int start, int end, int k) {
+	private static double findKthSmallest(final double[] a, final int start, final int end, int k) {
 		int size = end - start;
 		double[] left = new double[size], right = new double[size];
 		int l = 0, r = 0;
@@ -625,7 +625,7 @@ public class DataUtil {
 		}
 	}
 
-	public static double[] generateDefaultBeats(String wavFilePath) {
+	public static double[] generateDefaultBeats(final String wavFilePath) {
 		LOG.warn("Error occured during BeatRoot processing, generating a dummy sequence of beats");
 		WavFile wavFile = null;
 		try {

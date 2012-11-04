@@ -14,12 +14,12 @@ public class ChordListsComparison {
 	private final double[] expectedTimestamps;
 	private final Chord[] actual;
 	private final double[] actualTimestamps;
+	private final Map<String, Double> errors = new HashMap<String, Double>();
 	private double overlapMeasure;
-	private Map<String, Double> errors = new HashMap<String, Double>();
 	private double totalSeconds = 0;
 
-	public ChordListsComparison(Chord[] expected, double[] expectedTimestamps,
-			Chord[] actual, double[] actualTimestamps) {
+	public ChordListsComparison(final Chord[] expected, final double[] expectedTimestamps,
+			final Chord[] actual, final double[] actualTimestamps) {
 		if (expected == null) {
 			throw new NullPointerException("expected is null");
 		}

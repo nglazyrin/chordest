@@ -14,8 +14,8 @@ import chordest.util.DataUtil;
 
 public class Harmony {
 
-	public static Chord[] smoothUsingHarmony(double[][] pcp, Chord[] chords, 
-			ScaleInfo scaleInfo, Note pcpStartNote) {
+	public static Chord[] smoothUsingHarmony(final double[][] pcp, final Chord[] chords, 
+			final ScaleInfo scaleInfo, final Note pcpStartNote) {
 		if (pcp == null) {
 			throw new NullPointerException();
 		}
@@ -26,20 +26,20 @@ public class Harmony {
 			throw new IllegalArgumentException("pcp length != chords length: "
 					+ pcp.length + " != " + chords.length);
 		}
-		Chord[] result = new Chord[chords.length];
+		final Chord[] result = new Chord[chords.length];
 		for (int i = 0; i < chords.length; i++) {
 			result[i] = chords[i];
 		}
 		
-		List<IntervalToCorrect> intervals = gatherIntervals(chords);
+		final List<IntervalToCorrect> intervals = gatherIntervals(chords);
 		smoothChordSequence(pcp, result, intervals, pcpStartNote);
 		return result;
 	}
 
-	private static void smoothChordSequence(double[][] pcp, Chord[] result,
-			List<IntervalToCorrect> intervals, Note pcpStartNote) {
+	private static void smoothChordSequence(final double[][] pcp, final Chord[] result,
+			final List<IntervalToCorrect> intervals, final Note pcpStartNote) {
 		for (IntervalToCorrect interval : intervals) {
-			List<Chord> possibleChords = new ArrayList<Chord>(interval.chordTypes.size());
+			final List<Chord> possibleChords = new ArrayList<Chord>(interval.chordTypes.size());
 			for (String shortHand : interval.chordTypes) {
 				possibleChords.add(new Chord(interval.root, shortHand));
 			}
@@ -49,7 +49,7 @@ public class Harmony {
 				double[] col = pcp[i];
 				sum = DataUtil.add(sum, col);
 			}
-			Chord top = new TemplatesRecognition(pcpStartNote, possibleChords,
+			final Chord top = new TemplatesRecognition(pcpStartNote, possibleChords,
 					new TemplateProducer(pcpStartNote, true)).recognize(sum, new ScaleInfo(1,12));
 			for (int i = interval.start; i < interval.end; i++) {
 				result[i] = top;
@@ -57,7 +57,7 @@ public class Harmony {
 		}
 	}
 
-	private static List<IntervalToCorrect> gatherIntervals(Chord[] chords) {
+	private static List<IntervalToCorrect> gatherIntervals(final Chord[] chords) {
 		List<IntervalToCorrect> intervals = new ArrayList<IntervalToCorrect>();
 		Chord previous = Chord.empty();
 		int start = 0;
