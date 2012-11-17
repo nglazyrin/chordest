@@ -17,7 +17,7 @@ public class WaveReader implements ITaskProvider {
 	private static final int QUEUE_SIZE = 100;
 	
 	private final double[] times;
-	private final int[] offsets;
+	private final long[] offsets;
 	
 	private final WavFile wavFile;
 	private final int samplingRate;
@@ -27,6 +27,8 @@ public class WaveReader implements ITaskProvider {
 
 	private final int bufferSize;
 	private final BlockingQueue<Buffer> buffers;
+
+	private final Object lock = new Object();
 
 	/**
 	 * Reads the WavFile by placing frames at specified time moments
@@ -52,10 +54,10 @@ public class WaveReader implements ITaskProvider {
 		
 		this.buffers = new ArrayBlockingQueue<Buffer>(QUEUE_SIZE, true); //TODO: calculate automatically
 
-		this.offsets = new int[times.length + 1]; // one element bigger than times
+		this.offsets = new long[times.length + 1]; // one element bigger than times
 		double framesPerSecond = frames / seconds;
 		for (int i = 0; i < times.length; i++) {
-			offsets[i] = (int) (times[i] * framesPerSecond);
+			offsets[i] = (long) (times[i] * framesPerSecond);
 		}
 		offsets[times.length] = frames;
 	}
@@ -65,7 +67,7 @@ public class WaveReader implements ITaskProvider {
 		
 		for (int i = 0; i < times.length; i++) {
 			// number of frames to be read at this iteration
-			final int currentSize = offsets[i+1] - offsets[i];
+			final int currentSize = (int) (offsets[i+1] - offsets[i]);
 			
 			// create and fill temporary buffer
 			double[][] current = createArray(channels, currentSize);
@@ -82,9 +84,11 @@ public class WaveReader implements ITaskProvider {
 			buffers.put(new Buffer(bufferSize, times[i]));
 			
 			// append the data from temporary buffer to all buffers
-			for (Buffer buffer : buffers) {
-				if (! buffer.isFull()) {
-					buffer.append(data);
+			synchronized (lock) {
+				for (Buffer buffer : buffers) {
+					if (! buffer.isFull()) {
+						buffer.append(data);
+					}
 				}
 			}
 		}
@@ -97,7 +101,7 @@ public class WaveReader implements ITaskProvider {
 
 	private void skipDataBeforeFirstTimeStamp() throws IOException {
 		if (times != null && times.length > 0 && times[0] > 0) {
-			final int firstOffset = offsets[0];
+			final int firstOffset = (int) offsets[0];
 			final double[][] ignore = createArray(channels, firstOffset);
 			wavFile.readFrames(ignore, firstOffset);
 		}
@@ -114,11 +118,13 @@ public class WaveReader implements ITaskProvider {
 
 	@Override
 	public Buffer poll() throws InterruptedException {
-		if (buffers.size() > 0 && buffers.peek().isFull()) {
-			// use take() instead of poll() because it is a blocking queue
-			return buffers.take();
+		synchronized (lock) {
+			if (buffers.size() > 0 && buffers.peek().isFull()) {
+				// use take() instead of poll() because it is a blocking queue
+				return buffers.take();
+			}
+			return null;
 		}
-		return null;
 	}
 
 	@Override
