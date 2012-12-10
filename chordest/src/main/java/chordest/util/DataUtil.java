@@ -454,28 +454,6 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[] getSpectralFlatness(final double[][] data) {
-		if (data == null) {
-			throw new NullPointerException("data is null");
-		}
-		LOG.debug("Calculating spectral flatness ...");
-		double[] result = new double[data.length];
-		for (int i = 0; i < data.length; i++) {
-			double[] bin = data[i];
-			double sumLogs = 0;
-			double sum = 0;
-			for (int j = 0; j < bin.length; j++) {
-				sum += bin[j];
-				if (bin[j] > 0) {
-					sumLogs += Math.log(bin[j]);
-				}
-			}
-			double flatness = Math.exp(sumLogs / bin.length) / (sum / bin.length);
-			result[i] = 10 * Math.log10(flatness);
-		}
-		return result;
-	}
-
 	public static double[] getFirstOctave(final double[] cqtSpectrum, final ScaleInfo scaleInfo) {
 		return Arrays.copyOf(cqtSpectrum, scaleInfo.getNotesInOctaveCount());
 	}

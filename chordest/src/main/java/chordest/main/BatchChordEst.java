@@ -36,7 +36,7 @@ public class BatchChordEst {
 		Configuration c = new Configuration();
 		for (final String wavFileName : tracklist) {
 			String labFileName = new File(wavFileName).getName() + ".txt";
-			ChordExtractor ce = new ChordExtractor(c, new WaveFileSpectrumDataProvider(wavFileName, c));
+			ChordExtractor ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(wavFileName, c.spectrum));
 
 			LabFileWriter labWriter = new LabFileWriter(ce);
 			try {

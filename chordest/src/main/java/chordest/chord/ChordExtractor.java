@@ -5,18 +5,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import chordest.chord.templates.TemplatesRecognition;
-import chordest.configuration.Configuration;
+import chordest.configuration.Configuration.ProcessProperties;
 import chordest.model.Chord;
 import chordest.model.Key;
 import chordest.model.Note;
 import chordest.spectrum.ISpectrumDataProvider;
 import chordest.spectrum.SpectrumData;
-import chordest.transform.CQConstants;
 import chordest.transform.DiscreteCosineTransform;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
 import chordest.util.NoteLabelProvider;
-import chordest.util.Visualizer;
 
 /**
  * This class incapsulates all the chord extraction logic. All you need is to
@@ -35,81 +33,50 @@ public class ChordExtractor {
 	private static final Logger LOG = LoggerFactory.getLogger(ChordExtractor.class);
 	
 	private final double[] originalBeatTimes;
-	private final SpectrumData spectrum;
+	private final SpectrumData spectrumData;
 	private final Chord[] chords;
 	private Key key;
 
 	private final String[] labels;
 	private final String[] labels1;
 
-	public ChordExtractor(Configuration c, ISpectrumDataProvider spectrumProvider) {
-		spectrum = spectrumProvider.getSpectrumData();
-		double[] expandedBeatTimes = restoreBeatTimes();
-		
-		int framesPerBeat = c.spectrum.framesPerBeat;
-		originalBeatTimes = new double[expandedBeatTimes.length / framesPerBeat + 1];
+	public ChordExtractor(ProcessProperties p, ISpectrumDataProvider spectrumProvider) {
+		spectrumData = spectrumProvider.getSpectrumData();
+		int framesPerBeat = spectrumData.framesPerBeat;
+		originalBeatTimes = new double[spectrumData.beatTimes.length / framesPerBeat + 1];
 		for (int i = 0; i < originalBeatTimes.length; i++) {
-			originalBeatTimes[i] = expandedBeatTimes[framesPerBeat * i];
+			originalBeatTimes[i] = spectrumData.beatTimes[framesPerBeat * i];
 		}
 		
-		int offset = spectrum.startNoteOffsetInSemitonesFromF0;
-		labels = NoteLabelProvider.getNoteLabels(offset, spectrum.scaleInfo);
+		int offset = spectrumData.startNoteOffsetInSemitonesFromF0;
+		labels = NoteLabelProvider.getNoteLabels(offset, spectrumData.scaleInfo);
 		labels1 = NoteLabelProvider.getNoteLabels(offset, new ScaleInfo(1, 12));
 		
-		chords = doChordExtraction(c);
+//		Visualizer.visualizeSpectrum(spectrumData.spectrum, originalBeatTimes, labels, "Spectrum as is");
+		chords = doChordExtraction(p, spectrumData.spectrum);
 	}
 
-	/**
-	 * Beat times in spectrum are really the start positions of constant-Q
-	 * transform analysis windows. But those windows are centered at the
-	 * real beat time positions, which we need to restore. So we add half of
-	 * the longest constant-Q window to each position
-	 * @return
-	 */
-	private double[] restoreBeatTimes() {
-		final double[] result = new double[spectrum.beatTimes.length];
-		final double shift = getWindowsShift();
-		for (int i = 0; i < result.length; i++) {
-			result[i] = spectrum.beatTimes[i] + shift;
-		}
-		return result;
-	}
-
-	private double getWindowsShift() {
-		CQConstants cqConstants = CQConstants.getInstance(spectrum.samplingRate,
-				spectrum.scaleInfo, spectrum.f0, spectrum.startNoteOffsetInSemitonesFromF0);
-		int windowSize = cqConstants.getWindowLengthForComponent(0) + 1; // the longest window
-		double shift = windowSize / (spectrum.samplingRate * 2.0);
-		return shift;
-	}
-
-	private Chord[] doChordExtraction(final Configuration c) {
-		double[][] result = spectrum.spectrum;
-		
-//		result = DataUtil.whitenSpectrum(result, spectrum.scaleInfo.getNotesInOctaveCount());
-		result = DataUtil.smoothHorizontallyMedian(result, c.process.medianFilterWindow);
-		result = DataUtil.shrink(result, c.spectrum.framesPerBeat);
-		
-//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Spectrum as is");
-//		XYDataset dataset = DatasetUtil.toXYDataset(originalBeatTimes, DataUtil.getSpectralFlatness(result));
-//		JFreeChartUtils.visualize("Spectral variance", "Time", "Value", dataset);
+	private Chord[] doChordExtraction(final ProcessProperties p, final double[][] spectrum) {
+		double[][] result = spectrum;
 //		double[] e = DataUtil.getSoundEnergyByFrequencyDistribution(result);
 //		Visualizer.visualizeXByFrequencyDistribution(e, scaleInfo, spectrum.startNoteOffsetInSemitonesFromF0);
-
+		
+		result = DataUtil.smoothHorizontallyMedian(result, p.medianFilterWindow);
+		result = DataUtil.shrink(result, spectrumData.framesPerBeat);
 		result = DataUtil.toLogSpectrum(result);
 
-//		return doTemplateMatching(c, doChromaReductionAndSelfSimSmooth(c, result, 30, 10));
-//		return doTemplateMatching(c, doChromaReductionAndSelfSimSmooth(c, result, 20, 20));
-//		return doTemplateMatching(c, doChromaReductionAndSelfSimSmooth(c, result, 10, 10));
-		return doTemplateMatching(c, doChromaReductionAndSelfSimSmooth(c, result, 30, c.process.crpFirstNonZero));
+//		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, 30, 10, p.selfSimilarityTheta), spectrumData.scaleInfo.getNotesInOctaveCount());
+//		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, 20, 20, p.selfSimilarityTheta), spectrumData.scaleInfo.getNotesInOctaveCount());
+//		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, 10, 10, p.selfSimilarityTheta), spectrumData.scaleInfo.getNotesInOctaveCount());
+		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, 30, p.crpFirstNonZero, p.selfSimilarityTheta), spectrumData.scaleInfo.getNotesInOctaveCount());
 	}
 
-	private double[][] doChromaReductionAndSelfSimSmooth(final Configuration c,
-			final double[][] spectrum, int simNZ, int procNZ) {
+	private double[][] doChromaReductionAndSelfSimSmooth(final double[][] spectrum,
+			int simNZ, int procNZ, double theta) {
 		double[][] red = DiscreteCosineTransform.doChromaReduction(spectrum, simNZ);
 //		Visualizer.visualizeSpectrum(red, originalBeatTimes, labels, "Reduced " + simNZ);
 		double[][] selfSim = DataUtil.getSelfSimilarity(red);
-		selfSim = DataUtil.removeDissimilar(selfSim, c.process.selfSimilarityTheta);
+		selfSim = DataUtil.removeDissimilar(selfSim, theta);
 //		Visualizer.visualizeSelfSimilarity(selfSim, originalBeatTimes);
 		
 		double[][] result = DiscreteCosineTransform.doChromaReduction(spectrum, procNZ);
@@ -118,13 +85,13 @@ public class ChordExtractor {
 		return result;
 	}
 
-	private Chord[] doTemplateMatching(final Configuration c, final double[][] sp) {
-		double[][] result = DataUtil.toSingleOctave(sp, c.spectrum.notesPerOctave);
+	private Chord[] doTemplateMatching(final double[][] sp, int notesPerOctave) {
+		double[][] result = DataUtil.toSingleOctave(sp, notesPerOctave);
 		double[][] chromas = DataUtil.reduceTo12Notes(result);
 
 //		key = Key.recognizeKey(getTonalProfile(pcp, 0, pcp.length), startNote);
 		key = null;
-		Note startNote = Note.byNumber(spectrum.startNoteOffsetInSemitonesFromF0);
+		Note startNote = Note.byNumber(spectrumData.startNoteOffsetInSemitonesFromF0);
 		TemplatesRecognition first = new TemplatesRecognition(startNote, key);
 		Chord[] temp = first.recognize(chromas, new ScaleInfo(1, 12));
 		LOG.info("Normalized diff: " + first.getDiffNormalized());
@@ -141,7 +108,7 @@ public class ChordExtractor {
 	}
 
 	public double[] getOriginalBeatTimes() {
-		return ArrayUtils.add(originalBeatTimes, spectrum.totalSeconds);
+		return ArrayUtils.add(originalBeatTimes, spectrumData.totalSeconds);
 	}
 
 	public Chord[] getChords() {
@@ -153,7 +120,7 @@ public class ChordExtractor {
 	}
 
 	public SpectrumData getSpectrum() {
-		return spectrum;
+		return spectrumData;
 	}
 
 }

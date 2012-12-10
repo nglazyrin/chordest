@@ -52,9 +52,10 @@ public class SpectrumData implements Serializable {
 	public double totalSeconds;
 	
 	/**
-	 * The relative path to the sound file for which this spectrum was calculated
+	 * Number of constant-Q transform frames per each beat detected by beat
+	 * detector
 	 */
-	public String wavFilePath;
+	public int framesPerBeat;
 
 	public boolean equalsIgnoreSpectrumAndF0(SpectrumData other) {
 		if (other == null) { return false; }
@@ -65,7 +66,7 @@ public class SpectrumData implements Serializable {
 //		builder.append(f0, other.f0);
 		builder.append(scaleInfo, other.scaleInfo);
 		builder.append(startNoteOffsetInSemitonesFromF0, other.startNoteOffsetInSemitonesFromF0);
-//		builder.append(wavFilePath, other.wavFilePath);
+		builder.append(framesPerBeat, other.framesPerBeat);
 		builder.append(beatTimes.length, other.beatTimes.length); // weak check to avoid double == comparison
 		return builder.isEquals();
 	}

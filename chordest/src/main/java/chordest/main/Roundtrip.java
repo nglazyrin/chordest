@@ -48,11 +48,11 @@ public class Roundtrip {
 					labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_WAV) + PathConstants.EXT_BIN;
 			ChordExtractor ce;
 			if (new File(spectrumFileName).exists()) {
-				ce = new ChordExtractor(c, new FileSpectrumDataProvider(spectrumFileName));
+				ce = new ChordExtractor(c.process, new FileSpectrumDataProvider(spectrumFileName));
 			} else {
 				final String wavFileName = PathConstants.WAV_DIR + 
 						labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_WAV);
-				ce = new ChordExtractor(c, new WaveFileSpectrumDataProvider(wavFileName, c));
+				ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(wavFileName, c.spectrum));
 			}
 
 			LabFileWriter labWriter = new LabFileWriter(ce);

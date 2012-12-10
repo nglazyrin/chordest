@@ -11,8 +11,6 @@ import java.util.Scanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.io.lab.chordparser.TokenMgrError;
-
 
 public class BeatFileReader {
 
@@ -40,8 +38,6 @@ public class BeatFileReader {
 		} catch (InputMismatchException e) {
 			throw new IllegalArgumentException(e);
 		} catch (NumberFormatException e) {
-			throw new IllegalArgumentException(e);
-		} catch (TokenMgrError e) {
 			throw new IllegalArgumentException(e);
 		} finally {
 			if (scanner != null) {

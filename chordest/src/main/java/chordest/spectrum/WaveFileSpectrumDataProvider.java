@@ -8,9 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import uk.co.labbookpages.WavFile;
 import uk.co.labbookpages.WavFileException;
-
 import chordest.beat.BeatRootBeatTimesProvider;
-import chordest.configuration.Configuration;
+import chordest.configuration.Configuration.SpectrumProperties;
 import chordest.transform.CQConstants;
 import chordest.transform.PooledTransformer;
 import chordest.transform.ScaleInfo;
@@ -24,10 +23,10 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 
 	private final SpectrumData spectrumData;
 
-	public WaveFileSpectrumDataProvider(String waveFileName, Configuration c) {
+	public WaveFileSpectrumDataProvider(String waveFileName, SpectrumProperties s) {
 		double[] beatTimes = new BeatRootBeatTimesProvider(waveFileName).getBeatTimes();
-		double[] expandedBeatTimes = DataUtil.makeMoreFrequent(beatTimes, c.spectrum.framesPerBeat);
-		spectrumData = readSpectrum(c, waveFileName, expandedBeatTimes);
+		double[] expandedBeatTimes = DataUtil.makeMoreFrequent(beatTimes, s.framesPerBeat);
+		spectrumData = readSpectrum(s, waveFileName, expandedBeatTimes);
 	}
 
 	@Override
@@ -35,33 +34,29 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 		return spectrumData;
 	}
 
-	private SpectrumData readSpectrum(Configuration c, String waveFileName,
+	private SpectrumData readSpectrum(SpectrumProperties s, String waveFileName,
 			 double[] expandedBeatTimes) {
 		SpectrumData result = new SpectrumData();
 		result.beatTimes = expandedBeatTimes;
-		result.scaleInfo = new ScaleInfo(c.spectrum.octaves, c.spectrum.notesPerOctave);
-		result.startNoteOffsetInSemitonesFromF0 = c.spectrum.offsetFromF0InSemitones;
-		result.wavFilePath = waveFileName;
+		result.scaleInfo = new ScaleInfo(s.octaves, s.notesPerOctave);
+		result.startNoteOffsetInSemitonesFromF0 = s.offsetFromF0InSemitones;
+		result.framesPerBeat = s.framesPerBeat;
+		result.f0 = TuningFrequencyFinder.getTuningFrequency(waveFileName, s.threadPoolSize);
+//		result.f0 = CQConstants.F0_DEFAULT;
 		WavFile wavFile = null;
 		try {
 			wavFile = WavFile.openWavFile(new File(waveFileName));
 			result.samplingRate = (int) wavFile.getSampleRate();
-			int frames = (int) wavFile.getNumFrames();
-			result.totalSeconds = frames * 1.0 / result.samplingRate;
+			result.totalSeconds = wavFile.getNumFrames() * 1.0 / result.samplingRate;
 			
-			result.f0 = TuningFrequencyFinder.getTuningFrequency(waveFileName, c.process.threadPoolSize);
-//			result.f0 = CQConstants.F0_DEFAULT;
 			CQConstants cqConstants = CQConstants.getInstance(result.samplingRate,
 					result.scaleInfo, result.f0, result.startNoteOffsetInSemitonesFromF0);
 			int windowSize = cqConstants.getWindowLengthForComponent(0) + 1; // the longest window
 			// need to make windows centered at the beat positions, so shift them to the left
-			double shift = getWindowsShift(result);
-			for (int i = 0; i < result.beatTimes.length; i++) {
-				result.beatTimes[i] -= shift;
-			}
-			WaveReader reader = new WaveReader(wavFile, result.beatTimes, windowSize);
+			double[] windowBeginnings = beatsToWindowBeginnings(result.beatTimes, result);
+			WaveReader reader = new WaveReader(wavFile, windowBeginnings, windowSize);
 			PooledTransformer transformer = new PooledTransformer(
-					reader, c.process.threadPoolSize, result.beatTimes.length, result.scaleInfo, cqConstants);
+					reader, s.threadPoolSize, result.beatTimes.length, result.scaleInfo, cqConstants);
 			result.spectrum = transformer.run();
 		} catch (WavFileException e) {
 			LOG.error("Error when reading wave file " + waveFileName, e);
@@ -79,7 +74,24 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 		return result;
 	}
 
-	private double getWindowsShift(SpectrumData data) {
+	/**
+	 * Constant-Q analysis windows need to be centered at the beat positions,
+	 * so we shift beat positions to the left to get analysis windows
+	 * beginnings.
+	 * @param beats
+	 * @param data
+	 * @return
+	 */
+	private static double[] beatsToWindowBeginnings(double[] beats, SpectrumData data) {
+		double[] windowBeginnings = new double[beats.length];
+		double shift = getWindowsShift(data);
+		for (int i = 0; i < beats.length; i++) {
+			windowBeginnings[i] = beats[i] - shift;
+		}
+		return windowBeginnings;
+	}
+
+	private static double getWindowsShift(SpectrumData data) {
 		CQConstants cqConstants = CQConstants.getInstance(data.samplingRate,
 				data.scaleInfo, data.f0, data.startNoteOffsetInSemitonesFromF0);
 		int windowSize = cqConstants.getWindowLengthForComponent(0) + 1; // the longest window
