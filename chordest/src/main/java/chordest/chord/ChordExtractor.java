@@ -94,7 +94,7 @@ public class ChordExtractor {
 		Note startNote = Note.byNumber(spectrumData.startNoteOffsetInSemitonesFromF0);
 		TemplatesRecognition first = new TemplatesRecognition(startNote, key);
 		Chord[] temp = first.recognize(chromas, new ScaleInfo(1, 12));
-		LOG.info("Normalized diff: " + first.getDiffNormalized());
+//		LOG.info("Normalized diff: " + first.getDiffNormalized());
 		
 //		Map<Chord, double[]> newTemplates = TemplatesSmoother.smoothTemplates(chromas, temp);
 //		for (Entry<Chord, double[]> entry : newTemplates.entrySet()) {
