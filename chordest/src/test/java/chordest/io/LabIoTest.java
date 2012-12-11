@@ -1,4 +1,4 @@
-package chordest.lab;
+package chordest.io;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,17 +11,11 @@ import org.junit.Test;
 import chordest.io.lab.LabFileReader;
 import chordest.io.lab.LabFileWriter;
 import chordest.model.Chord;
-import chordest.util.PathConstants;
 
 
 public class LabIoTest {
 
-	private static final String SEP = PathConstants.SEP;
-	private static final String ARTIST = "Beatles";
-	private static final String ALBUM = "01_-_Please_Please_Me";
-	private static final String TRACK = "05_-_Boys";
-	private static final String LAB_EXPECTED_FILENAME = PathConstants.LAB_DIR
-			+ ARTIST + SEP + ALBUM + SEP + TRACK + PathConstants.EXT_LAB;
+	private static final String LAB_EXPECTED_FILENAME = "src/test/resources/05_-_Boys.lab";
 
 	@Test
 	public void testLabReadWrite() {
@@ -30,7 +24,7 @@ public class LabIoTest {
 		double[] expectedTimestamps = reader.getTimestamps();
 		LabFileWriter writer = new LabFileWriter(expectedChords, expectedTimestamps);
 		try {
-			File temp = File.createTempFile("chords", ".tmp");
+			File temp = File.createTempFile("labIoTest", ".lab");
 			writer.writeTo(temp);
 			LabFileReader reader2 = new LabFileReader(temp);
 			Assert.assertTrue(Arrays.equals(expectedChords, reader2.getChords()));
