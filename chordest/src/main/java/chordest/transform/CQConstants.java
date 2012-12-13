@@ -44,7 +44,6 @@ public class CQConstants implements Serializable {
 	private final ScaleInfo scaleInfo;
 	private final double minimalFrequency;
 	private final Note startNote;
-	private final int startOctave;
 	private final double Q;
 
 	private ComplexNumber [][] kernels;
@@ -62,9 +61,9 @@ public class CQConstants implements Serializable {
 		this.componentsTotal = scaleInfo.getNotesInOctaveCount() * scaleInfo.getOctavesCount();
 		this.scaleInfo = scaleInfo;
 		this.minimalFrequency = f0 * Math.pow(2, startNoteOffsetInSemitonesFromF0 / 12.0);
-		this.startOctave = startNoteOffsetInSemitonesFromF0 > 0 ? 
-				(startNoteOffsetInSemitonesFromF0 + 9) / 12 + 5 : 
-				(startNoteOffsetInSemitonesFromF0 - 2) / 12 + 5;
+//		this.startOctave = startNoteOffsetInSemitonesFromF0 > 0 ? 
+//				(startNoteOffsetInSemitonesFromF0 + 9) / 12 + 5 : 
+//				(startNoteOffsetInSemitonesFromF0 - 2) / 12 + 5;
 		this.startNote = Note.byNumber(startNoteOffsetInSemitonesFromF0);
 		this.Q = QUtil.calculateQ(scaleInfo.getNotesInOctaveCount());
 		initialize();
