@@ -1,7 +1,13 @@
 package chordest.beat;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import uk.co.labbookpages.WavFile;
+import uk.co.labbookpages.WavFileException;
 
 import at.ofai.music.beatroot.AudioPlayer;
 import at.ofai.music.beatroot.AudioProcessor;
@@ -50,7 +56,41 @@ public class BeatRootBeatTimesProvider implements IBeatTimesProvider {
 		EventList beats = gui.getBeatData();
 		gui.dispose();
 		audioProcessor.closeStreams();
-		return beats.toOnsetArray();
+		double[] result = beats.toOnsetArray();
+		if (result.length == 0) {
+			result = generateDefaultBeats(wavFilePath);
+		}
+		return result;
+	}
+
+	private double[] generateDefaultBeats(String wavFilePath) {
+		LOG.warn("Error occured during BeatRoot processing, generating a dummy sequence of beats");
+		WavFile wavFile = null;
+		try {
+			wavFile = WavFile.openWavFile(new File(wavFilePath));
+			int samplingRate = (int) wavFile.getSampleRate();
+			int frames = (int) wavFile.getNumFrames();
+			double totalSeconds = frames * 1.0 / samplingRate;
+			int length = (int) (Math.floor(totalSeconds))* 2;
+			double[] result = new double[length];
+			for (int i = 0; i < length; i++) {
+				result[i] = 0.5 * i;
+			}
+			return result;
+		} catch (WavFileException e) {
+			LOG.error("Error when reading wave file to generate default beat sequence", e);
+		} catch (IOException e) {
+			LOG.error("Error when reading wave file to generate default beat sequence", e);
+		} finally {
+			if (wavFile != null) {
+				try {
+					wavFile.close();
+				} catch (IOException e) {
+					LOG.error("Error when closing wave file after generation of default beat sequence", e);
+				}
+			}
+		}
+		return new double[] { 0 };
 	}
 
 	public double getBPM() {

@@ -31,7 +31,7 @@ public class Roundtrip {
 	private static final String CSV_ACTUAL_DIR = PathConstants.CSV_DIR + "actual" + SEP;
 	private static final String CSV_EXPECTED_DIR = PathConstants.CSV_DIR + "expected" + SEP;
 	private static final String LAB_DIR = PathConstants.LAB_DIR;
-	private static final String SPECTRUM_DIR = "spectrum_tuning" + SEP;
+	private static final String SPECTRUM_DIR = "spectrum8" + SEP;
 
 	public static void main(String[] args) {
 		List<String> tracklist = TracklistCreator.createTracklist(new File(LAB_DIR), "");
@@ -68,17 +68,20 @@ public class Roundtrip {
 				LOG.error("Error when saving actual csv file", e);
 			}
 
-			LabFileReader labReader = new LabFileReader(new File(
+			LabFileReader labReaderExpected = new LabFileReader(new File(
 					PathConstants.LAB_DIR + labFileName));
-			csvWriter = new CsvFileWriter(labReader.getChords(), labReader.getTimestamps());
+			csvWriter = new CsvFileWriter(labReaderExpected.getChords(), labReaderExpected.getTimestamps());
 			try {
 				csvWriter.writeTo(new File(CSV_EXPECTED_DIR + csvFileName));
 			} catch (IOException e) {
 				LOG.error("Error when saving expected csv file", e);
 			}
-			
-			ChordListsComparison sim = new ChordListsComparison(labReader.getChords(),
-					labReader.getTimestamps(), ce.getChords(), ce.getOriginalBeatTimes());
+
+			LabFileReader labReaderActual = new LabFileReader(new File(
+					PathConstants.OUTPUT_DIR + labFileName));
+
+			ChordListsComparison sim = new ChordListsComparison(labReaderExpected.getChords(),
+					labReaderExpected.getTimestamps(), labReaderActual.getChords(), labReaderActual.getTimestamps());
 			final double overlap = sim.getOverlapMeasure();
 			final double effectiveSeconds = sim.getTotalSeconds();
 			totalOverlap += overlap;

@@ -1,4 +1,4 @@
-package chordest.lab;
+package chordest.chord;
 
 import junit.framework.Assert;
 
@@ -9,7 +9,7 @@ import chordest.model.Chord;
 import chordest.model.Note;
 
 
-public class LabSimilarityTest {
+public class ChordListComparisonTest {
 
 	@Test
 	public void oudreExample() {
