@@ -16,9 +16,6 @@ public class ChordFinder {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ChordFinder.class);
 
-	private static final String SEP = PathConstants.SEP;
-	private static final String ARTIST = "Beatles";
-	private static final String PREFIX = ARTIST + SEP; //+ ALBUM + SEP;
 	private static final String LAB_DIR = PathConstants.LAB_DIR;
 
 	public static void main(String[] args) {

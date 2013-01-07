@@ -15,6 +15,7 @@ import chordest.transform.DiscreteCosineTransform;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
 import chordest.util.NoteLabelProvider;
+import chordest.util.Visualizer;
 
 /**
  * This class incapsulates all the chord extraction logic. All you need is to
@@ -36,11 +37,18 @@ public class ChordExtractor {
 	private final SpectrumData spectrumData;
 	private final Chord[] chords;
 	private Key key;
+	private IExternalProcessor externalProcessor;
 
 	private final String[] labels;
 	private final String[] labels1;
 
 	public ChordExtractor(ProcessProperties p, ISpectrumDataProvider spectrumProvider) {
+		this(p, spectrumProvider, null);
+	}
+
+	public ChordExtractor(ProcessProperties p, ISpectrumDataProvider spectrumProvider,
+			IExternalProcessor ex) {
+		this.externalProcessor = ex;
 		spectrumData = spectrumProvider.getSpectrumData();
 		int framesPerBeat = spectrumData.framesPerBeat;
 		originalBeatTimes = new double[spectrumData.beatTimes.length / framesPerBeat + 1];
@@ -64,6 +72,11 @@ public class ChordExtractor {
 		result = DataUtil.smoothHorizontallyMedian(result, p.medianFilterWindow);
 		result = DataUtil.shrink(result, spectrumData.framesPerBeat);
 		result = DataUtil.toLogSpectrum(result);
+//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Original spectrum");
+		if (externalProcessor != null) {
+			result = externalProcessor.process(result);
+//			Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Modified spectrum");
+		}
 
 //		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, 30, 10, p.selfSimilarityTheta), spectrumData.scaleInfo.getNotesInOctaveCount());
 //		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, 20, 20, p.selfSimilarityTheta), spectrumData.scaleInfo.getNotesInOctaveCount());
@@ -79,7 +92,8 @@ public class ChordExtractor {
 		selfSim = DataUtil.removeDissimilar(selfSim, theta);
 //		Visualizer.visualizeSelfSimilarity(selfSim, originalBeatTimes);
 		
-		double[][] result = DiscreteCosineTransform.doChromaReduction(spectrum, procNZ);
+//		double[][] result = DiscreteCosineTransform.doChromaReduction(spectrum, procNZ);
+		double[][] result = spectrum;
 //		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Reduced " + procNZ);
 		result = DataUtil.smoothWithSelfSimilarity(result, selfSim);
 		return result;
@@ -121,6 +135,10 @@ public class ChordExtractor {
 
 	public SpectrumData getSpectrum() {
 		return spectrumData;
+	}
+
+	public static interface IExternalProcessor {
+		public double[][] process(double[][] data);
 	}
 
 }

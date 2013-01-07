@@ -53,7 +53,7 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 					result.scaleInfo, result.f0, result.startNoteOffsetInSemitonesFromF0);
 			int windowSize = cqConstants.getWindowLengthForComponent(0) + 1; // the longest window
 			// need to make windows centered at the beat positions, so shift them to the left
-			double[] windowBeginnings = beatsToWindowBeginnings(result.beatTimes, result);
+			double[] windowBeginnings = shiftBeatsLeft(result.beatTimes, getWindowsShift(result));
 			WaveReader reader = new WaveReader(wavFile, windowBeginnings, windowSize);
 			PooledTransformer transformer = new PooledTransformer(
 					reader, s.threadPoolSize, result.beatTimes.length, result.scaleInfo, cqConstants);
@@ -79,12 +79,11 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 	 * so we shift beat positions to the left to get analysis windows
 	 * beginnings.
 	 * @param beats
-	 * @param data
+	 * @param shift
 	 * @return
 	 */
-	private static double[] beatsToWindowBeginnings(double[] beats, SpectrumData data) {
+	private static double[] shiftBeatsLeft(double[] beats, double shift) {
 		double[] windowBeginnings = new double[beats.length];
-		double shift = getWindowsShift(data);
 		for (int i = 0; i < beats.length; i++) {
 			windowBeginnings[i] = beats[i] - shift;
 		}

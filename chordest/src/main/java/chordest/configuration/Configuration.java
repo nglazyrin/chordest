@@ -85,9 +85,9 @@ public class Configuration {
 	}
 
 	public class ProcessProperties {
-		private static final int MEDIAN_FILTER_WINDOW_DEFAULT = 17;
-		private static final double SELF_SIMILARITY_THETA_DEFAULT = 0.10;
-		private static final int CRP_FIRST_NON_ZERO_DEFAULT = 10;
+		private static final int MEDIAN_FILTER_WINDOW_DEFAULT = 21;
+		private static final double SELF_SIMILARITY_THETA_DEFAULT = 0.20;
+		private static final int CRP_FIRST_NON_ZERO_DEFAULT = 15;
 
 		public final int medianFilterWindow;
 		public final double selfSimilarityTheta;
