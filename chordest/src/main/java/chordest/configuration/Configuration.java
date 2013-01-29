@@ -60,7 +60,7 @@ public class Configuration {
         this.process = new ProcessProperties(window, theta, crpFirstNonZero);
 	};
 
-	public class SpectrumProperties {
+	public static class SpectrumProperties {
 		private static final int OCTAVES_DEFAULT = 4;
 		private static final int NOTES_PER_OCTAVE_DEFAULT = 60;
 		private static final int OFFSET_FROM_F0_IN_SEMITONES_DEFAULT = -33;
@@ -73,7 +73,7 @@ public class Configuration {
 		public final int framesPerBeat;
 		public final int threadPoolSize;
 		
-		private SpectrumProperties(int octaves, int notesPerOctave,
+		public SpectrumProperties(int octaves, int notesPerOctave,
 				int offsetFromF0InSemitones, int framesPerBeat, int threadPoolSize) {
 			this.octaves = octaves > 0 ? octaves : OCTAVES_DEFAULT;
 			this.notesPerOctave = notesPerOctave > 0 ? notesPerOctave : NOTES_PER_OCTAVE_DEFAULT;

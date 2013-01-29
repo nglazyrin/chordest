@@ -29,6 +29,10 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 		spectrumData = readSpectrum(s, waveFileName, expandedBeatTimes);
 	}
 
+	public WaveFileSpectrumDataProvider(String waveFileName, SpectrumProperties s, double[] expandedBeatTimes) {
+		spectrumData = readSpectrum(s, waveFileName, expandedBeatTimes);
+	}
+
 	@Override
 	public SpectrumData getSpectrumData() {
 		return spectrumData;
