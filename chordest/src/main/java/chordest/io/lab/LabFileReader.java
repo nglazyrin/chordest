@@ -2,6 +2,7 @@ package chordest.io.lab;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Arrays;
 import java.util.InputMismatchException;
 import java.util.LinkedList;
 import java.util.List;
@@ -72,6 +73,23 @@ public class LabFileReader {
 
 	public double[] getTimestamps() {
 		return timestamps;
+	}
+
+	public Chord getChord(double timestamp) {
+		final double DELTA = 0.5;
+		if (timestamp < timestamps[0] || timestamp >= timestamps[timestamps.length - 1]) {
+			return Chord.empty();
+		}
+		int index = Arrays.binarySearch(timestamps, timestamp);
+		if (index >= 0) {
+			return chords[index];
+		} else {
+			int insertionPoint = -index - 1;
+			if (timestamps[insertionPoint] - timestamp < DELTA) {
+				return null; // doubtful
+			}
+			return chords[insertionPoint - 1];
+		}
 	}
 
 }
