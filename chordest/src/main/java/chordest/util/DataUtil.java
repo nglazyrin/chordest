@@ -45,6 +45,16 @@ public class DataUtil {
 	}
 
 	/**
+	 * Fits each column separately to [0, 1] range.
+	 * @param data 2D array
+	 */
+	public static void scaleEachTo01(double[][] data) {
+		for (double[] array : data) {
+			scaleTo01(array);
+		}
+	}
+
+	/**
 	 * Fits all the array values to [0, 1] range.
 	 * @param data 1D array
 	 */
@@ -295,6 +305,55 @@ public class DataUtil {
 		double[][] result = new double[cqtSpectrum.length][];
 		for (int i = 0; i < cqtSpectrum.length; i++) {
 			result[i] = DataUtil.toSingleOctave(cqtSpectrum[i], notesInOctave);
+		}
+		return result;
+	}
+
+	/**
+	 * Reduces a given spectrum bin having 12*n components per octave to a
+	 * spectrum bin having 12 components per octave. 
+	 * @param data 12*n*octaves-dimensional vector - spectrum bin
+	 * @param octaves Number of octaves in the given bin
+	 * @return
+	 */
+	public static double[] reduce(final double[] data, int octaves) {
+		if (data.length % 12 != 0) {
+			throw new IllegalArgumentException("There must be 12 * N components. " 
+					+ data.length + " is not multiple of 12");
+		}
+		int resultComponents = 12 * octaves;
+		int subnotes = data.length / resultComponents;
+		if (subnotes > 1) {
+			// Reduce pcp array size to 12 if we have more than 12 "notes" in octave
+			// by summing the values of the "subnotes" nearest to each note with weights
+			double [] result = new double[resultComponents];
+			int totalNotes = data.length;
+			int delta = subnotes / 2;
+			if ((subnotes & 1) == 0) { // if subnotesCount is even
+				delta--; // to exclude the subnotes that are in the "middle" between 2 real notes
+			}
+			for (int i = 0; i < resultComponents; i++) {
+				double temp = 0;
+				for (int j = -delta; j <= delta; j++) {
+					// account neighbors with lower weights
+					temp += data[(totalNotes + i * subnotes + j) % totalNotes] * Math.pow(0.6, Math.abs(j));
+				}
+				result[i] = temp;
+			}
+			return result;
+		} else {
+			return Arrays.copyOf(data, data.length);
+		}
+	}
+
+	public static double[][] reduce(final double[][] data, int octaves) {
+		if (data == null) {
+			throw new NullPointerException("data is null");
+		}
+		LOG.debug("Reducing to 12 notes per octave ...");
+		double[][] result = new double[data.length][];
+		for (int i = 0; i < data.length; i++) {
+			result[i] = reduce(data[i], octaves);
 		}
 		return result;
 	}
