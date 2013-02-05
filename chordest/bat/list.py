@@ -11,6 +11,6 @@ for dirname, dirnames, filenames in os.walk(os.path.abspath(sys.argv[1])):
     for filename in filenames:
 #        if filename.endswith(sys.argv[2]):
          if re.search(sys.argv[2], filename):
-            all.write(os.path.join(dirname, filename) + '\r')
+            all.write(os.path.join(dirname, filename) + '\n')
 all.close()
 
