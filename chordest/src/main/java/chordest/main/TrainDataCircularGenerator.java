@@ -21,15 +21,26 @@ import chordest.util.DataUtil;
 import chordest.util.PathConstants;
 import chordest.util.TracklistCreator;
 
+/**
+ * For each 72-dimensional spectrum bin corresponding to a major/minor chord
+ * take 12 samples using 60 element window sliding from lowest to highest bin.
+ * Treat each sample as corresponding to a major/minor chord with moving root
+ * note. The resulting training data contains equal number of instances for
+ * each root note, but different for major and minor chords.
+ * 
+ * @author Nikolay
+ *
+ */
 public class TrainDataCircularGenerator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TrainDataGenerator.class);
+	private static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "all_files1train.txt";
 	private static final String CSV_FILE = PathConstants.OUTPUT_DIR + "train_dA_c.csv";
 
 	private OutputStream csvOut;
 
 	public static void main(String[] args) {
-		List<String> tracklist = TracklistCreator.readTrackList("work/all_files0.txt");
+		List<String> tracklist = TracklistCreator.readTrackList(TRAIN_FILE_LIST);
 		TrainDataGenerator.deleteIfExists(CSV_FILE);
 		int filesProcessed = 0;
 		for (final String binFileName : tracklist) {

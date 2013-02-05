@@ -24,28 +24,32 @@ import chordest.util.DataUtil;
 import chordest.util.PathConstants;
 import chordest.util.TracklistCreator;
 
+/**
+ * Stores spectrum values in csv file along with corresponding chord, chord
+ * is written as sequence of notes joined with "-". All the values are stored
+ * in one large file.
+ * @author Nikolay
+ *
+ */
 public class TrainDataGenerator implements IExternalProcessor {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TrainDataGenerator.class);
 	private static final String DELIMITER = ",";
 	private static final String ENCODING = "utf-8";
+	private static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "all_files0train.txt";
 	private static final String CSV_FILE = PathConstants.OUTPUT_DIR + "train_dA.csv";
 
 	private OutputStream csvOut;
 
 	public static void main(String[] args) {
-		if (args.length < 1) {
-			System.out.println("Usage: TrainDataGenerator /path/to/trainFileList.txt");
-			System.exit(-1);
-		}
-		List<String> tracklist = TracklistCreator.readTrackList(args[0]);
+		List<String> tracklist = TracklistCreator.readTrackList(TRAIN_FILE_LIST);
 		TrainDataGenerator.deleteIfExists(CSV_FILE);
 		int filesProcessed = 0;
 		for (final String binFileName : tracklist) {
 			TrainDataGenerator tdg = new TrainDataGenerator(CSV_FILE, true);
 			double[][] result = TrainDataGenerator.prepareSpectrum(binFileName);
 			Chord[] chords = TrainDataGenerator.prepareChords(binFileName);
-			tdg.process(result, chords);
+			tdg.process(result, chords, result[0].length);
 			if (++filesProcessed % 10 == 0) {
 				LOG.info(filesProcessed + " files processed");
 			}
@@ -101,18 +105,27 @@ public class TrainDataGenerator implements IExternalProcessor {
 
 	@Override
 	public double[][] process(double[][] data) {
-		process(data, new Chord[data.length]);
+		process(data, new Chord[data.length], data[0].length);
 		return data;
 	}
 
-	private void process(double[][] data, Chord[] chords) {
+	public double[][] process(double[][] data, int components) {
+		process(data, new Chord[data.length], components);
+		return data;
+	}
+
+	private void process(double[][] data, Chord[] chords, int components) {
 		if (data == null || chords == null) {
 			LOG.error("data or chords is null");
 			return;
 		}
 		try {
 			for (int i = 0; i < data.length; i++) {
-				csvOut.write(toByteArray(data[i], chords[i]));
+				double[] row = data[i];
+				if (components != row.length) {
+					row = Arrays.copyOfRange(row, 0, components);
+				}
+				csvOut.write(toByteArray(row, chords[i]));
 			}
 		} catch (IOException e) {
 			LOG.error("Error when writing result", e);

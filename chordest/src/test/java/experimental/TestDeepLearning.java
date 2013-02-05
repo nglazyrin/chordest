@@ -24,18 +24,28 @@ import chordest.spectrum.SpectrumData;
 import chordest.util.PathConstants;
 import chordest.util.TracklistCreator;
 
+/**
+ * Treats the values from .csv file as Tonnetz representation of spectrum.
+ * Recognizes the chord by this representation and calculates recognition
+ * quality.
+ * @author Nikolay
+ *
+ */
 public class TestDeepLearning {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TestDeepLearning.class);
+	private static final Logger SIM_LOG = LoggerFactory.getLogger("Similarity");
 
 	private static String BIN_DIRECTORY = "spectrum8" + PathConstants.SEP;
+	private static final String TEST_FILE_LIST = "work" + PathConstants.SEP + "all_files0test.txt";
 	private static String CSV_DIRECTORY = PathConstants.CSV_DIR + "encoded" + PathConstants.SEP;
 
 	private static ComparisonAccumulator acc = new ComparisonAccumulator();
 	private static Configuration c = new Configuration();
 
 	public static void main(String[] args) {
-		List<String> tracklist = TracklistCreator.readTrackList("work" + PathConstants.SEP + "all_files1.txt");
+		List<String> tracklist = TracklistCreator.readTrackList(TEST_FILE_LIST);
+		SIM_LOG.info("name,overlap,effective_length,full_length");
 		for (String item : tracklist) {
 			String track = StringUtils.substringAfterLast(item, PathConstants.SEP);
 			String binFile = BIN_DIRECTORY + track;
@@ -87,6 +97,8 @@ public class TestDeepLearning {
 		ChordListsComparison cmp = new ChordListsComparison(labReaderExpected.getChords(),
 				labReaderExpected.getTimestamps(), labReaderActual.getChords(), labReaderActual.getTimestamps());
 		acc.append(cmp);
+		SIM_LOG.info(expectedLab.replace(',', '_').replace('\\', '/') + "," + 
+				cmp.getOverlapMeasure() + "," + cmp.getTotalSeconds() + "," + sd.totalSeconds);
 		
 		return cmp.getOverlapMeasure();
 	}
