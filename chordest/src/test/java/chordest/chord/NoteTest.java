@@ -23,6 +23,9 @@ public class NoteTest {
 	@Test
 	public void testWithOffset() {
 		Assert.assertEquals(Note.C, Note.CD.withOffset(-1));
+		Assert.assertEquals(Note.B, Note.CD.withOffset(-2));
+		Assert.assertEquals(Note.AD, Note.CD.withOffset(-3));
+		Assert.assertEquals(Note.A, Note.CD.withOffset(-4));
 		Assert.assertEquals(Note.C, Note.CD.withOffset(-121));
 		Assert.assertEquals(Note.C, Note.CD.withOffset(11));
 		Assert.assertEquals(Note.C, Note.B.withOffset(1));

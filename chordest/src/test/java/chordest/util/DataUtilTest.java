@@ -92,4 +92,18 @@ public class DataUtilTest {
 		Assert.assertTrue(Math.abs(result[8] - 4) < eps);
 	}
 
+	@Test
+	public void testReduce() {
+		double[] array = new double[] { 
+				2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1,
+				2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1,
+				2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1,
+				2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1 };
+		double[] result = DataUtil.reduce(array, 2);
+		Assert.assertEquals(24, result.length);
+		for (int i = 0; i < 24; i++) {
+			Assert.assertEquals(3.2, result[i]);
+		}
+	}
+
 }

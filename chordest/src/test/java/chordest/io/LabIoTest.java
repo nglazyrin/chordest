@@ -11,6 +11,7 @@ import org.junit.Test;
 import chordest.io.lab.LabFileReader;
 import chordest.io.lab.LabFileWriter;
 import chordest.model.Chord;
+import chordest.model.Note;
 
 
 public class LabIoTest {
@@ -32,5 +33,17 @@ public class LabIoTest {
 		} catch (IOException e) {
 			Assert.fail();
 		}
+	}
+	
+	@Test
+	public void testGetChord() {
+		LabFileReader reader = new LabFileReader(new File(LAB_EXPECTED_FILENAME));
+		Assert.assertEquals(Chord.empty(), reader.getChord(-1));
+		Assert.assertEquals(Chord.empty(), reader.getChord(0.5));
+		Assert.assertEquals(Chord.empty(), reader.getChord(148));
+		
+		Assert.assertEquals(Chord.major(Note.A), reader.getChord(22.1));
+		Assert.assertEquals(Chord.major(Note.E), reader.getChord(30));
+		Assert.assertEquals(null, reader.getChord(22.09));
 	}
 }

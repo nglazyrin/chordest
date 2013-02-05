@@ -105,6 +105,7 @@ public class ChordParserTest {
 			notes.add(Note.D);
 			Chord c2 = new Chord(notes.toArray(new Note[notes.size()]));
 			Assert.assertEquals(c2, c1);
+			Assert.assertEquals(c2.getRoot(), c1.getRoot());
 		} catch (Exception e) {
 			e.printStackTrace();
 			Assert.fail();
@@ -117,6 +118,7 @@ public class ChordParserTest {
 			Chord c1 = ChordParser.parseString("C/3");
 			Chord c2 = new Chord(Note.C, Chord.MAJ);
 			Assert.assertEquals(c2, c1);
+			Assert.assertEquals(c2.getRoot(), c1.getRoot());
 		} catch (Exception e) {
 			e.printStackTrace();
 			Assert.fail();

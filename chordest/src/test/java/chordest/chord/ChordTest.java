@@ -50,4 +50,85 @@ public class ChordTest {
 		Assert.assertFalse(c2.hasSameRootDifferentType(c1));
 	}
 
+	@Test
+	public void testRootAndMajorWhenNotesInDifferentOrder() {
+		Chord c = new Chord(Note.C, Note.E, Note.G);
+		Assert.assertTrue(c.isMajor());
+		Assert.assertEquals(Note.C, c.getRoot());
+		
+		c = new Chord(Note.C, Note.G, Note.E);
+		Assert.assertTrue(c.isMajor());
+		Assert.assertEquals(Note.C, c.getRoot());
+		
+		c = new Chord(Note.E, Note.G, Note.C);
+		Assert.assertTrue(c.isMajor());
+		Assert.assertEquals(Note.C, c.getRoot());
+		
+		c = new Chord(Note.E, Note.C, Note.G);
+		Assert.assertTrue(c.isMajor());
+		Assert.assertEquals(Note.C, c.getRoot());
+		
+		c = new Chord(Note.G, Note.C, Note.E);
+		Assert.assertTrue(c.isMajor());
+		Assert.assertEquals(Note.C, c.getRoot());
+		
+		c = new Chord(Note.G, Note.E, Note.C);
+		Assert.assertTrue(c.isMajor());
+		Assert.assertEquals(Note.C, c.getRoot());
+	}
+
+	@Test
+	public void testRootAndMinorWhenNotesInDifferentOrder() {
+		Chord c = new Chord(Note.C, Note.DD, Note.G);
+		Assert.assertTrue(c.isMinor());
+		Assert.assertEquals(Note.C, c.getRoot());
+		
+		c = new Chord(Note.C, Note.G, Note.DD);
+		Assert.assertTrue(c.isMinor());
+		Assert.assertEquals(Note.C, c.getRoot());
+		
+		c = new Chord(Note.DD, Note.G, Note.C);
+		Assert.assertTrue(c.isMinor());
+		Assert.assertEquals(Note.C, c.getRoot());
+		
+		c = new Chord(Note.DD, Note.C, Note.G);
+		Assert.assertTrue(c.isMinor());
+		Assert.assertEquals(Note.C, c.getRoot());
+		
+		c = new Chord(Note.G, Note.C, Note.DD);
+		Assert.assertTrue(c.isMinor());
+		Assert.assertEquals(Note.C, c.getRoot());
+		
+		c = new Chord(Note.G, Note.DD, Note.C);
+		Assert.assertTrue(c.isMinor());
+		Assert.assertEquals(Note.C, c.getRoot());
+	}
+
+	@Test
+	public void testRootWhenDoubledNotes() {
+		Chord c = new Chord(Note.C, Note.E, Note.G, Note.C);
+		Assert.assertTrue(c.isMajor());
+		Assert.assertEquals(Note.C, c.getRoot());
+		
+		c = new Chord(Note.C, Note.G, Note.E, Note.E);
+		Assert.assertTrue(c.isMajor());
+		Assert.assertEquals(Note.C, c.getRoot());
+		
+		c = new Chord(Note.E, Note.G, Note.C, Note.G);
+		Assert.assertTrue(c.isMajor());
+		Assert.assertEquals(Note.C, c.getRoot());
+		
+		c = new Chord(Note.C, Note.DD, Note.G, Note.C);
+		Assert.assertTrue(c.isMinor());
+		Assert.assertEquals(Note.C, c.getRoot());
+		
+		c = new Chord(Note.C, Note.G, Note.DD, Note.DD);
+		Assert.assertTrue(c.isMinor());
+		Assert.assertEquals(Note.C, c.getRoot());
+		
+		c = new Chord(Note.DD, Note.G, Note.C, Note.G);
+		Assert.assertTrue(c.isMinor());
+		Assert.assertEquals(Note.C, c.getRoot());
+	}
+
 }
