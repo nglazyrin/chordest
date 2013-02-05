@@ -2,6 +2,7 @@ package chordest.model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -45,24 +46,47 @@ public class Chord {
 		return new Chord();
 	}
 
+	public static List<Chord> getAll3NoteChords() {
+		String[] shorthands = new String[] {
+				Chord.MAJ, Chord.MIN, Chord.AUG, Chord.DIM };
+		List<Chord> chords = new ArrayList<Chord>(shorthands.length * Note.values().length);
+		for (String shorthand : shorthands) {
+			for (Note note : Note.values()) {
+				chords.add(new Chord(note, shorthand));
+			}
+		}
+		return Collections.unmodifiableList(chords);
+	}
+
 	private Chord() {
 		this.shorthand = N;
 		this.components = new Note[0];
 	}
 
 	public Chord(Note... notes) {
-		if (notes.length > 0) {
-			Set<Note> set = new HashSet<Note>();
-			set.addAll(Arrays.asList(notes));
-			set.remove(null);
-			Note[] array = set.toArray(new Note[set.size()]);
-			int i = 0;
-			while (i < array.length && array[i] != null) { i++; }
-			this.components = Arrays.copyOf(array, i);
+		Set<Note> set = new HashSet<Note>();
+		set.addAll(Arrays.asList(notes));
+		set.remove(null);
+		Note[] array = set.toArray(new Note[set.size()]);
+		if (array.length > 0) {
+			Note rootMaj = tryMajor(array);
+			Note rootMin = tryMinor(array);
+			if (rootMaj != null) {
+				this.shorthand = Chord.MAJ;
+				this.components = new Note[] { rootMaj, rootMaj.withOffset(Interval.MAJOR_THIRD), rootMaj.withOffset(Interval.PERFECT_FIFTH) };
+			} else if (rootMin != null) {
+				this.shorthand = Chord.MIN;
+				this.components = new Note[] { rootMin, rootMin.withOffset(Interval.MINOR_THIRD), rootMin.withOffset(Interval.PERFECT_FIFTH) };
+			} else {
+				int i = 0;
+				while (i < array.length && array[i] != null) { i++; }
+				this.shorthand = NO_SHORTHAND;
+				this.components = Arrays.copyOf(array, i);
+			}
 		} else {
+			this.shorthand = NO_SHORTHAND;
 			this.components = new Note[0];
 		}
-		this.shorthand = NO_SHORTHAND;
 	}
 
 	public Chord(Note root, String shortHand) {
@@ -231,25 +255,51 @@ public class Chord {
 	}
 
 	public boolean isMajor() {
-		if (isShortHandDefined()) {
-			return MAJ.equals(shorthand);
-		} else {
-			return (this.components.length == 3) &&
-			((getNote(1).ordinal() - getNote(0).ordinal() + 12) % 12 == Interval.MAJOR_THIRD) &&
-			((getNote(2).ordinal() - getNote(0).ordinal() + 12) % 12 == Interval.PERFECT_FIFTH);
-		}
+		return MAJ.equals(shorthand);
 	}
 
 	public boolean isMinor() {
-		if (isShortHandDefined()) {
-			return MIN.equals(shorthand);
-		} else {
-			return (this.components.length == 3) &&
-			((getNote(1).ordinal() - getNote(0).ordinal() + 12) % 12 == Interval.MINOR_THIRD) &&
-			((getNote(2).ordinal() - getNote(0).ordinal() + 12) % 12 == Interval.PERFECT_FIFTH);
-		}
+		return MIN.equals(shorthand);
 	}
-	
+
+	private Note tryMajor(Note[] notes) {
+		if (notes == null || notes.length != 3) {
+			return null;
+		}
+		if (isMajorWithRootN0(notes[0], notes[1], notes[2]) || isMajorWithRootN0(notes[0], notes[2], notes[1])) {
+			return notes[0];
+		} else if (isMajorWithRootN0(notes[1], notes[0], notes[2]) || isMajorWithRootN0(notes[1], notes[2], notes[0])) {
+			return notes[1];
+		} else if (isMajorWithRootN0(notes[2], notes[0], notes[1]) || isMajorWithRootN0(notes[2], notes[1], notes[0])) {
+			return notes[2];
+		}
+		return null;
+	}
+
+	private boolean isMajorWithRootN0(Note n0, Note n1, Note n2) {
+		return (n1.ordinal() - n0.ordinal() + 12) % 12 == Interval.MAJOR_THIRD &&
+				(n2.ordinal() - n0.ordinal() + 12) % 12 == Interval.PERFECT_FIFTH;
+	}
+
+	private Note tryMinor(Note[] notes) {
+		if (notes == null || notes.length != 3) {
+			return null;
+		}
+		if (isMinorWithRootN0(notes[0], notes[1], notes[2]) || isMinorWithRootN0(notes[0], notes[2], notes[1])) {
+			return notes[0];
+		} else if (isMinorWithRootN0(notes[1], notes[0], notes[2]) || isMinorWithRootN0(notes[1], notes[2], notes[0])) {
+			return notes[1];
+		} else if (isMinorWithRootN0(notes[2], notes[0], notes[1]) || isMinorWithRootN0(notes[2], notes[1], notes[0])) {
+			return notes[2];
+		}
+		return null;
+	}
+
+	private boolean isMinorWithRootN0(Note n0, Note n1, Note n2) {
+		return (n1.ordinal() - n0.ordinal() + 12) % 12 == Interval.MINOR_THIRD &&
+				(n2.ordinal() - n0.ordinal() + 12) % 12 == Interval.PERFECT_FIFTH;
+	}
+
 	public boolean isEmpty() {
 		return this.components.length == 0 || N.equals(this.shorthand);
 	}
