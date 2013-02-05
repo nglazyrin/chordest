@@ -17,7 +17,7 @@ from SdA_modified import SdA
 
 class Phi(object):
     def __init__(self):
-        self.R = [0.5, 0.5, 0.25]
+        self.R = [1, 1, 0.5]
         self.PHI = [
             map(lambda x: self.R[0] * math.sin(x * 7 * math.pi / 6), range(12)),
             map(lambda x: self.R[0] * math.cos(x * 7 * math.pi / 6), range(12)),
@@ -34,7 +34,7 @@ class Phi(object):
         c = numpy.array(chroma)
         p = numpy.dot(phi, c)
         p = numpy.squeeze(numpy.asarray(p)) # 1x6 matrix to 1-dim array
-        n = numpy.linalg.norm(p, numpy.inf)
+        n = numpy.linalg.norm(p, 2)
         if (n <= 0): n = 1 # in case of vector consisting of 0s
         p = map(lambda x: x / n, p)
         return p
@@ -71,6 +71,20 @@ def to_tonnetz(chords):
 def to_uniform(row, l):
     return [math.exp(-float(x) * l[i]) for i,x in enumerate(row)]
 
+def to_tile_array(array, height, width):
+    half = int(math.floor(width / 2))
+    temp_len = len(array) + 2 * half
+    temp = [[0 for col in range(height)] for row in range(temp_len)]
+    for i in range(len(array)):
+        temp[i + half] = array[i]
+    return [to_tile(temp[i:i+2*half+1], height*width) for i in range(len(array))]
+
+def to_tile(array, size):
+    result = numpy.asarray(array, dtype=theano.config.floatX).reshape(-1)
+    if (len(result.tolist()) < size):
+        return [0] * size
+    return result.tolist()
+
 def list_spectrum_data(reader, components=200, allow_no_chord=False):
     spectral_components = components
     array = []
@@ -85,13 +99,18 @@ def list_spectrum_data(reader, components=200, allow_no_chord=False):
             chords.append(row[-1])
     return (array, chords)
 
+def through_cnn(cnn, data):
+    m = theano.shared(numpy.asmatrix(data, dtype=theano.config.floatX),
+                                     borrow=True)
+    return cnn.get_result(m)
+
 def through_da(data):
-    with open('dA_spectrum/corruption_30.dat', 'rb') as d:
+    with open('model/corruption_30.dat', 'rb') as d:
         da = cPickle.load(d)
     return da.encode_m(data)
 
 def through_mlp(data, l=None):
-    with open('dA_spectrum/mlp.dat', 'rb') as f:
+    with open('model/mlp.dat', 'rb') as f:
         (hidden, out) = cPickle.load(f)
     if (l):
         data = map(lambda x: to_uniform(x, l), data)
@@ -119,6 +138,11 @@ def through_sda(sda, data):
                                      borrow=True)
     return sda.get_result(m)
 
+def through_sda_layers(sda, data):
+    m = theano.shared(numpy.asmatrix(data, dtype=theano.config.floatX),
+                                     borrow=True)
+    return sda.get_sda_features(m)
+
 def through(data, l=None):
     features = through_da(data)
     return through_mlp(features, l)
@@ -133,5 +157,5 @@ def shuffle_2(list1, list2):
         list2_shuf.append(list2[i])
     return (list1_shuf, list2_shuf)
 
-#chords = ('G#-B-D#', 'A-C#-E', 'N', None)
+#chords = ('B-E-G#', 'A-C#-E', 'N', None)
 #print to_tonnetz(chords)

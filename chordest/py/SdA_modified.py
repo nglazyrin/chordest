@@ -281,3 +281,8 @@ class SdA(object):
         z = self.logLayer.p_y_given_x
         result = theano.function([], z, givens={self.x: m})
         return result()
+
+    def get_sda_features(self, m):
+        z = self.sigmoid_layers[-1].output
+        result = theano.function([], z, givens={self.x: m})
+        return result()

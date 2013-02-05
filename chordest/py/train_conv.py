@@ -15,8 +15,7 @@ import numpy
 import theano
 import theano.tensor as T
 
-from math import floor
-from chord_utils import list_spectrum_data, shuffle_2, to_tonnetz, asarray, asmatrix
+from chord_utils import list_spectrum_data, shuffle_2, to_tonnetz, asarray, to_tile_array
 from conv_modified import LeNetConvPoolLayer
 from dl_code.logistic_sgd import LogisticRegression
 from dl_code.mlp import HiddenLayer
@@ -51,10 +50,9 @@ def read_data():
     with open(train_file, 'rb') as f:
         reader = csv.reader(f)
         (array, chords) = list_spectrum_data(reader, components=ins)
-    array = to_tile_array(array)
+    array = to_tile_array(array, ins, width)
     array = array[4:-4]
     chords = chords[4:-4]
-    print len(array)
     chords = to_tonnetz(chords)
     (array, chords) = shuffle_2(array, chords)
     train = int(0.7 * len(array))
@@ -71,59 +69,9 @@ def read_data():
     return [[train_array, train_chords], [test_array, test_chords], \
             [valid_array, valid_chords]]
 
-def to_tile_array(array):
-    half = int(floor(width / 2))
-    return [to_tile(array[i-half:i+half+1]) for i,x in enumerate(array)]
-
-def to_tile(array):
-    result = numpy.asarray(array, dtype=theano.config.floatX).reshape(-1)
-    if (len(result.tolist()) < size):
-        return [0] * size
-    return result.tolist()
-
-def train_conv(learning_rate=0.001, n_epochs=200,
-                    nkerns=[nkerns0, nkerns1], batch_size=500):
-    """ Demonstrates lenet on audio spectrum data
-
-    :type learning_rate: float
-    :param learning_rate: learning rate used (factor for the stochastic
-                          gradient)
-
-    :type n_epochs: int
-    :param n_epochs: maximal number of epochs to run the optimizer
-
-    :type nkerns: list of ints
-    :param nkerns: number of kernels on each layer
-    """
-
+def create_cnn(x, y, batch_size, nkerns):
     rng = numpy.random.RandomState(23455)
-
-    datasets = read_data()
-
-    train_set_x, train_set_y = datasets[0]
-    valid_set_x, valid_set_y = datasets[1]
-    test_set_x, test_set_y = datasets[2]
-
-    # compute number of minibatches for training, validation and testing
-    n_train_batches = train_set_x.get_value(borrow=True).shape[0]
-    n_valid_batches = valid_set_x.get_value(borrow=True).shape[0]
-    n_test_batches = test_set_x.get_value(borrow=True).shape[0]
-    n_train_batches /= batch_size
-    n_valid_batches /= batch_size
-    n_test_batches /= batch_size
-
-    # allocate symbolic variables for the data
-    index = T.lscalar()  # index to a [mini]batch
-    x = T.matrix('x')   # the spectrum data
-    y = T.matrix('y')  # target tonnetz vectors
-
-    #ishape = (48, 7)  # this is the size of spectrum tile
-
-    ######################
-    # BUILD ACTUAL MODEL #
-    ######################
-    print '... building the model'
-
+    
     # Reshape matrix of rasterized images of shape (batch_size,48*7)
     # to a 4D tensor, compatible with our LeNetConvPoolLayer
     layer0_input = x.reshape((batch_size, 1, ins, width))
@@ -158,6 +106,52 @@ def train_conv(learning_rate=0.001, n_epochs=200,
 
     # classify the values of the fully-connected sigmoidal layer
     layer3 = LogisticRegression(input=layer2.output, n_in=n_sigm, n_out=outs)
+    
+    return (layer0, layer1, layer2, layer3)
+
+
+def train_conv(learning_rate=0.001, n_epochs=200,
+                    nkerns=[nkerns0, nkerns1], batch_size=500):
+    """ Demonstrates lenet on audio spectrum data
+
+    :type learning_rate: float
+    :param learning_rate: learning rate used (factor for the stochastic
+                          gradient)
+
+    :type n_epochs: int
+    :param n_epochs: maximal number of epochs to run the optimizer
+
+    :type nkerns: list of ints
+    :param nkerns: number of kernels on each layer
+    """
+
+
+    datasets = read_data()
+
+    train_set_x, train_set_y = datasets[0]
+    valid_set_x, valid_set_y = datasets[1]
+    test_set_x, test_set_y = datasets[2]
+
+    # compute number of minibatches for training, validation and testing
+    n_train_batches = train_set_x.get_value(borrow=True).shape[0]
+    n_valid_batches = valid_set_x.get_value(borrow=True).shape[0]
+    n_test_batches = test_set_x.get_value(borrow=True).shape[0]
+    n_train_batches /= batch_size
+    n_valid_batches /= batch_size
+    n_test_batches /= batch_size
+
+    # allocate symbolic variables for the data
+    x = T.matrix('x')   # the spectrum data
+    y = T.matrix('y')  # target tonnetz vectors
+    index = T.lscalar()  # index to a [mini]batch
+
+    #ishape = (48, 7)  # this is the size of spectrum tile
+
+    ######################
+    # BUILD ACTUAL MODEL #
+    ######################
+    print '... building the model'
+    (layer0, layer1, layer2, layer3) = create_cnn(x, y, batch_size, nkerns)
 
     # the cost we minimize during training is the NLL of the model
     #cost = layer3.negative_log_likelihood(y)

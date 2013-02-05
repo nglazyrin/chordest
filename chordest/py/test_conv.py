@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jan 17 12:29:41 2013
+Created on Mon Jan 28 10:13:52 2013
 
 @author: Nikolay
 """
@@ -9,17 +9,21 @@ import csv
 import os
 import cPickle
 
-from chord_utils import list_spectrum_data, restore_sda, through_sda
+from chord_utils import list_spectrum_data, through_cnn, to_tile_array
+from conv_modified import CNN
 
-with open('model/SdA.dat', 'rb') as f:
-    (dA_layers, sigmoid_layers, log_layer) = cPickle.load(f)
-sda = restore_sda(dA_layers, sigmoid_layers, log_layer)
+with open('dA_spectrum/conv.dat', 'rb') as f:
+    layers = cPickle.load(f)
+ins = 48
+width = 7
 
 def process_file(source, target):
     with open(source, 'rb') as i:
         reader = csv.reader(i)
-        (before, chords) = list_spectrum_data(reader, components=60, allow_no_chord=True)
-    result = through_sda(sda, before)
+        (before, chords) = list_spectrum_data(reader, components=48, allow_no_chord=True)
+    before = to_tile_array(before, ins, width)
+    cnn = CNN(len(before), layers)
+    result = through_cnn(cnn, before)
     with open(target, 'wb') as o:
         writer = csv.writer(o)
         writer.writerows(result)

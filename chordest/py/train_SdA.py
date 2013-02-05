@@ -10,16 +10,16 @@ import time
 import csv
 import numpy
 import cPickle
-import theano
 
 from SdA_modified import SdA
 from chord_utils import list_spectrum_data, shuffle_2, to_tonnetz, asarray
 
-train_file = 'E:/Dev/git/my_repository/chordest/result/train_dA.csv'
-layers_file = 'dA_spectrum/sda_layers_p.dat'
-sda_file = 'dA_spectrum/SdA.dat'
-ins = 48
-layers_sizes = [40, 40]
+train_file = 'E:/Dev/git/my_repository/chordest/result/train_dA_c.csv'
+layers_file = 'model/sda_layers_p.dat'
+sda_file = 'model/SdA.dat'
+ins = 60
+layers_sizes = [54, 48]
+corruption_levels = [.5, .3, .2]
 outs = 6
 
 def read_data():
@@ -49,11 +49,11 @@ def load_layers():
         return None
     with open(layers_file, 'rb') as f:
         (da, sigmoid) = cPickle.load(f)
-#    return (da, sigmoid)
-    return None
+    return (da, sigmoid)
+#    return None
 
-def train_SdA(finetune_lr=0.01, pretraining_epochs=20,
-             pretrain_lr=0.03, training_epochs=1000, batch_size=3):
+def train_SdA(finetune_lr=0.01, pretraining_epochs=15,
+             pretrain_lr=0.03, training_epochs=1000, batch_size=10):
     """
     Demonstrates how to train and test a stochastic denoising autoencoder.
 
@@ -108,7 +108,6 @@ def train_SdA(finetune_lr=0.01, pretraining_epochs=20,
         print '... pre-training the model'
         start_time = time.clock()
         ## Pre-train layer-wise
-        corruption_levels = [.1, .2, .3]
         for i in xrange(sda.n_layers):
             # go through pretraining epochs
             for epoch in xrange(pretraining_epochs):
@@ -120,7 +119,7 @@ def train_SdA(finetune_lr=0.01, pretraining_epochs=20,
                              lr=pretrain_lr))
                 print 'Pre-training layer %i, epoch %d, cost ' % (i, epoch),
                 print numpy.mean(c)
-        with open('dA_spectrum/sda_layers_p.dat', 'wb') as f:
+        with open(layers_file, 'wb') as f:
             cPickle.dump((sda.dA_layers, sda.sigmoid_layers), f)
     
         end_time = time.clock()
@@ -136,12 +135,13 @@ def train_SdA(finetune_lr=0.01, pretraining_epochs=20,
     # get the training, validation and testing function for the model
     print '... getting the finetuning functions'
     train_fn, validate_model, test_model = sda.build_finetune_functions(
-                datasets=datasets, batch_size=1, #batch_size=batch_size,
+                datasets=datasets, batch_size=batch_size,
                 learning_rate=finetune_lr)
 
     print '... finetunning the model'
     # early-stopping parameters
-    patience = 10 * n_train_batches  # look as this many examples regardless
+    #n_train_batches = train_set_x.get_value(borrow=True).shape[0]
+    patience = 15 * n_train_batches  # look as this many examples regardless
     patience_increase = 2.  # wait this much longer when a new best is
                             # found
     improvement_threshold = 0.995  # a relative improvement of this much is
