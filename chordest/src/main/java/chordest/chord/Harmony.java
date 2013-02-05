@@ -5,8 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import chordest.chord.recognition.TemplatesRecognition;
 import chordest.chord.templates.TemplateProducer;
-import chordest.chord.templates.TemplatesRecognition;
 import chordest.model.Chord;
 import chordest.model.Note;
 import chordest.transform.ScaleInfo;
@@ -49,10 +49,10 @@ public class Harmony {
 				double[] col = pcp[i];
 				sum = DataUtil.add(sum, col);
 			}
-			final Chord top = new TemplatesRecognition(pcpStartNote, possibleChords,
-					new TemplateProducer(pcpStartNote, true)).recognize(sum, new ScaleInfo(1,12));
+			final Chord[] top = new TemplatesRecognition(pcpStartNote, possibleChords,
+					new TemplateProducer(pcpStartNote, true)).recognize(new double[][] { sum }, new ScaleInfo(1,12));
 			for (int i = interval.start; i < interval.end; i++) {
-				result[i] = top;
+				result[i] = top[0];
 			}
 		}
 	}

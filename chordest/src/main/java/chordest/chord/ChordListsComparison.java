@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import chordest.chord.templates.TemplatesRecognition;
+import chordest.chord.recognition.TemplatesRecognition;
 import chordest.model.Chord;
 
 

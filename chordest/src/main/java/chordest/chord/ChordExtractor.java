@@ -4,7 +4,8 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.chord.templates.TemplatesRecognition;
+import chordest.chord.recognition.IChordRecognition;
+import chordest.chord.tonnetz.TonnetzRecognition;
 import chordest.configuration.Configuration.ProcessProperties;
 import chordest.model.Chord;
 import chordest.model.Key;
@@ -72,7 +73,7 @@ public class ChordExtractor {
 		result = DataUtil.smoothHorizontallyMedian(result, p.medianFilterWindow);
 		result = DataUtil.shrink(result, spectrumData.framesPerBeat);
 		result = DataUtil.toLogSpectrum(result);
-//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Original spectrum");
+		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Original spectrum");
 		if (externalProcessor != null) {
 			result = externalProcessor.process(result);
 //			Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Modified spectrum");
@@ -92,9 +93,9 @@ public class ChordExtractor {
 		selfSim = DataUtil.removeDissimilar(selfSim, theta);
 //		Visualizer.visualizeSelfSimilarity(selfSim, originalBeatTimes);
 		
-//		double[][] result = DiscreteCosineTransform.doChromaReduction(spectrum, procNZ);
-		double[][] result = spectrum;
-//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Reduced " + procNZ);
+		double[][] result = DiscreteCosineTransform.doChromaReduction(spectrum, procNZ);
+//		double[][] result = spectrum;
+		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Reduced " + procNZ);
 		result = DataUtil.smoothWithSelfSimilarity(result, selfSim);
 		return result;
 	}
@@ -106,7 +107,8 @@ public class ChordExtractor {
 //		key = Key.recognizeKey(getTonalProfile(pcp, 0, pcp.length), startNote);
 		key = null;
 		Note startNote = Note.byNumber(spectrumData.startNoteOffsetInSemitonesFromF0);
-		TemplatesRecognition first = new TemplatesRecognition(startNote, key);
+//		IChordRecognition first = new TemplatesRecognition(startNote, key);
+		IChordRecognition first = new TonnetzRecognition(startNote);
 		Chord[] temp = first.recognize(chromas, new ScaleInfo(1, 12));
 //		LOG.info("Normalized diff: " + first.getDiffNormalized());
 		
@@ -114,7 +116,7 @@ public class ChordExtractor {
 //		for (Entry<Chord, double[]> entry : newTemplates.entrySet()) {
 //			LOG.info(entry.getKey().toString() + " - " + Arrays.toString(entry.getValue()));
 //		}
-//		TemplatesRecognition second = new TemplatesRecognition(startNote, newTemplates.keySet(),
+//		IChordRecognition second = new TemplatesRecognition(startNote, newTemplates.keySet(),
 //				new SimpleTemplateProducer(newTemplates));
 //		temp = second.recognize(chromas, new ScaleInfo(1, 12));
 		

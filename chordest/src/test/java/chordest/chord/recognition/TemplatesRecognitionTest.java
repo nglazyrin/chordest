@@ -4,7 +4,6 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import chordest.chord.templates.TemplatesRecognition;
 import chordest.io.lab.chordparser.ChordParser;
 import chordest.io.lab.chordparser.ParseException;
 import chordest.io.lab.chordparser.TokenMgrError;
