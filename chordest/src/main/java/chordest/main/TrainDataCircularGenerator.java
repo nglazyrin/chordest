@@ -34,7 +34,7 @@ import chordest.util.TracklistCreator;
 public class TrainDataCircularGenerator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TrainDataGenerator.class);
-	private static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "all_files1train.txt";
+	private static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "all_files0.txt";
 	private static final String CSV_FILE = PathConstants.OUTPUT_DIR + "train_dA_c.csv";
 
 	private OutputStream csvOut;

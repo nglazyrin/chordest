@@ -19,7 +19,7 @@ import chordest.util.TracklistCreator;
 public class TestDataGenerator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TestDataGenerator.class);
-	private static final String TEST_FILE_LIST = "work" + PathConstants.SEP + "all_files1test.txt";
+	private static final String TEST_FILE_LIST = "work" + PathConstants.SEP + "all_files1.txt";
 	private static final String OUTPUT_FOLDER = PathConstants.CSV_DIR + "test" + PathConstants.SEP;
 
 	public static void main(String[] args) {
