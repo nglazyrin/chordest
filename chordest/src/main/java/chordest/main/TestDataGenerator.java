@@ -36,7 +36,7 @@ public class TestDataGenerator {
 			TrainDataGenerator.deleteIfExists(csvFileName);
 			TrainDataGenerator tdg = new TrainDataGenerator(csvFileName, false);
 			double[][] result = TrainDataGenerator.prepareSpectrum(binFileName);
-			tdg.process(result, 60);
+			tdg.process(result, 72);
 			if (++filesProcessed % 10 == 0) {
 				LOG.info(filesProcessed + " files processed");
 			}

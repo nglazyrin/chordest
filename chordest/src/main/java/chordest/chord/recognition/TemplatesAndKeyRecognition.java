@@ -57,9 +57,6 @@ public class TemplatesAndKeyRecognition extends TemplatesRecognition {
 		}
 		final int notesInOctave = scaleInfo.getNotesInOctaveCount();
 		final double[] pcp = DataUtil.toSingleOctave(cqtSpectrum, notesInOctave);
-		if (isSmall(pcp)) {
-			return Chord.empty();
-		}
 		final double[] vector = metric.normalize(DataUtil.reduceTo12Notes(pcp));
 		
 		Map<Chord, Double> distances = new HashMap<Chord, Double>();

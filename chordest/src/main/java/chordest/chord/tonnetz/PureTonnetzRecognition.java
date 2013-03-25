@@ -34,7 +34,8 @@ public class PureTonnetzRecognition {
 	}
 
 	public PureTonnetzRecognition(Note pcpStartNote) {
-		Map<Chord, double[]> map = getTemplatesForChords(new TemplateProducer(pcpStartNote, false), Chord.getAll3NoteChords());
+		Map<Chord, double[]> map = getTemplatesForChords(new TemplateProducer(pcpStartNote, false),
+				Chord.getAllChordsWithShorthands(new String[] { Chord.MAJ, Chord.MIN, Chord.AUG, Chord.DIM }));
 		for (Chord chord : map.keySet()) {
 			map.put(chord, toTonalCentroid(map.get(chord)));
 		}

@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import chordest.chord.recognition.IChordRecognition;
-import chordest.chord.tonnetz.TonnetzRecognition;
+import chordest.chord.recognition.TemplatesRecognition;
 import chordest.configuration.Configuration.ProcessProperties;
 import chordest.model.Chord;
 import chordest.model.Key;
@@ -73,7 +73,7 @@ public class ChordExtractor {
 		result = DataUtil.smoothHorizontallyMedian(result, p.medianFilterWindow);
 		result = DataUtil.shrink(result, spectrumData.framesPerBeat);
 		result = DataUtil.toLogSpectrum(result);
-		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Original spectrum");
+//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Original spectrum");
 		if (externalProcessor != null) {
 			result = externalProcessor.process(result);
 //			Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Modified spectrum");
@@ -87,16 +87,16 @@ public class ChordExtractor {
 
 	private double[][] doChromaReductionAndSelfSimSmooth(final double[][] spectrum,
 			int simNZ, int procNZ, double theta) {
-		double[][] red = DiscreteCosineTransform.doChromaReduction(spectrum, simNZ);
+//		double[][] red = DiscreteCosineTransform.doChromaReduction(spectrum, simNZ);
 //		Visualizer.visualizeSpectrum(red, originalBeatTimes, labels, "Reduced " + simNZ);
-		double[][] selfSim = DataUtil.getSelfSimilarity(red);
-		selfSim = DataUtil.removeDissimilar(selfSim, theta);
+//		double[][] selfSim = DataUtil.getSelfSimilarity(red);
+//		selfSim = DataUtil.removeDissimilar(selfSim, theta);
 //		Visualizer.visualizeSelfSimilarity(selfSim, originalBeatTimes);
 		
 		double[][] result = DiscreteCosineTransform.doChromaReduction(spectrum, procNZ);
 //		double[][] result = spectrum;
-		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Reduced " + procNZ);
-		result = DataUtil.smoothWithSelfSimilarity(result, selfSim);
+//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Reduced " + procNZ);
+//		result = DataUtil.smoothWithSelfSimilarity(result, selfSim);
 		return result;
 	}
 
@@ -107,8 +107,8 @@ public class ChordExtractor {
 //		key = Key.recognizeKey(getTonalProfile(pcp, 0, pcp.length), startNote);
 		key = null;
 		Note startNote = Note.byNumber(spectrumData.startNoteOffsetInSemitonesFromF0);
-//		IChordRecognition first = new TemplatesRecognition(startNote, key);
-		IChordRecognition first = new TonnetzRecognition(startNote);
+		IChordRecognition first = new TemplatesRecognition(startNote, key);
+//		IChordRecognition first = new TonnetzRecognition(startNote);
 		Chord[] temp = first.recognize(chromas, new ScaleInfo(1, 12));
 //		LOG.info("Normalized diff: " + first.getDiffNormalized());
 		

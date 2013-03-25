@@ -13,32 +13,32 @@ import chordest.model.Chord;
 import chordest.model.Key;
 import chordest.model.Note;
 import chordest.util.MapUtil;
+import chordest.util.metric.EuclideanMetric;
 import chordest.util.metric.IMetric;
-import chordest.util.metric.KLMetric;
 
 
 public class TemplatesRecognition extends AbstractChordRecognition {
 
 	public static final List<Chord> knownChords;
 
-	public static final IMetric metric = new KLMetric();			// step 4
-//	public static final IMetric metric = new CosineMetric();
+//	public static final IMetric metric = new KLMetric();			// step 4
+	public static final IMetric metric = new EuclideanMetric();
 
 	static {
-		knownChords = Chord.getAll3NoteChords();
+		knownChords = Chord.getAllChordsWithShorthands(new String[] { Chord.MAJ, Chord.MIN, Chord.N });
 	}
 
 	public static boolean isKnown(Chord chord) {
 		return chord.isEmpty() || knownChords.contains(chord);
 	}
 
-	private final Map<Chord, double[]> possibleChords;
+	protected final Map<Chord, double[]> possibleChords;
 
 	/**
 	 * All 24 major/minor chords will be used for recognition
 	 */
 	public TemplatesRecognition(Note pcpStartNote) {
-		Map<Chord, double[]> map = getTemplatesForChords(new TemplateProducer(pcpStartNote, true), knownChords);
+		Map<Chord, double[]> map = getTemplatesForChords(new TemplateProducer(pcpStartNote, false), knownChords);
 		possibleChords = Collections.unmodifiableMap(map);
 	}
 
@@ -48,7 +48,7 @@ public class TemplatesRecognition extends AbstractChordRecognition {
 	 * @param key
 	 */
 	public TemplatesRecognition(Note pcpStartNote, Key key) {
-		ITemplateProducer templateProducer = new TemplateProducer(pcpStartNote, true);
+		ITemplateProducer templateProducer = new TemplateProducer(pcpStartNote, false);
 		Map<Chord, double[]> map = new HashMap<Chord, double[]>();
 		if (key != null) {
 			map = getTemplatesForChords(templateProducer, key.getChords());
@@ -80,11 +80,6 @@ public class TemplatesRecognition extends AbstractChordRecognition {
 		// find element with minimal distance
 		List<Entry<Chord, Double>> sorted = MapUtil.sortMapByValue(distances, true);
 		return sorted.get(0).getKey();
-	}
-
-	protected boolean isSmall(final double[] vector) {
-//		return metric.distance(vector, new double[12]) < 0.05;
-		return false;
 	}
 
 }

@@ -12,9 +12,11 @@ import org.slf4j.LoggerFactory;
 
 import chordest.chord.ChordListsComparison;
 import chordest.chord.ComparisonAccumulator;
+import chordest.io.csv.CsvFileWriter;
 import chordest.io.lab.LabFileReader;
 import chordest.io.lab.LabFileWriter;
 import chordest.io.spectrum.SpectrumFileReader;
+import chordest.main.Roundtrip;
 import chordest.model.Chord;
 import chordest.spectrum.SpectrumData;
 import chordest.util.PathConstants;
@@ -83,10 +85,17 @@ public abstract class AbstractTestRecognizeFromCsv {
 		
 		LabFileReader labReaderExpected = new LabFileReader(new File(expectedLab));
 		LabFileReader labReaderActual = new LabFileReader(temp);
+		
+		String track = StringUtils.substringAfterLast(expectedLab, PathConstants.SEP);
+		String csvFileName = StringUtils.replace(track, PathConstants.EXT_LAB, PathConstants.EXT_CSV);
+		Roundtrip.write(new CsvFileWriter(labReaderActual.getChords(), labReaderActual.getTimestamps()), Roundtrip.CSV_ACTUAL_DIR + csvFileName);
+		Roundtrip.write(new CsvFileWriter(labReaderExpected.getChords(), labReaderExpected.getTimestamps()), Roundtrip.CSV_EXPECTED_DIR + csvFileName);
+		
 		ChordListsComparison cmp = new ChordListsComparison(labReaderExpected.getChords(),
 				labReaderExpected.getTimestamps(), labReaderActual.getChords(), labReaderActual.getTimestamps());
 		acc.append(cmp);
-		SIM_LOG.info(expectedLab.replace(',', '_').replace('\\', '/') + "," + 
+		
+		SIM_LOG.info(expectedLab.substring(4).replace(',', '_').replace('\\', '/') + "," + 
 				cmp.getOverlapMeasure() + "," + cmp.getTotalSeconds() + "," + sd.totalSeconds);
 		
 		return cmp.getOverlapMeasure();

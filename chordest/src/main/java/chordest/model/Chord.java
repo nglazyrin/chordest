@@ -46,9 +46,7 @@ public class Chord {
 		return new Chord();
 	}
 
-	public static List<Chord> getAll3NoteChords() {
-		String[] shorthands = new String[] {
-				Chord.MAJ, Chord.MIN, Chord.AUG, Chord.DIM };
+	public static List<Chord> getAllChordsWithShorthands(String[] shorthands) {
 		List<Chord> chords = new ArrayList<Chord>(shorthands.length * Note.values().length);
 		for (String shorthand : shorthands) {
 			for (Note note : Note.values()) {
@@ -309,6 +307,9 @@ public class Chord {
 	}
 
 	public boolean hasSameRootDifferentType(Chord other) {
+		if (isEmpty() || other.isEmpty()) {
+			return false;
+		}
 		return this.getRoot().equals(other.getRoot()) &&
 				! this.getShortHand().equals(other.getShortHand());
 	}

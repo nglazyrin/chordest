@@ -46,6 +46,8 @@ public class TemplateProducer implements ITemplateProducer {
 				fillHarmonicsForPitchClass(template, notes[1], 1.0);
 				fillHarmonicsForPitchClass(template, notes[2], 1.0);
 			}
+		} else if (chord.isEmpty()) {
+			// fill nothing
 		} else {
 			String shorthand = chord.getShortHand();
 			if (Chord.MAJ7.equals(shorthand) || Chord.DOM.equals(shorthand)

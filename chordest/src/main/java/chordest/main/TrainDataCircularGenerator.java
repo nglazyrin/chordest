@@ -36,15 +36,18 @@ public class TrainDataCircularGenerator {
 	private static final Logger LOG = LoggerFactory.getLogger(TrainDataGenerator.class);
 	private static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "all_files0.txt";
 	private static final String CSV_FILE = PathConstants.OUTPUT_DIR + "train_dA_c.csv";
+	private static final String CSV_FILE_B = PathConstants.OUTPUT_DIR + "train_dA_bass_c.csv";
 
-	private OutputStream csvOut;
+	private final File chordFile;
+	private final File bassFile;
 
 	public static void main(String[] args) {
 		List<String> tracklist = TracklistCreator.readTrackList(TRAIN_FILE_LIST);
 		TrainDataGenerator.deleteIfExists(CSV_FILE);
+		TrainDataGenerator.deleteIfExists(CSV_FILE_B);
 		int filesProcessed = 0;
 		for (final String binFileName : tracklist) {
-			TrainDataCircularGenerator tdg = new TrainDataCircularGenerator(CSV_FILE, true);
+			TrainDataCircularGenerator tdg = new TrainDataCircularGenerator(CSV_FILE, CSV_FILE_B);
 			SpectrumData sd = SpectrumFileReader.read(binFileName);
 			double[][] result = TrainDataCircularGenerator.prepareSpectrum(sd);
 			Chord[] chords = TrainDataCircularGenerator.prepareChords(binFileName, sd);
@@ -89,14 +92,9 @@ public class TrainDataCircularGenerator {
 		return result;
 	}
 
-	public TrainDataCircularGenerator(String outputCsvFileName, boolean append) {
-		File file = new File(outputCsvFileName);
-		try {
-			csvOut = FileUtils.openOutputStream(file, append);
-		} catch (IOException e) {
-			LOG.error("Error when creating resulting .csv file", e);
-			System.exit(-2);
-		}
+	public TrainDataCircularGenerator(String chordCsvFileName, String bassCsvFileName) {
+		chordFile = new File(chordCsvFileName);
+		bassFile = new File(bassCsvFileName);
 	}
 
 	private void process(double[][] data, Chord[] chords) {
@@ -104,46 +102,55 @@ public class TrainDataCircularGenerator {
 			LOG.error("data or chords is null");
 			return;
 		}
-		try {
+		try (OutputStream chordOut = FileUtils.openOutputStream(chordFile, true);
+				OutputStream bassOut = FileUtils.openOutputStream(bassFile, true)) {
 			for (int i = 0; i < data.length; i++) {
 				if (data[i].length != 72) {
 					throw new IOException("Spectrum bin length != 72: " + data[i].length);
 				}
-				process(data[i], chords[i]);
+				process(data[i], chords[i], chordOut, bassOut);
 			}
 		} catch (IOException e) {
 			LOG.error("Error when writing result", e);
-		} finally {
-			try {
-				csvOut.close();
-			} catch (IOException e) {
-				LOG.error("Error when closing output stream for the resulting file", e);
-			}
 		}
 	}
 
-	private void process(double[] data, Chord chord) throws IOException {
+	private void process(double[] data, Chord chord, OutputStream chordOut, OutputStream bassOut) throws IOException {
 		if (chord == null) {
 			return;
 		}
 		if (chord.isEmpty()) {
 			double[] dataLocal = Arrays.copyOfRange(data, 0, 60);
-			csvOut.write(TrainDataGenerator.toByteArray(dataLocal, chord));
-		} else if (chord.isMajor()) {
-			Note startNote = chord.getRoot();
+			chordOut.write(TrainDataGenerator.toByteArray(dataLocal, chord));
+			bassOut.write(TrainDataGenerator.toByteArrayForBass(dataLocal, chord));
+		} else {
+			Note[] notes = chord.getNotes();
 			for (int i = 0; i < 12; i++) {
 				double[] dataLocal = Arrays.copyOfRange(data, i, i + 60);
-				Chord chordLocal = Chord.major(startNote.withOffset(-i));
-				csvOut.write(TrainDataGenerator.toByteArray(dataLocal, chordLocal));
-			}
-		} else if (chord.isMinor()) {
-			Note startNote = chord.getRoot();
-			for (int i = 0; i < 12; i++) {
-				double[] dataLocal = Arrays.copyOfRange(data, i, i + 60);
-				Chord chordLocal = Chord.minor(startNote.withOffset(-i));
-				csvOut.write(TrainDataGenerator.toByteArray(dataLocal, chordLocal));
+				Note[] newNotes = new Note[notes.length];
+				for (int j = 0; j < notes.length; j++) {
+					newNotes[j] = notes[j].withOffset(-i);
+				}
+				Chord chordLocal = new Chord(newNotes);
+				chordOut.write(TrainDataGenerator.toByteArray(dataLocal, chordLocal));
+				bassOut.write(TrainDataGenerator.toByteArrayForBass(dataLocal, chordLocal));
 			}
 		}
+//		} else if (chord.isMajor()) {
+//			Note startNote = chord.getRoot();
+//			for (int i = 0; i < 12; i++) {
+//				double[] dataLocal = Arrays.copyOfRange(data, i, i + 60);
+//				Chord chordLocal = Chord.major(startNote.withOffset(-i));
+//				csvOut.write(TrainDataGenerator.toByteArray(dataLocal, chordLocal));
+//			}
+//		} else if (chord.isMinor()) {
+//			Note startNote = chord.getRoot();
+//			for (int i = 0; i < 12; i++) {
+//				double[] dataLocal = Arrays.copyOfRange(data, i, i + 60);
+//				Chord chordLocal = Chord.minor(startNote.withOffset(-i));
+//				csvOut.write(TrainDataGenerator.toByteArray(dataLocal, chordLocal));
+//			}
+//		}
 	}
 
 }

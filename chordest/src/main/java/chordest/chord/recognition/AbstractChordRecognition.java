@@ -14,7 +14,7 @@ import chordest.util.DataUtil;
 
 public abstract class AbstractChordRecognition implements IChordRecognition {
 
-	private static final Logger LOG = LoggerFactory.getLogger(AbstractChordRecognition.class);
+	protected static final Logger LOG = LoggerFactory.getLogger(AbstractChordRecognition.class);
 
 	public Chord[] recognize(final double[][] cqtSpectrum, final ScaleInfo scaleInfo) {
 		if (cqtSpectrum == null) {
@@ -38,7 +38,7 @@ public abstract class AbstractChordRecognition implements IChordRecognition {
 	 * of "notes" per octave in the given spectrum bin
 	 * @return The same bin compressed to 12-dimensions, 1 per pitch class
 	 */
-	private double[] to12DimensionalFeatureVector(double[] cqtSpectrumBin, ScaleInfo scaleInfo) {
+	protected double[] to12DimensionalFeatureVector(double[] cqtSpectrumBin, ScaleInfo scaleInfo) {
 		if (cqtSpectrumBin == null) {
 			throw new NullPointerException("vector is null");
 		}

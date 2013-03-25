@@ -168,4 +168,24 @@ public class TrainDataGenerator implements IExternalProcessor {
 		return sb.toString().getBytes(ENCODING);
 	}
 
+	public static byte[] toByteArrayForBass(double[] ds, Chord chord) throws UnsupportedEncodingException {
+		if (ds == null || ds.length == 0 || chord == null) {
+			return new byte[0];
+		}
+		StringBuilder sb = new StringBuilder();
+		for (int j = 0; j < ds.length; j++) {
+			sb.append(ds[j]);
+			sb.append(DELIMITER);
+		}
+		if (chord != null) {
+			if (chord.isEmpty()) {
+				sb.append('N');
+			} else {
+				sb.append(chord.getRoot().getShortName());
+			}
+		}
+		sb.append("\r\n");
+		return sb.toString().getBytes(ENCODING);
+	}
+
 }

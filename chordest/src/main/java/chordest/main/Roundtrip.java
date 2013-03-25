@@ -27,8 +27,8 @@ public class Roundtrip {
 	private static final Logger SIM_LOG = LoggerFactory.getLogger("Similarity");
 
 	private static final String SEP = PathConstants.SEP;
-	private static final String CSV_ACTUAL_DIR = PathConstants.CSV_DIR + "actual" + SEP;
-	private static final String CSV_EXPECTED_DIR = PathConstants.CSV_DIR + "expected" + SEP;
+	public static final String CSV_ACTUAL_DIR = PathConstants.CSV_DIR + "actual" + SEP;
+	public static final String CSV_EXPECTED_DIR = PathConstants.CSV_DIR + "expected" + SEP;
 	private static final String LAB_DIR = PathConstants.LAB_DIR;
 	private static final String SPECTRUM_DIR = "spectrum8" + SEP;
 
@@ -86,7 +86,7 @@ public class Roundtrip {
 		}
 	}
 
-	private static void write(AbstractWriter writer, String fileName) {
+	public static void write(AbstractWriter writer, String fileName) {
 		try {
 			writer.writeTo(new File(fileName));
 		} catch (IOException e) {

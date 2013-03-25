@@ -18,9 +18,7 @@ public class CsvSpectrumFileReader {
 	
 	public CsvSpectrumFileReader(File csv) {
 		List<double[]> spectrumTemp = new LinkedList<double[]>();
-		Scanner scanner = null;
-		try {
-			scanner = new Scanner(csv);
+		try (Scanner scanner = new Scanner(csv);) {
 			scanner.useLocale(Locale.ENGLISH);
 			while (scanner.hasNext()) {
 				String line = scanner.nextLine();
@@ -42,10 +40,6 @@ public class CsvSpectrumFileReader {
 			throw new IllegalArgumentException(e);
 		} catch (NumberFormatException e) {
 			throw new IllegalArgumentException(e);
-		} finally {
-			if (scanner != null) {
-				scanner.close();
-			}
 		}
 	}
 

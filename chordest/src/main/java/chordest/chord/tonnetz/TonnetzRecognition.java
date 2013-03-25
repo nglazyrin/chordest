@@ -46,7 +46,8 @@ public class TonnetzRecognition extends AbstractChordRecognition {
 	 * All 24 major/minor chords will be used for recognition
 	 */
 	public TonnetzRecognition(Note pcpStartNote) {
-		Map<Chord, double[]> map = getTemplatesForChords(new TemplateProducer(pcpStartNote, false), Chord.getAll3NoteChords());
+		Map<Chord, double[]> map = getTemplatesForChords(new TemplateProducer(pcpStartNote, false),
+				Chord.getAllChordsWithShorthands(new String[] { Chord.MAJ, Chord.MIN, Chord.AUG, Chord.DIM }));
 		for (Chord chord : map.keySet()) {
 			map.put(chord, toTonalCentroid(map.get(chord)));
 		}
