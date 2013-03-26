@@ -38,6 +38,10 @@ public class TrainDataGenerator implements IExternalProcessor {
 	private static final String ENCODING = "utf-8";
 	private static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "all_files0train.txt";
 	private static final String CSV_FILE = PathConstants.OUTPUT_DIR + "train_dA.csv";
+	
+	public static final int WINDOW = 11;
+	public static final int OFFSET = 12;
+	public static final int INPUTS = 60;
 
 	private OutputStream csvOut;
 
@@ -49,7 +53,7 @@ public class TrainDataGenerator implements IExternalProcessor {
 			TrainDataGenerator tdg = new TrainDataGenerator(CSV_FILE, true);
 			double[][] result = TrainDataGenerator.prepareSpectrum(binFileName);
 			Chord[] chords = TrainDataGenerator.prepareChords(binFileName);
-			tdg.process(result, chords, result[0].length);
+			tdg.process(result, chords, 0, result[0].length);
 			if (++filesProcessed % 10 == 0) {
 				LOG.info(filesProcessed + " files processed");
 			}
@@ -71,8 +75,8 @@ public class TrainDataGenerator implements IExternalProcessor {
 	public static double[][] prepareSpectrum(final String binFileName) {
 		SpectrumData sd = SpectrumFileReader.read(binFileName);
 		double[][] result = sd.spectrum;
-		int window = new Configuration().process.medianFilterWindow;
-		result = DataUtil.smoothHorizontallyMedian(result, window);
+		//int window = new Configuration().process.medianFilterWindow;
+		result = DataUtil.smoothHorizontallyMedian(result, WINDOW);
 		result = DataUtil.shrink(result, sd.framesPerBeat);
 		result = DataUtil.toLogSpectrum(result);
 		result = DataUtil.reduce(result, sd.scaleInfo.getOctavesCount());
@@ -105,16 +109,16 @@ public class TrainDataGenerator implements IExternalProcessor {
 
 	@Override
 	public double[][] process(double[][] data) {
-		process(data, new Chord[data.length], data[0].length);
+		process(data, new Chord[data.length], OFFSET, data[0].length);
 		return data;
 	}
 
-	public double[][] process(double[][] data, int components) {
-		process(data, new Chord[data.length], components);
+	public double[][] process(double[][] data, int offset, int components) {
+		process(data, new Chord[data.length], offset, components);
 		return data;
 	}
 
-	private void process(double[][] data, Chord[] chords, int components) {
+	private void process(double[][] data, Chord[] chords, int offset, int components) {
 		if (data == null || chords == null) {
 			LOG.error("data or chords is null");
 			return;
@@ -123,7 +127,7 @@ public class TrainDataGenerator implements IExternalProcessor {
 			for (int i = 0; i < data.length; i++) {
 				double[] row = data[i];
 				if (components != row.length) {
-					row = Arrays.copyOfRange(row, 0, components);
+					row = Arrays.copyOfRange(row, offset, offset + components);
 				}
 				csvOut.write(toByteArray(row, chords[i]));
 			}

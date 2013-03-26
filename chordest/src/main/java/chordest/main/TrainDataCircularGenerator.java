@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,8 +73,7 @@ public class TrainDataCircularGenerator {
 
 	public static double[][] prepareSpectrum(final SpectrumData sd) {
 		double[][] result = sd.spectrum;
-		int window = new Configuration().process.medianFilterWindow;
-		result = DataUtil.smoothHorizontallyMedian(result, window);
+		result = DataUtil.smoothHorizontallyMedian(result, TrainDataGenerator.WINDOW);
 		result = DataUtil.shrink(result, sd.framesPerBeat);
 		result = DataUtil.toLogSpectrum(result);
 		result = DataUtil.reduce(result, sd.scaleInfo.getOctavesCount());
@@ -105,8 +105,10 @@ public class TrainDataCircularGenerator {
 		try (OutputStream chordOut = FileUtils.openOutputStream(chordFile, true);
 				OutputStream bassOut = FileUtils.openOutputStream(bassFile, true)) {
 			for (int i = 0; i < data.length; i++) {
-				if (data[i].length != 72) {
-					throw new IOException("Spectrum bin length != 72: " + data[i].length);
+				if (data[i].length < TrainDataGenerator.INPUTS + 12) {
+					throw new IOException("Spectrum bin length < " + (TrainDataGenerator.INPUTS+12) +  ": " + data[i].length);
+				} else if (data[i].length > 72) {
+					data[i] = ArrayUtils.subarray(data[i], 0, TrainDataGenerator.INPUTS + 12);
 				}
 				process(data[i], chords[i], chordOut, bassOut);
 			}
@@ -120,13 +122,13 @@ public class TrainDataCircularGenerator {
 			return;
 		}
 		if (chord.isEmpty()) {
-			double[] dataLocal = Arrays.copyOfRange(data, 0, 60);
+			double[] dataLocal = Arrays.copyOfRange(data, TrainDataGenerator.OFFSET, TrainDataGenerator.OFFSET + TrainDataGenerator.INPUTS);
 			chordOut.write(TrainDataGenerator.toByteArray(dataLocal, chord));
 			bassOut.write(TrainDataGenerator.toByteArrayForBass(dataLocal, chord));
 		} else {
 			Note[] notes = chord.getNotes();
 			for (int i = 0; i < 12; i++) {
-				double[] dataLocal = Arrays.copyOfRange(data, i, i + 60);
+				double[] dataLocal = Arrays.copyOfRange(data, TrainDataGenerator.OFFSET + i, TrainDataGenerator.OFFSET + i + TrainDataGenerator.INPUTS);
 				Note[] newNotes = new Note[notes.length];
 				for (int j = 0; j < notes.length; j++) {
 					newNotes[j] = notes[j].withOffset(-i);
@@ -139,14 +141,14 @@ public class TrainDataCircularGenerator {
 //		} else if (chord.isMajor()) {
 //			Note startNote = chord.getRoot();
 //			for (int i = 0; i < 12; i++) {
-//				double[] dataLocal = Arrays.copyOfRange(data, i, i + 60);
+//				double[] dataLocal = Arrays.copyOfRange(data, i, i + TrainDataGenerator.INPUTS);
 //				Chord chordLocal = Chord.major(startNote.withOffset(-i));
 //				csvOut.write(TrainDataGenerator.toByteArray(dataLocal, chordLocal));
 //			}
 //		} else if (chord.isMinor()) {
 //			Note startNote = chord.getRoot();
 //			for (int i = 0; i < 12; i++) {
-//				double[] dataLocal = Arrays.copyOfRange(data, i, i + 60);
+//				double[] dataLocal = Arrays.copyOfRange(data, i, i + TrainDataGenerator.INPUTS);
 //				Chord chordLocal = Chord.minor(startNote.withOffset(-i));
 //				csvOut.write(TrainDataGenerator.toByteArray(dataLocal, chordLocal));
 //			}
