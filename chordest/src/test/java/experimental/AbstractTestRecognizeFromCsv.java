@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,8 @@ public abstract class AbstractTestRecognizeFromCsv {
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractTestRecognizeFromCsv.class);
 	private static final Logger SIM_LOG = LoggerFactory.getLogger("Similarity");
 
-	private static String BIN_DIRECTORY = "spectrum8" + PathConstants.SEP;
+	private static String BIN_DIRECTORY = "spectrum4" + PathConstants.SEP;
+	private static String OUTPUT_DIRECTORY = "work" + PathConstants.SEP + "lab" + PathConstants.SEP;
 	private static final String TEST_FILE_LIST = "work" + PathConstants.SEP + "all_files1.txt";
 
 	private static ComparisonAccumulator acc = new ComparisonAccumulator();
@@ -76,7 +78,8 @@ public abstract class AbstractTestRecognizeFromCsv {
 		LabFileWriter lw = new LabFileWriter(chords, beatTimes);
 		File temp = null;
 		try {
-			temp = File.createTempFile("chordest", PathConstants.EXT_LAB);
+			temp = new File(OUTPUT_DIRECTORY, new File(expectedLab).getName());
+			if (temp.exists()) { FileUtils.forceDelete(temp); }
 			lw.writeTo(temp);
 		} catch (IOException e) {
 			LOG.error("Error when saving temporary lab file", e);
