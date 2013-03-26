@@ -4,6 +4,8 @@ import java.io.File;
 
 import chordest.chord.Harmony;
 import chordest.chord.recognition.TemplatesRecognition;
+import chordest.chord.templates.ITemplateProducer;
+import chordest.chord.templates.TemplateProducer;
 import chordest.configuration.Configuration;
 import chordest.io.csv.CsvSpectrumFileReader;
 import chordest.model.Chord;
@@ -38,9 +40,10 @@ public class TestCsvChroma extends AbstractTestRecognizeFromCsv {
 		chroma = DataUtil.smoothWithSelfSimilarity(chroma, selfSim);
 		
 		Note startNote = Note.byNumber(c.spectrum.offsetFromF0InSemitones);
-		TemplatesRecognition rec = new TemplatesRecognition(startNote);
+		ITemplateProducer producer = new TemplateProducer(startNote);
+		TemplatesRecognition rec = new TemplatesRecognition(producer);
 		Chord[] temp = rec.recognize(chroma, new ScaleInfo(1, 12));
-		return Harmony.smoothUsingHarmony(chroma, temp, new ScaleInfo(1, 12), startNote);
+		return Harmony.smoothUsingHarmony(chroma, temp, new ScaleInfo(1, 12), producer);
 //		return temp;
 	}
 

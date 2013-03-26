@@ -7,6 +7,8 @@ import java.nio.file.Path;
 import chordest.chord.Harmony;
 import chordest.chord.recognition.TemplatesRecognition;
 import chordest.chord.recognition.TemplatesWithBassRecognition;
+import chordest.chord.templates.ITemplateProducer;
+import chordest.chord.templates.TemplateProducer;
 import chordest.configuration.Configuration;
 import chordest.io.csv.CsvSpectrumFileReader;
 import chordest.model.Chord;
@@ -90,10 +92,11 @@ public class TestCsvChromaBass extends AbstractTestRecognizeFromCsv {
 //		bassChroma = DataUtil.smoothWithSelfSimilarity(bassChroma, selfSim);
 		
 		Note startNote = Note.byNumber(c.spectrum.offsetFromF0InSemitones);
-		TemplatesWithBassRecognition rec = new TemplatesWithBassRecognition(startNote, bassChroma);
+		ITemplateProducer producer = new TemplateProducer(startNote);
+		TemplatesWithBassRecognition rec = new TemplatesWithBassRecognition(producer, bassChroma);
 //		TemplatesRecognition rec = new TemplatesRecognition(startNote);
 		Chord[] temp = rec.recognize(chroma, new ScaleInfo(1, 12));
-		return Harmony.smoothUsingHarmony(chroma, temp, new ScaleInfo(1, 12), startNote);
+		return Harmony.smoothUsingHarmony(chroma, temp, new ScaleInfo(1, 12), producer);
 //		return temp;
 	}
 

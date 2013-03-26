@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 
 import chordest.chord.recognition.IChordRecognition;
 import chordest.chord.recognition.TemplatesRecognition;
+import chordest.chord.templates.ITemplateProducer;
+import chordest.chord.templates.TemplateProducer;
 import chordest.configuration.Configuration.ProcessProperties;
 import chordest.model.Chord;
 import chordest.model.Key;
@@ -16,7 +18,6 @@ import chordest.transform.DiscreteCosineTransform;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
 import chordest.util.NoteLabelProvider;
-import chordest.util.Visualizer;
 
 /**
  * This class incapsulates all the chord extraction logic. All you need is to
@@ -107,8 +108,9 @@ public class ChordExtractor {
 //		key = Key.recognizeKey(getTonalProfile(pcp, 0, pcp.length), startNote);
 		key = null;
 		Note startNote = Note.byNumber(spectrumData.startNoteOffsetInSemitonesFromF0);
-		IChordRecognition first = new TemplatesRecognition(startNote, key);
-//		IChordRecognition first = new TonnetzRecognition(startNote);
+		ITemplateProducer producer = new TemplateProducer(startNote, true);
+		IChordRecognition first = new TemplatesRecognition(producer, key);
+//		IChordRecognition first = new TonnetzRecognition(producer);
 		Chord[] temp = first.recognize(chromas, new ScaleInfo(1, 12));
 //		LOG.info("Normalized diff: " + first.getDiffNormalized());
 		
@@ -116,11 +118,11 @@ public class ChordExtractor {
 //		for (Entry<Chord, double[]> entry : newTemplates.entrySet()) {
 //			LOG.info(entry.getKey().toString() + " - " + Arrays.toString(entry.getValue()));
 //		}
-//		IChordRecognition second = new TemplatesRecognition(startNote, newTemplates.keySet(),
+//		IChordRecognition second = new TemplatesRecognition(newTemplates.keySet(),
 //				new SimpleTemplateProducer(newTemplates));
 //		temp = second.recognize(chromas, new ScaleInfo(1, 12));
 		
-		return Harmony.smoothUsingHarmony(chromas, temp, new ScaleInfo(1, 12), startNote);
+		return Harmony.smoothUsingHarmony(chromas, temp, new ScaleInfo(1, 12), producer);
 	}
 
 	public double[] getOriginalBeatTimes() {

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import chordest.chord.recognition.TemplatesRecognition;
-import chordest.chord.templates.TemplateProducer;
+import chordest.chord.templates.ITemplateProducer;
 import chordest.model.Chord;
 import chordest.model.Note;
 import chordest.transform.ScaleInfo;
@@ -15,7 +15,7 @@ import chordest.util.DataUtil;
 public class Harmony {
 
 	public static Chord[] smoothUsingHarmony(final double[][] pcp, final Chord[] chords, 
-			final ScaleInfo scaleInfo, final Note pcpStartNote) {
+			final ScaleInfo scaleInfo, final ITemplateProducer templateProducer) {
 		if (pcp == null) {
 			throw new NullPointerException();
 		}
@@ -32,12 +32,12 @@ public class Harmony {
 		}
 		
 		final List<IntervalToCorrect> intervals = gatherIntervals(chords);
-		smoothChordSequence(pcp, result, intervals, pcpStartNote);
+		smoothChordSequence(pcp, result, intervals, templateProducer);
 		return result;
 	}
 
 	private static void smoothChordSequence(final double[][] pcp, final Chord[] result,
-			final List<IntervalToCorrect> intervals, final Note pcpStartNote) {
+			final List<IntervalToCorrect> intervals, final ITemplateProducer templateProducer) {
 		for (IntervalToCorrect interval : intervals) {
 			final List<Chord> possibleChords = new ArrayList<Chord>(interval.chordTypes.size());
 			for (String shortHand : interval.chordTypes) {
@@ -49,8 +49,8 @@ public class Harmony {
 				double[] col = pcp[i];
 				sum = DataUtil.add(sum, col);
 			}
-			final Chord[] top = new TemplatesRecognition(pcpStartNote, possibleChords,
-					new TemplateProducer(pcpStartNote, true)).recognize(new double[][] { sum }, new ScaleInfo(1,12));
+			final Chord[] top = new TemplatesRecognition(possibleChords,
+					templateProducer).recognize(new double[][] { sum }, new ScaleInfo(1,12));
 			for (int i = interval.start; i < interval.end; i++) {
 				result[i] = top[0];
 			}

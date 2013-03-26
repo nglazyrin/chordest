@@ -28,6 +28,10 @@ public class TemplateProducer implements ITemplateProducer {
 
 	private final boolean useModifiedTemplates;
 
+	public TemplateProducer(Note startNote) {
+		this(startNote, false);
+	}
+
 	public TemplateProducer(Note startNote, boolean useModifiedTemplates) {
 		this.startNote = startNote;
 		this.useModifiedTemplates = useModifiedTemplates;

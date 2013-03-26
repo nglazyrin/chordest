@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import chordest.chord.templates.ITemplateProducer;
 import chordest.model.Chord;
 import chordest.model.Note;
 import chordest.transform.ScaleInfo;
@@ -14,8 +15,8 @@ public class TemplatesWithBassRecognition extends TemplatesRecognition {
 
 	private final double[][] bass;
 
-	public TemplatesWithBassRecognition(Note pcpStartNote, double[][] bassChroma) {
-		super(pcpStartNote);
+	public TemplatesWithBassRecognition(ITemplateProducer producer, double[][] bassChroma) {
+		super(producer);
 		bass = bassChroma;
 	}
 

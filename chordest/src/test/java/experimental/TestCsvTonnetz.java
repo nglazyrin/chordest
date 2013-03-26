@@ -2,6 +2,7 @@ package experimental;
 
 import java.io.File;
 
+import chordest.chord.templates.TemplateProducer;
 import chordest.chord.tonnetz.PureTonnetzRecognition;
 import chordest.configuration.Configuration;
 import chordest.io.csv.CsvSpectrumFileReader;
@@ -35,7 +36,7 @@ public class TestCsvTonnetz extends AbstractTestRecognizeFromCsv {
 	@Override
 	public Chord[] recognize(File csvFile) {
 		double[][] tonnetz = new CsvSpectrumFileReader(csvFile).getSpectrum();
-		PureTonnetzRecognition rec = new PureTonnetzRecognition(Note.byNumber(c.spectrum.offsetFromF0InSemitones));
+		PureTonnetzRecognition rec = new PureTonnetzRecognition(new TemplateProducer(Note.byNumber(c.spectrum.offsetFromF0InSemitones)));
 		return rec.recognize(tonnetz);
 	}
 

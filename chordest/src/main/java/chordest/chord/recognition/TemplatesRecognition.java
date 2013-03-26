@@ -37,8 +37,8 @@ public class TemplatesRecognition extends AbstractChordRecognition {
 	/**
 	 * All 24 major/minor chords will be used for recognition
 	 */
-	public TemplatesRecognition(Note pcpStartNote) {
-		Map<Chord, double[]> map = getTemplatesForChords(new TemplateProducer(pcpStartNote, false), knownChords);
+	public TemplatesRecognition(ITemplateProducer templateProducer) {
+		Map<Chord, double[]> map = getTemplatesForChords(templateProducer, knownChords);
 		possibleChords = Collections.unmodifiableMap(map);
 	}
 
@@ -47,8 +47,7 @@ public class TemplatesRecognition extends AbstractChordRecognition {
 	 * or all known chords if <code>key</code> is null.
 	 * @param key
 	 */
-	public TemplatesRecognition(Note pcpStartNote, Key key) {
-		ITemplateProducer templateProducer = new TemplateProducer(pcpStartNote, false);
+	public TemplatesRecognition(ITemplateProducer templateProducer, Key key) {
 		Map<Chord, double[]> map = new HashMap<Chord, double[]>();
 		if (key != null) {
 			map = getTemplatesForChords(templateProducer, key.getChords());
@@ -58,8 +57,7 @@ public class TemplatesRecognition extends AbstractChordRecognition {
 		possibleChords = Collections.unmodifiableMap(map);
 	}
 
-	public TemplatesRecognition(Note pcpStartNote, Collection<Chord> possibleChords,
-			ITemplateProducer producer) {
+	public TemplatesRecognition(Collection<Chord> possibleChords, ITemplateProducer producer) {
 		Map<Chord, double[]> map = getTemplatesForChords(producer, possibleChords);
 		this.possibleChords = Collections.unmodifiableMap(map);
 	}

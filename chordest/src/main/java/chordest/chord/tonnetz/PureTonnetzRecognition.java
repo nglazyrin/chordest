@@ -27,14 +27,14 @@ public class PureTonnetzRecognition {
 	private final Map<Chord, double[]> possibleChords;
 
 	public static void main(String[] args) {
-		PureTonnetzRecognition p = new PureTonnetzRecognition(Note.C);
+		PureTonnetzRecognition p = new PureTonnetzRecognition(new TemplateProducer(Note.C));
 		for (Entry<Chord, double[]> e : p.possibleChords.entrySet()) {
 			LOG.info(e.getKey() + " " + Arrays.toString(e.getValue()));
 		}
 	}
 
-	public PureTonnetzRecognition(Note pcpStartNote) {
-		Map<Chord, double[]> map = getTemplatesForChords(new TemplateProducer(pcpStartNote, false),
+	public PureTonnetzRecognition(ITemplateProducer templateProducer) {
+		Map<Chord, double[]> map = getTemplatesForChords(templateProducer,
 				Chord.getAllChordsWithShorthands(new String[] { Chord.MAJ, Chord.MIN, Chord.AUG, Chord.DIM }));
 		for (Chord chord : map.keySet()) {
 			map.put(chord, toTonalCentroid(map.get(chord)));
