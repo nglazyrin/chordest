@@ -75,8 +75,7 @@ public class LabFileReader {
 		return timestamps;
 	}
 
-	public Chord getChord(double timestamp) {
-		final double DELTA = 0.5;
+	public Chord getChord(double timestamp, double delta) {
 		if (timestamp < timestamps[0] || timestamp >= timestamps[timestamps.length - 1]) {
 			return Chord.empty();
 		}
@@ -85,7 +84,7 @@ public class LabFileReader {
 			return chords[index];
 		} else {
 			int insertionPoint = -index - 1;
-			if (timestamps[insertionPoint] - timestamp < DELTA) {
+			if (timestamps[insertionPoint] - timestamp < delta) {
 				return null; // doubtful
 			}
 			return chords[insertionPoint - 1];

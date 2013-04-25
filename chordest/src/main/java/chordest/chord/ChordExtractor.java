@@ -18,6 +18,8 @@ import chordest.transform.DiscreteCosineTransform;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
 import chordest.util.NoteLabelProvider;
+import chordest.util.Visualizer;
+import chordest.util.Viterbi;
 
 /**
  * This class incapsulates all the chord extraction logic. All you need is to
@@ -62,7 +64,7 @@ public class ChordExtractor {
 		labels = NoteLabelProvider.getNoteLabels(offset, spectrumData.scaleInfo);
 		labels1 = NoteLabelProvider.getNoteLabels(offset, new ScaleInfo(1, 12));
 		
-//		Visualizer.visualizeSpectrum(spectrumData.spectrum, originalBeatTimes, labels, "Spectrum as is");
+//		Visualizer.visualizeSpectrum(spectrumData.spectrum, spectrumData.beatTimes, labels, "Spectrum as is");
 		chords = doChordExtraction(p, spectrumData.spectrum);
 	}
 
@@ -80,23 +82,23 @@ public class ChordExtractor {
 //			Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Modified spectrum");
 		}
 
-//		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, 30, 10, p.selfSimilarityTheta), spectrumData.scaleInfo.getNotesInOctaveCount());
-//		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, 20, 20, p.selfSimilarityTheta), spectrumData.scaleInfo.getNotesInOctaveCount());
-//		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, 10, 10, p.selfSimilarityTheta), spectrumData.scaleInfo.getNotesInOctaveCount());
-		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, 30, p.crpFirstNonZero, p.selfSimilarityTheta), spectrumData.scaleInfo.getNotesInOctaveCount());
+//		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, 30, p.selfSimilarityTheta), spectrumData.scaleInfo.getNotesInOctaveCount());
+//		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, 20, p.selfSimilarityTheta), spectrumData.scaleInfo.getNotesInOctaveCount());
+//		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, 10, p.selfSimilarityTheta), spectrumData.scaleInfo.getNotesInOctaveCount());
+		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, p.crpFirstNonZero, p.selfSimilarityTheta), spectrumData.scaleInfo.getNotesInOctaveCount());
 	}
 
 	private double[][] doChromaReductionAndSelfSimSmooth(final double[][] spectrum,
-			int simNZ, int procNZ, double theta) {
-//		double[][] red = DiscreteCosineTransform.doChromaReduction(spectrum, simNZ);
+			int simNZ,  double theta) {
+		double[][] red = DiscreteCosineTransform.doChromaReduction(spectrum, simNZ);
 //		Visualizer.visualizeSpectrum(red, originalBeatTimes, labels, "Reduced " + simNZ);
 //		double[][] selfSim = DataUtil.getSelfSimilarity(red);
 //		selfSim = DataUtil.removeDissimilar(selfSim, theta);
 //		Visualizer.visualizeSelfSimilarity(selfSim, originalBeatTimes);
 		
-		double[][] result = DiscreteCosineTransform.doChromaReduction(spectrum, procNZ);
+		double[][] result = red;
 //		double[][] result = spectrum;
-//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Reduced " + procNZ);
+//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Reduced " + simNZ);
 //		result = DataUtil.smoothWithSelfSimilarity(result, selfSim);
 		return result;
 	}
@@ -122,7 +124,8 @@ public class ChordExtractor {
 //				new SimpleTemplateProducer(newTemplates));
 //		temp = second.recognize(chromas, new ScaleInfo(1, 12));
 		
-		return Harmony.smoothUsingHarmony(chromas, temp, new ScaleInfo(1, 12), producer);
+//		return Harmony.smoothUsingHarmony(chromas, temp, new ScaleInfo(1, 12), producer);
+		return new Viterbi(producer).decode(chromas);
 	}
 
 	public double[] getOriginalBeatTimes() {

@@ -11,44 +11,44 @@ import chordest.model.Key;
 import chordest.model.Note;
 
 
-public class ModeIntersectionTest {
+public class KeyIntersectionTest {
 
-	private static final Logger LOG = LoggerFactory.getLogger(ModeIntersectionTest.class);
+	private static final Logger LOG = LoggerFactory.getLogger(KeyIntersectionTest.class);
 
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Key[] modes = new Key[12];
+		Key[] keys = new Key[12];
 		int index = 0;
 		for (Note note : Note.values()) {
-			modes[index++] = new Key(note, Chord.MAJ);
-//			modes[index++] = new Mode(note, Chord.MIN);
+			keys[index++] = new Key(note, Chord.MAJ);
+//			modes[index++] = new Key(note, Chord.MIN);
 		}
 		int maxCommon = 0;
 		Key max1 = null;
 		Key max2 = null;
 		for (int i = 0; i < 12; i++) {
-			Key mode1 = modes[i];
+			Key key1 = keys[i];
 			for (int j = i+1; j < 12; j++) {
-				Key mode2 = modes[j];
-				int common = commonNotes(mode1, mode2);
+				Key key2 = keys[j];
+				int common = commonNotes(key1, key2);
 				if (common > maxCommon) {
 					maxCommon = common;
-					max1 = mode1;
-					max2 = mode2;
+					max1 = key1;
+					max2 = key2;
 				}
 			}
 		}
 		LOG.info("Max common: " + maxCommon);
-		LOG.info("Mode 1: " + max1.toString());
-		LOG.info("Mode 2: " + max2.toString());
+		LOG.info("Key 1: " + max1.toString());
+		LOG.info("Key 2: " + max2.toString());
 	}
 
-	private static int commonNotes(Key mode1, Key mode2) {
+	private static int commonNotes(Key key1, Key key2) {
 		Set<Note> set = new HashSet<Note>();
-		set.addAll(mode1.getNotes());
-		set.addAll(mode2.getNotes());
+		set.addAll(key1.getNotes());
+		set.addAll(key2.getNotes());
 		return 14 - set.size();
 	}
 

@@ -1,4 +1,4 @@
-package experimental;
+package chordest.main.experimental;
 
 import java.io.File;
 
@@ -13,6 +13,7 @@ import chordest.model.Note;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
 import chordest.util.PathConstants;
+import chordest.util.Viterbi;
 
 public class TestCsvChroma extends AbstractTestRecognizeFromCsv {
 
@@ -35,15 +36,16 @@ public class TestCsvChroma extends AbstractTestRecognizeFromCsv {
 		double[][] chroma = new CsvSpectrumFileReader(csvFile).getSpectrum();
 		
 		DataUtil.scaleEachTo01(chroma);
-		double[][] selfSim = DataUtil.getSelfSimilarity(chroma);
-		selfSim = DataUtil.removeDissimilar(selfSim, 0.1);
-		chroma = DataUtil.smoothWithSelfSimilarity(chroma, selfSim);
+//		double[][] selfSim = DataUtil.getSelfSimilarity(chroma);
+//		selfSim = DataUtil.removeDissimilar(selfSim, 0.1);
+//		chroma = DataUtil.smoothWithSelfSimilarity(chroma, selfSim);
 		
 		Note startNote = Note.byNumber(c.spectrum.offsetFromF0InSemitones);
 		ITemplateProducer producer = new TemplateProducer(startNote);
-		TemplatesRecognition rec = new TemplatesRecognition(producer);
-		Chord[] temp = rec.recognize(chroma, new ScaleInfo(1, 12));
-		return Harmony.smoothUsingHarmony(chroma, temp, new ScaleInfo(1, 12), producer);
+//		TemplatesRecognition rec = new TemplatesRecognition(producer);
+//		Chord[] temp = rec.recognize(chroma, new ScaleInfo(1, 12));
+//		return Harmony.smoothUsingHarmony(chroma, temp, new ScaleInfo(1, 12), producer);
+		return new Viterbi(producer).decode(chroma);
 //		return temp;
 	}
 

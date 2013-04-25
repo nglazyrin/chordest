@@ -1,4 +1,4 @@
-package chordest.main;
+package chordest.main.experimental;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import chordest.chord.ChordExtractor.IExternalProcessor;
-import chordest.configuration.Configuration;
 import chordest.io.lab.LabFileReader;
 import chordest.io.spectrum.SpectrumFileReader;
 import chordest.model.Chord;
@@ -34,13 +33,13 @@ import chordest.util.TracklistCreator;
 public class TrainDataGenerator implements IExternalProcessor {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TrainDataGenerator.class);
-	private static final String DELIMITER = ",";
-	private static final String ENCODING = "utf-8";
-	private static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "all_files0train.txt";
+	public static final String DELIMITER = ",";
+	public static final String ENCODING = "utf-8";
 	private static final String CSV_FILE = PathConstants.OUTPUT_DIR + "train_dA.csv";
 	
-	public static final int WINDOW = 11;
-	public static final int OFFSET = 12;
+	public static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "all_files0.txt";
+	public static final int WINDOW = 21;
+	public static final int OFFSET = 0;
 	public static final int INPUTS = 60;
 
 	private OutputStream csvOut;
@@ -52,7 +51,7 @@ public class TrainDataGenerator implements IExternalProcessor {
 		for (final String binFileName : tracklist) {
 			TrainDataGenerator tdg = new TrainDataGenerator(CSV_FILE, true);
 			double[][] result = TrainDataGenerator.prepareSpectrum(binFileName);
-			Chord[] chords = TrainDataGenerator.prepareChords(binFileName);
+			Chord[] chords = TrainDataGenerator.prepareChords(binFileName, 0.5);
 			tdg.process(result, chords, 0, result[0].length);
 			if (++filesProcessed % 10 == 0) {
 				LOG.info(filesProcessed + " files processed");
@@ -75,7 +74,6 @@ public class TrainDataGenerator implements IExternalProcessor {
 	public static double[][] prepareSpectrum(final String binFileName) {
 		SpectrumData sd = SpectrumFileReader.read(binFileName);
 		double[][] result = sd.spectrum;
-		//int window = new Configuration().process.medianFilterWindow;
 		result = DataUtil.smoothHorizontallyMedian(result, WINDOW);
 		result = DataUtil.shrink(result, sd.framesPerBeat);
 		result = DataUtil.toLogSpectrum(result);
@@ -85,14 +83,14 @@ public class TrainDataGenerator implements IExternalProcessor {
 		return result;
 	}
 
-	public static Chord[] prepareChords(final String binFileName) {
+	public static Chord[] prepareChords(final String binFileName, double delta) {
 		SpectrumData sd = SpectrumFileReader.read(binFileName);
 		String track = StringUtils.substringAfterLast(binFileName, PathConstants.SEP);
 		String labFileName = PathConstants.LAB_DIR + track.replace(PathConstants.EXT_WAV + PathConstants.EXT_BIN, PathConstants.EXT_LAB);
 		LabFileReader labReader = new LabFileReader(new File(labFileName));
 		Chord[] result = new Chord[sd.beatTimes.length - 1];
 		for (int i = 0; i < result.length; i++) {
-			result[i] = labReader.getChord(sd.beatTimes[i]);
+			result[i] = labReader.getChord(sd.beatTimes[i], delta);
 		}
 		return result;
 	}
@@ -118,7 +116,7 @@ public class TrainDataGenerator implements IExternalProcessor {
 		return data;
 	}
 
-	private void process(double[][] data, Chord[] chords, int offset, int components) {
+	protected void process(double[][] data, Chord[] chords, int offset, int components) {
 		if (data == null || chords == null) {
 			LOG.error("data or chords is null");
 			return;

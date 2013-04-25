@@ -38,12 +38,12 @@ public class LabIoTest {
 	@Test
 	public void testGetChord() {
 		LabFileReader reader = new LabFileReader(new File(LAB_EXPECTED_FILENAME));
-		Assert.assertEquals(Chord.empty(), reader.getChord(-1));
-		Assert.assertEquals(Chord.empty(), reader.getChord(0.5));
-		Assert.assertEquals(Chord.empty(), reader.getChord(148));
+		Assert.assertEquals(Chord.empty(), reader.getChord(-1, 0.5));
+		Assert.assertEquals(Chord.empty(), reader.getChord(0.5, 0.5));
+		Assert.assertEquals(Chord.empty(), reader.getChord(148, 0.5));
 		
-		Assert.assertEquals(Chord.major(Note.A), reader.getChord(22.1));
-		Assert.assertEquals(Chord.major(Note.E), reader.getChord(30));
-		Assert.assertEquals(null, reader.getChord(22.09));
+		Assert.assertEquals(Chord.major(Note.A), reader.getChord(22.1, 0.5));
+		Assert.assertEquals(Chord.major(Note.E), reader.getChord(30, 0.5));
+		Assert.assertEquals(null, reader.getChord(22.09, 0.5));
 	}
 }

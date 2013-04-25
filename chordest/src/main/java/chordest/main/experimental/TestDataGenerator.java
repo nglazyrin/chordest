@@ -1,4 +1,4 @@
-package chordest.main;
+package chordest.main.experimental;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +19,7 @@ import chordest.util.TracklistCreator;
 public class TestDataGenerator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TestDataGenerator.class);
-	private static final String TEST_FILE_LIST = "work" + PathConstants.SEP + "all_files1.txt";
+	public static final String TEST_FILE_LIST = "work" + PathConstants.SEP + "all_files2test.txt";
 	private static final String OUTPUT_FOLDER = PathConstants.CSV_DIR + "test" + PathConstants.SEP;
 
 	public static void main(String[] args) {
@@ -36,7 +36,7 @@ public class TestDataGenerator {
 			TrainDataGenerator.deleteIfExists(csvFileName);
 			TrainDataGenerator tdg = new TrainDataGenerator(csvFileName, false);
 			double[][] result = TrainDataGenerator.prepareSpectrum(binFileName);
-			tdg.process(result, TrainDataGenerator.OFFSET, TrainDataGenerator.INPUTS + TrainDataGenerator.OFFSET);
+			tdg.process(result, TrainDataGenerator.OFFSET, TrainDataGenerator.INPUTS + 12);
 			if (++filesProcessed % 10 == 0) {
 				LOG.info(filesProcessed + " files processed");
 			}

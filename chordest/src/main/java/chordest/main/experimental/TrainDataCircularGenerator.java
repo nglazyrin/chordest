@@ -1,4 +1,4 @@
-package chordest.main;
+package chordest.main.experimental;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,7 +12,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.configuration.Configuration;
 import chordest.io.lab.LabFileReader;
 import chordest.io.spectrum.SpectrumFileReader;
 import chordest.model.Chord;
@@ -35,7 +34,7 @@ import chordest.util.TracklistCreator;
 public class TrainDataCircularGenerator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TrainDataGenerator.class);
-	private static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "all_files0.txt";
+	private static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "all_files2train.txt";
 	private static final String CSV_FILE = PathConstants.OUTPUT_DIR + "train_dA_c.csv";
 	private static final String CSV_FILE_B = PathConstants.OUTPUT_DIR + "train_dA_bass_c.csv";
 
@@ -87,7 +86,7 @@ public class TrainDataCircularGenerator {
 		LabFileReader labReader = new LabFileReader(new File(labFileName));
 		Chord[] result = new Chord[sd.beatTimes.length - 1];
 		for (int i = 0; i < result.length; i++) {
-			result[i] = labReader.getChord(sd.beatTimes[i]);
+			result[i] = labReader.getChord(sd.beatTimes[i], 0.5);
 		}
 		return result;
 	}

@@ -1,4 +1,4 @@
-package experimental;
+package chordest.main.experimental;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,9 +28,7 @@ public abstract class AbstractTestRecognizeFromCsv {
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractTestRecognizeFromCsv.class);
 	private static final Logger SIM_LOG = LoggerFactory.getLogger("Similarity");
 
-	private static String BIN_DIRECTORY = "spectrum4" + PathConstants.SEP;
 	private static String OUTPUT_DIRECTORY = "work" + PathConstants.SEP + "lab" + PathConstants.SEP;
-	private static final String TEST_FILE_LIST = "work" + PathConstants.SEP + "all_files1.txt";
 
 	private static ComparisonAccumulator acc = new ComparisonAccumulator();
 //	private static Configuration c = new Configuration();
@@ -40,11 +38,11 @@ public abstract class AbstractTestRecognizeFromCsv {
 	public abstract Chord[] recognize(File csvFile);
 
 	public void recognizeFromCsv() {
-		List<String> tracklist = TracklistCreator.readTrackList(TEST_FILE_LIST);
+		List<String> tracklist = TracklistCreator.readTrackList(TestDataGenerator.TEST_FILE_LIST);
 		SIM_LOG.info("name,overlap,effective_length,full_length");
 		for (String item : tracklist) {
 			String track = StringUtils.substringAfterLast(item, PathConstants.SEP);
-			String binFile = BIN_DIRECTORY + track;
+			String binFile = item;
 			String csvFile = getCsvDirectory() + track + PathConstants.EXT_CSV;
 			String labFile = PathConstants.LAB_DIR + StringUtils.replace(track, PathConstants.EXT_WAV + PathConstants.EXT_BIN, PathConstants.EXT_LAB);
 			double rco = doChordRecognition(binFile, csvFile, labFile);

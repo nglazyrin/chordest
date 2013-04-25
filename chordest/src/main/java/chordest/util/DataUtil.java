@@ -346,6 +346,13 @@ public class DataUtil {
 		}
 	}
 
+	/**
+	 * Reduces the given spectrum having 12*n components per octave to a
+	 * spectrum having 12 components per octave. 
+	 * @param data array of 12*n*octaves-dimensional vectors - spectrum
+	 * @param octaves Number of octaves in the given spectrum
+	 * @return
+	 */
 	public static double[][] reduce(final double[][] data, int octaves) {
 		if (data == null) {
 			throw new NullPointerException("data is null");

@@ -43,9 +43,9 @@ public class TemplatesRecognitionTest {
 	}
 
 	@Test
-	public void isKnownAugmentedDiminished() {
-		Assert.assertTrue(TemplatesRecognition.isKnown(new Chord(Note.B, Chord.AUG)));
-		Assert.assertTrue(TemplatesRecognition.isKnown(new Chord(Note.AD, Chord.DIM)));
+	public void isNotKnownAugmentedDiminished() {
+		Assert.assertFalse(TemplatesRecognition.isKnown(new Chord(Note.B, Chord.AUG)));
+		Assert.assertFalse(TemplatesRecognition.isKnown(new Chord(Note.AD, Chord.DIM)));
 	}
 
 	@Test
