@@ -24,10 +24,14 @@ public class KLMetric implements IMetric {
 			sum += vector[i] * vector[i];
 		}
 		sum = Math.sqrt(sum);
-		for (int i = 0; i < vector.length; i++) {
-			result[i] = vector[i] / sum;
+		if (sum > 0) {
+			for (int i = 0; i < vector.length; i++) {
+				result[i] = vector[i] / sum;
+			}
+			return result;
+		} else {
+			return vector;
 		}
-		return result;
 	}
 
 }

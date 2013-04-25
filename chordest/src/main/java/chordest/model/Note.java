@@ -87,6 +87,11 @@ public enum Note {
 		}
 	}
 
+	/**
+	 * 
+	 * @param other
+	 * @return An integer number x: -5 <= x <= 6
+	 */
 	public int offsetFrom(Note other) {
 		if (other == null) {
 			throw new NullPointerException("other is null");

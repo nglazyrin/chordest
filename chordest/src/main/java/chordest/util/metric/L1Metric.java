@@ -19,11 +19,15 @@ public class L1Metric implements IMetric {
 	public double[] normalize(double[] array) {
 		double sum = Double.MIN_VALUE;
 		for (double value : array) { sum += Math.abs(value); }
-		double[] result = new double[array.length];
-		for (int i = 0; i < array.length; i++) {
-			result[i] = array[i] / sum;
+		if (sum > 0) {
+			double[] result = new double[array.length];
+			for (int i = 0; i < array.length; i++) {
+				result[i] = array[i] / sum;
+			}
+			return result;
+		} else {
+			return array;
 		}
-		return result;
 	}
 
 }
