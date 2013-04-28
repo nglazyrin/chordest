@@ -21,10 +21,12 @@ public class LogConfiguration {
 	 * line argument.
 	 * @param dir
 	 */
+	@SuppressWarnings("unchecked")
 	public static void setLogFileDirectory(String dir) {
 	    LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-	    FileAppender fileAppender = new FileAppender();
+	    @SuppressWarnings("rawtypes")
+		FileAppender fileAppender = new FileAppender();
 	    fileAppender.setContext(loggerContext);
 	    fileAppender.setName("LOG_FILE");
 	    // set the file name
