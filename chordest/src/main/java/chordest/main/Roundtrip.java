@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,24 +30,23 @@ public class Roundtrip {
 	private static final String SEP = PathConstants.SEP;
 	public static final String CSV_ACTUAL_DIR = PathConstants.CSV_DIR + "actual" + SEP;
 	public static final String CSV_EXPECTED_DIR = PathConstants.CSV_DIR + "expected" + SEP;
-	private static final String LAB_DIR = PathConstants.LAB_DIR;
-	private static final String SPECTRUM_DIR = "spectrum8-60-6" + SEP;
+	public static final String FILE_LIST = "work" + PathConstants.SEP + "all_files.txt";
 
 	public static void main(String[] args) {
-		List<String> tracklist = TracklistCreator.createTracklist(new File(LAB_DIR), "");
+		List<String> tracklist = TracklistCreator.readTrackList(FILE_LIST);
 		ComparisonAccumulator acc = new ComparisonAccumulator();
 		Configuration c = new Configuration();
 		SIM_LOG.info("name,key,overlap,effective_length,full_length");
-		for (final String labFileName : tracklist) {
-			final String csvFileName = labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_CSV);
-			final String spectrumFileName = SPECTRUM_DIR + 
-					labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_WAV) + PathConstants.EXT_BIN;
+		for (final String binFileName : tracklist) {
+			String temp = StringUtils.substringAfterLast(binFileName, PathConstants.SEP);
+			String track = StringUtils.substringBeforeLast(temp, PathConstants.EXT_WAV + PathConstants.EXT_BIN);
+			String labFileName = track + PathConstants.EXT_LAB;
+			final String csvFileName = track + PathConstants.EXT_CSV;
 			ChordExtractor ce;
-			if (new File(spectrumFileName).exists()) {
-				ce = new ChordExtractor(c.process, new FileSpectrumDataProvider(spectrumFileName));
+			if (new File(binFileName).exists()) {
+				ce = new ChordExtractor(c.process, new FileSpectrumDataProvider(binFileName));
 			} else {
-				final String wavFileName = PathConstants.WAV_DIR + 
-						labFileName.replace(PathConstants.EXT_LAB, PathConstants.EXT_WAV);
+				final String wavFileName = PathConstants.WAV_DIR + track + PathConstants.EXT_WAV;
 				ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(wavFileName, c.spectrum));
 			}
 
