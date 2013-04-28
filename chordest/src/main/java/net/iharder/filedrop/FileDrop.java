@@ -297,7 +297,8 @@ public class FileDrop
                     // over the drag target.
                 }   // end dragOver
 
-                public void drop( java.awt.dnd.DropTargetDropEvent evt )
+                @SuppressWarnings("unchecked")
+				public void drop( java.awt.dnd.DropTargetDropEvent evt )
                 {   log( out, "FileDrop: drop event." );
                     try
                     {   // Get whatever was dropped
@@ -312,9 +313,9 @@ public class FileDrop
                             log( out, "FileDrop: file list accepted." );
 
                             // Get a useful list
-                            java.util.List fileList = (java.util.List) 
+                            @SuppressWarnings("rawtypes")
+							java.util.List fileList = (java.util.List) 
                                 tr.getTransferData(java.awt.datatransfer.DataFlavor.javaFileListFlavor);
-                            java.util.Iterator iterator = fileList.iterator();
 
                             // Convert list to array
                             java.io.File[] filesTemp = new java.io.File[ fileList.size() ];
@@ -424,7 +425,8 @@ public class FileDrop
         {   
             boolean support = false;
             try
-            {   Class arbitraryDndClass = Class.forName( "java.awt.dnd.DnDConstants" );
+            {   @SuppressWarnings("unused")
+				Class<?> arbitraryDndClass = Class.forName( "java.awt.dnd.DnDConstants" );
                 support = true;
             }   // end try
             catch( Exception e )
@@ -438,10 +440,12 @@ public class FileDrop
     
      // BEGIN 2007-09-12 Nathan Blomquist -- Linux (KDE/Gnome) support added.
      private static String ZERO_CHAR_STRING = "" + (char)0;
-     private static File[] createFileArray(BufferedReader bReader, PrintStream out)
+     @SuppressWarnings("unchecked")
+	private static File[] createFileArray(BufferedReader bReader, PrintStream out)
      {
         try { 
-            java.util.List list = new java.util.ArrayList();
+            @SuppressWarnings("rawtypes")
+			java.util.List list = new java.util.ArrayList();
             java.lang.String line = null;
             while ((line = bReader.readLine()) != null) {
                 try {
@@ -648,7 +652,11 @@ public class FileDrop
      */
     public static class Event extends java.util.EventObject {
 
-        private java.io.File[] files;
+        /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+		private java.io.File[] files;
 
         /**
          * Constructs an {@link Event} with the array
@@ -801,7 +809,7 @@ public class FileDrop
          * @param fetcher The {@link Fetcher} that will return the data object
          * @since 1.1
          */
-        public TransferableObject( Class dataClass, Fetcher fetcher )
+        public TransferableObject( Class<?> dataClass, Fetcher fetcher )
         {   this.fetcher = fetcher;
             this.customFlavor = new java.awt.datatransfer.DataFlavor( dataClass, MIME_TYPE );
         }   // end constructor
