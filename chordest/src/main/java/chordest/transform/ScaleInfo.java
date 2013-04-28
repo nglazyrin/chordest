@@ -7,28 +7,20 @@ public class ScaleInfo implements Serializable {
 
 	private static final long serialVersionUID = -8240598304243514812L;
 
-	private int notesInOctaveCount;
-	private int octavesCount;
+	public final int notesInOctave;
+	public final int octaves;
 
 	public static ScaleInfo getDefaultInstance() {
 		return new ScaleInfo(5, 12);
 	}
 
 	public ScaleInfo(int octaves, int notesInOctave) {
-		this.notesInOctaveCount = notesInOctave;
-		this.octavesCount = octaves;
-	}
-
-	public int getNotesInOctaveCount() {
-		return this.notesInOctaveCount;
-	}
-
-	public int getOctavesCount() {
-		return this.octavesCount;
+		this.notesInOctave = notesInOctave;
+		this.octaves = octaves;
 	}
 
 	public int getTotalComponentsCount() {
-		return notesInOctaveCount * octavesCount;
+		return notesInOctave * octaves;
 	}
 
 	@Override
@@ -40,13 +32,13 @@ public class ScaleInfo implements Serializable {
 			return true;
 		}
 		ScaleInfo otherInfo = (ScaleInfo) other;
-		return otherInfo.notesInOctaveCount == this.notesInOctaveCount &&
-				otherInfo.octavesCount == this.octavesCount;
+		return otherInfo.notesInOctave == this.notesInOctave &&
+				otherInfo.octaves == this.octaves;
 	}
 
 	@Override
 	public int hashCode() {
-		return octavesCount * 31 + notesInOctaveCount;
+		return octaves * 31 + notesInOctave;
 	}
 
 }

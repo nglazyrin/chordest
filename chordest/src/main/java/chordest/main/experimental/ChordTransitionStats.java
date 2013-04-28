@@ -6,8 +6,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import chordest.io.spectrum.SpectrumFileReader;
 import chordest.model.Chord;
 import chordest.model.Note;
+import chordest.spectrum.SpectrumData;
 import chordest.util.TracklistCreator;
 import chordest.util.Viterbi;
 
@@ -20,7 +22,8 @@ public class ChordTransitionStats {
 		int filesProcessed = 0;
 		ChordTransitionStats cts = new ChordTransitionStats();
 		for (final String binFileName : tracklist) {
-			Chord[] chords = TrainDataGenerator.prepareChords(binFileName, 0);
+			SpectrumData sd = SpectrumFileReader.read(binFileName);
+			Chord[] chords = TrainDataGenerator.prepareChords(binFileName, sd, 0);
 			cts.process(chords);
 			if (++filesProcessed % 10 == 0) {
 				LOG.info(filesProcessed + " files processed");

@@ -58,14 +58,14 @@ public class CQConstants implements Serializable {
 			throw new NullPointerException("scaleInfo is null");
 		}
 		this.samplingRate = rate;
-		this.componentsTotal = scaleInfo.getNotesInOctaveCount() * scaleInfo.getOctavesCount();
+		this.componentsTotal = scaleInfo.getTotalComponentsCount();
 		this.scaleInfo = scaleInfo;
 		this.minimalFrequency = f0 * Math.pow(2, startNoteOffsetInSemitonesFromF0 / 12.0);
 //		this.startOctave = startNoteOffsetInSemitonesFromF0 > 0 ? 
 //				(startNoteOffsetInSemitonesFromF0 + 9) / 12 + 5 : 
 //				(startNoteOffsetInSemitonesFromF0 - 2) / 12 + 5;
 		this.startNote = Note.byNumber(startNoteOffsetInSemitonesFromF0);
-		this.Q = QUtil.calculateQ(scaleInfo.getNotesInOctaveCount());
+		this.Q = QUtil.calculateQ(scaleInfo.notesInOctave);
 		initialize();
 	}
 
@@ -88,8 +88,8 @@ public class CQConstants implements Serializable {
 	}
 
 	private static int calculateHash(int rate, ScaleInfo scaleInfo, double f0, int startNoteOffsetInSemitonesFromF0) {
-		return 3 * rate + 5 * scaleInfo.getOctavesCount() + 
-				7 * scaleInfo.getNotesInOctaveCount() + 
+		return 3 * rate + 5 * scaleInfo.octaves + 
+				7 * scaleInfo.notesInOctave + 
 				11 * (int)(f0 * 1000) + 
 				11 * startNoteOffsetInSemitonesFromF0;
 	}
@@ -110,7 +110,7 @@ public class CQConstants implements Serializable {
 		componentFrequencies = new double[this.componentsTotal];
 		for (int i = 0; i < this.componentsTotal; i++) {
 			componentFrequencies[i] = Math.pow(2.0, 
-					i * 1.0 / this.scaleInfo.getNotesInOctaveCount()) * this.minimalFrequency;
+					i * 1.0 / this.scaleInfo.notesInOctave) * this.minimalFrequency;
 		}
 	}
 

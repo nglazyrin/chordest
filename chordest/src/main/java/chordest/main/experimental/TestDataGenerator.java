@@ -8,6 +8,8 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import chordest.io.spectrum.SpectrumFileReader;
+import chordest.spectrum.SpectrumData;
 import chordest.util.PathConstants;
 import chordest.util.TracklistCreator;
 
@@ -19,7 +21,7 @@ import chordest.util.TracklistCreator;
 public class TestDataGenerator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TestDataGenerator.class);
-	public static final String TEST_FILE_LIST = "work" + PathConstants.SEP + "all_files2test.txt";
+	public static final String TEST_FILE_LIST = "work" + PathConstants.SEP + "all_files0test.txt";
 	private static final String OUTPUT_FOLDER = PathConstants.CSV_DIR + "test" + PathConstants.SEP;
 
 	public static void main(String[] args) {
@@ -35,7 +37,8 @@ public class TestDataGenerator {
 			String csvFileName = OUTPUT_FOLDER + new File(binFileName).getName() + PathConstants.EXT_CSV;
 			TrainDataGenerator.deleteIfExists(csvFileName);
 			TrainDataGenerator tdg = new TrainDataGenerator(csvFileName, false);
-			double[][] result = TrainDataGenerator.prepareSpectrum(binFileName);
+			SpectrumData sd = SpectrumFileReader.read(binFileName);
+			double[][] result = TrainDataGenerator.prepareSpectrum(sd);
 			tdg.process(result, TrainDataGenerator.OFFSET, TrainDataGenerator.INPUTS + 12);
 			if (++filesProcessed % 10 == 0) {
 				LOG.info(filesProcessed + " files processed");

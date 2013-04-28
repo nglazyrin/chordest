@@ -385,7 +385,7 @@ public class DataUtil {
 			// by summing the values of the "subnotes" nearest to each note with weights
 			double [] pcp12 = new double[12];
 			int totalNotes = pcp.length;
-			int delta = subnotesCount / 2;
+			int delta = subnotesCount / 2 - 1; // TODO
 			if ((subnotesCount & 1) == 0) { // if subnotesCount is even
 				delta--; // to exclude the subnotes that are in the "middle" between 2 real notes
 			}
@@ -393,7 +393,7 @@ public class DataUtil {
 				double temp = 0;
 				for (int j = -delta; j <= delta; j++) {
 					// account neighbors with lower weights
-					temp += pcp[(totalNotes + i * subnotesCount + j) % totalNotes] * Math.pow(0.6, Math.abs(j));
+					temp += pcp[(totalNotes + i * subnotesCount + j) % totalNotes];// * Math.pow(0.6, Math.abs(j));
 				}
 				pcp12[i] = temp;
 			}
@@ -513,15 +513,20 @@ public class DataUtil {
 				for (int k = left; k <= right; k++) {
 					sum += data[i][k];
 				}
-				sum /= (right - left + 1);
-				result[i][j] = Math.max(data[i][j] - sum, 0);
+				double mean = sum / (right - left + 1);
+				double std = 0;
+				for (int k = left; k <= right; k++) {
+					std += (data[i][k] - mean) * (data[i][k] - mean);
+				}
+				std = Math.sqrt(std / (right - left));
+				result[i][j] = Math.max((data[i][j] - mean) / std, 0);
 			}
 		}
 		return result;
 	}
 
 	public static double[] getFirstOctave(final double[] cqtSpectrum, final ScaleInfo scaleInfo) {
-		return Arrays.copyOf(cqtSpectrum, scaleInfo.getNotesInOctaveCount());
+		return Arrays.copyOf(cqtSpectrum, scaleInfo.notesInOctave);
 	}
 
 	public static double[][] getSelfSimilarity(final double[][] spectrum) {

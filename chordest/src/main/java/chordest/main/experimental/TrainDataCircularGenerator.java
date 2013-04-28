@@ -8,16 +8,13 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.io.lab.LabFileReader;
 import chordest.io.spectrum.SpectrumFileReader;
 import chordest.model.Chord;
 import chordest.model.Note;
 import chordest.spectrum.SpectrumData;
-import chordest.util.DataUtil;
 import chordest.util.PathConstants;
 import chordest.util.TracklistCreator;
 
@@ -34,7 +31,7 @@ import chordest.util.TracklistCreator;
 public class TrainDataCircularGenerator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TrainDataGenerator.class);
-	private static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "all_files2train.txt";
+	private static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "all_files0train.txt";
 	private static final String CSV_FILE = PathConstants.OUTPUT_DIR + "train_dA_c.csv";
 	private static final String CSV_FILE_B = PathConstants.OUTPUT_DIR + "train_dA_bass_c.csv";
 
@@ -49,8 +46,8 @@ public class TrainDataCircularGenerator {
 		for (final String binFileName : tracklist) {
 			TrainDataCircularGenerator tdg = new TrainDataCircularGenerator(CSV_FILE, CSV_FILE_B);
 			SpectrumData sd = SpectrumFileReader.read(binFileName);
-			double[][] result = TrainDataCircularGenerator.prepareSpectrum(sd);
-			Chord[] chords = TrainDataCircularGenerator.prepareChords(binFileName, sd);
+			double[][] result = TrainDataGenerator.prepareSpectrum(sd);
+			Chord[] chords = TrainDataGenerator.prepareChords(binFileName, sd, 0.5);
 			tdg.process(result, chords);
 			if (++filesProcessed % 10 == 0) {
 				LOG.info(filesProcessed + " files processed");
@@ -68,27 +65,6 @@ public class TrainDataCircularGenerator {
 				LOG.warn("Error when deleting file " + fileName, e);
 			}
 		}
-	}
-
-	public static double[][] prepareSpectrum(final SpectrumData sd) {
-		double[][] result = sd.spectrum;
-		result = DataUtil.smoothHorizontallyMedian(result, TrainDataGenerator.WINDOW);
-		result = DataUtil.shrink(result, sd.framesPerBeat);
-		result = DataUtil.toLogSpectrum(result);
-		result = DataUtil.reduce(result, sd.scaleInfo.getOctavesCount());
-		DataUtil.scaleEachTo01(result);
-		return result;
-	}
-
-	public static Chord[] prepareChords(final String binFileName, final SpectrumData sd) {
-		String track = StringUtils.substringAfterLast(binFileName, PathConstants.SEP);
-		String labFileName = PathConstants.LAB_DIR + track.replace(PathConstants.EXT_WAV + PathConstants.EXT_BIN, PathConstants.EXT_LAB);
-		LabFileReader labReader = new LabFileReader(new File(labFileName));
-		Chord[] result = new Chord[sd.beatTimes.length - 1];
-		for (int i = 0; i < result.length; i++) {
-			result[i] = labReader.getChord(sd.beatTimes[i], 0.5);
-		}
-		return result;
 	}
 
 	public TrainDataCircularGenerator(String chordCsvFileName, String bassCsvFileName) {

@@ -55,7 +55,7 @@ public class TemplatesAndKeyRecognition extends TemplatesRecognition {
 		if (scaleInfo == null) {
 			throw new NullPointerException("scaleInfo is null");
 		}
-		final int notesInOctave = scaleInfo.getNotesInOctaveCount();
+		final int notesInOctave = scaleInfo.notesInOctave;
 		final double[] pcp = DataUtil.toSingleOctave(cqtSpectrum, notesInOctave);
 		final double[] vector = metric.normalize(DataUtil.reduceTo12Notes(pcp));
 		

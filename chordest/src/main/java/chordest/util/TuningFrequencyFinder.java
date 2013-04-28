@@ -2,13 +2,18 @@ package chordest.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import chordest.transform.CQConstants;
+import chordest.transform.DummyConstantQTransform;
+import chordest.transform.ITransform;
 import chordest.transform.PooledTransformer;
 import chordest.transform.ScaleInfo;
+import chordest.transform.PooledTransformer.ITransformProvider;
+import chordest.wave.Buffer;
 import chordest.wave.WaveReader;
 
 import uk.co.labbookpages.WavFile;
@@ -18,34 +23,35 @@ public class TuningFrequencyFinder {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(TuningFrequencyFinder.class);
 	
-	public static final int OCTAVES = 4;
+	public static final int OCTAVES = 1;
 	public static final int BINS_PER_NOTE = 20;
 	public static final int NOTES_IN_OCTAVE = 12 * BINS_PER_NOTE;
 	public static final double BASIC_FREQUENCY = 440;
 
-	public static double getTuningFrequency(String fileName, int threadPoolSize) {
-		return getTuningFrequency(fileName, BASIC_FREQUENCY, threadPoolSize);
+	public static double getTuningFrequency(String fileName, double[] beatTimes, int threadPoolSize) {
+		return getTuningFrequency(fileName, BASIC_FREQUENCY, beatTimes, threadPoolSize);
+//		return BASIC_FREQUENCY;
 	}
 
-	private static double getTuningFrequency(String filename, double basicFrequency, int threadPoolSize) {
+	private static double getTuningFrequency(String filename, double basicFrequency, double[] beatTimes, int threadPoolSize) {
 		WavFile wavFile = null;
 		try {
 			wavFile = WavFile.openWavFile(new File(filename));
 			int samplingRate = (int) wavFile.getSampleRate();
-			int frames = (int) wavFile.getNumFrames();
-			double seconds = frames * 1.0 / samplingRate;
-			double[] beatTimes = new double[(int) Math.floor(seconds)];
-			for (int i = 0; i < beatTimes.length; i++) {
-				beatTimes[i] = i;
-			}
 			
-			ScaleInfo scaleInfo = new ScaleInfo(OCTAVES, NOTES_IN_OCTAVE);
-			CQConstants cqc = CQConstants.getInstance(samplingRate, scaleInfo, CQConstants.F0_DEFAULT, 0);
+			final ScaleInfo scaleInfo = new ScaleInfo(OCTAVES, NOTES_IN_OCTAVE);
+			final CQConstants cqc = CQConstants.getInstance(samplingRate, scaleInfo, CQConstants.F0_DEFAULT, -12);
 			int windowSize = cqc.getWindowLengthForComponent(0) + 1; // the longest window
 			
 			WaveReader reader = new WaveReader(wavFile, beatTimes, windowSize);
+			ITransformProvider cqProvider = new ITransformProvider() {
+				@Override
+				public ITransform getTransform(Buffer buffer, CountDownLatch latch) {
+					return new DummyConstantQTransform(buffer, scaleInfo, latch, cqc);
+				}
+			};
 			PooledTransformer transformer = new PooledTransformer(
-					reader, threadPoolSize, beatTimes.length, scaleInfo, cqc);
+					reader, threadPoolSize, beatTimes.length, cqProvider);
 			double[][] spectrum = transformer.run();
 			double[] tunes = new double[BINS_PER_NOTE];
 			for (double[] data : spectrum) {

@@ -31,8 +31,8 @@ public class SpectrumAppender {
 			
 			SpectrumProperties s = new SpectrumProperties(
 					1, // add 1 octave
-					sd.scaleInfo.getNotesInOctaveCount(),
-					sd.startNoteOffsetInSemitonesFromF0 + sd.scaleInfo.getOctavesCount() * 12, // at the end
+					sd.scaleInfo.notesInOctave,
+					sd.startNoteOffsetInSemitonesFromF0 + sd.scaleInfo.octaves * 12, // at the end
 					sd.framesPerBeat,
 					4); // threadpool size
 			WaveFileSpectrumDataProvider p = new WaveFileSpectrumDataProvider(wavFileName, s, sd.beatTimes);
@@ -45,7 +45,7 @@ public class SpectrumAppender {
 				result[i] = ArrayUtils.addAll(source[i], addition[i]);
 			}
 			sd.spectrum = result;
-			sd.scaleInfo = new ScaleInfo(sd.scaleInfo.getOctavesCount() + 1, sd.scaleInfo.getNotesInOctaveCount());
+			sd.scaleInfo = new ScaleInfo(sd.scaleInfo.octaves + 1, sd.scaleInfo.notesInOctave);
 			SpectrumFileWriter.write(newBinFileName, sd);
 		}
 	}

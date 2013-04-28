@@ -22,8 +22,7 @@ public class PooledTransformer {
 	private static final int SLEEP_MS = 100;
 
 	private final ITaskProvider provider;
-	private final ScaleInfo scaleInfo;
-	private final CQConstants cqConstants;
+	private final ITransformProvider transProvider;
 	
 	private final int transformsInTotal;
 	private final CountDownLatch latch;
@@ -32,14 +31,13 @@ public class PooledTransformer {
 	
 	private boolean isCancelRequested = false;
 
-	public PooledTransformer(ITaskProvider provider, int threadPoolSize, int transforms, 
-			ScaleInfo scaleInfo, CQConstants cqConstants) {
+	public PooledTransformer(ITaskProvider provider, int threadPoolSize, int transforms,
+			ITransformProvider transProvider) {
 		if (provider == null) {
 			throw new NullPointerException("Task provider is null");
 		}
 		this.provider = provider;
-		this.scaleInfo = scaleInfo;
-		this.cqConstants = cqConstants;
+		this.transProvider = transProvider;
 		this.transformsInTotal = transforms;
 		this.latch = new CountDownLatch(transforms);
 		this.threadPoolQueueSize = 3 * threadPoolSize;
@@ -53,8 +51,9 @@ public class PooledTransformer {
 		while (!isCancelRequested && latch.getCount() > 0) {
 			final Buffer buffer = provider.poll();
 			if (buffer != null) {
-				final ITransform transform = new DummyConstantQTransform(
-						buffer, scaleInfo, latch, cqConstants);
+//				final ITransform transform = new DummyConstantQTransform(
+//						buffer, scaleInfo, latch, cqConstants);
+				final ITransform transform = transProvider.getTransform(buffer, latch);
 				// simplest way to limit the queue size of the thread pool
 				while (threadPool.getQueue().size() > threadPoolQueueSize) {
 					Thread.sleep(SLEEP_MS);
@@ -100,6 +99,10 @@ public class PooledTransformer {
 			LOG.error("Error when getting data from Futures", e);
 		}
 		return result;
+	}
+
+	public static interface ITransformProvider {
+		ITransform getTransform(Buffer buffer, CountDownLatch latch);
 	}
 
 }

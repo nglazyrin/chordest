@@ -11,8 +11,10 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import chordest.io.spectrum.SpectrumFileReader;
 import chordest.model.Chord;
 import chordest.model.Note;
+import chordest.spectrum.SpectrumData;
 import chordest.util.PathConstants;
 import chordest.util.TracklistCreator;
 
@@ -29,8 +31,9 @@ public class HmmDataGenerator {
 		int filesProcessed = 0;
 		for (final String binFileName : tracklist) {
 			HmmDataGenerator hdg = new HmmDataGenerator();
-			double[][] result = TrainDataGenerator.prepareSpectrum(binFileName);
-			Chord[] chords = TrainDataGenerator.prepareChords(binFileName, 0.5);
+			SpectrumData sd = SpectrumFileReader.read(binFileName);
+			double[][] result = TrainDataGenerator.prepareSpectrum(sd);
+			Chord[] chords = TrainDataGenerator.prepareChords(binFileName, sd, 0.5);
 			hdg.process(result, chords, TrainDataGenerator.OFFSET, TrainDataGenerator.INPUTS);
 			if (++filesProcessed % 10 == 0) {
 				LOG.info(filesProcessed + " files processed");

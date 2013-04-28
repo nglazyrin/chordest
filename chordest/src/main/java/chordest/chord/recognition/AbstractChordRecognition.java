@@ -45,7 +45,7 @@ public abstract class AbstractChordRecognition implements IChordRecognition {
 		if (scaleInfo == null) {
 			throw new NullPointerException("scaleInfo is null");
 		}
-		final int notesInOctave = scaleInfo.getNotesInOctaveCount();
+		final int notesInOctave = scaleInfo.notesInOctave;
 		final double[] pcp = DataUtil.toSingleOctave(cqtSpectrumBin, notesInOctave);
 		return DataUtil.reduceTo12Notes(pcp);
 	}

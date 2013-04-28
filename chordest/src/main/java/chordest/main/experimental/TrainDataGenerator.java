@@ -40,7 +40,7 @@ public class TrainDataGenerator implements IExternalProcessor {
 	public static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "all_files0.txt";
 	public static final int WINDOW = 21;
 	public static final int OFFSET = 0;
-	public static final int INPUTS = 60;
+	public static final int INPUTS = 48;
 
 	private OutputStream csvOut;
 
@@ -50,8 +50,9 @@ public class TrainDataGenerator implements IExternalProcessor {
 		int filesProcessed = 0;
 		for (final String binFileName : tracklist) {
 			TrainDataGenerator tdg = new TrainDataGenerator(CSV_FILE, true);
-			double[][] result = TrainDataGenerator.prepareSpectrum(binFileName);
-			Chord[] chords = TrainDataGenerator.prepareChords(binFileName, 0.5);
+			SpectrumData sd = SpectrumFileReader.read(binFileName);
+			double[][] result = TrainDataGenerator.prepareSpectrum(sd);
+			Chord[] chords = TrainDataGenerator.prepareChords(binFileName, sd, 0.5);
 			tdg.process(result, chords, 0, result[0].length);
 			if (++filesProcessed % 10 == 0) {
 				LOG.info(filesProcessed + " files processed");
@@ -71,26 +72,24 @@ public class TrainDataGenerator implements IExternalProcessor {
 		}
 	}
 
-	public static double[][] prepareSpectrum(final String binFileName) {
-		SpectrumData sd = SpectrumFileReader.read(binFileName);
+	public static double[][] prepareSpectrum(final SpectrumData sd) {
 		double[][] result = sd.spectrum;
-		result = DataUtil.smoothHorizontallyMedian(result, WINDOW);
+		result = DataUtil.smoothHorizontallyMedian(result, TrainDataGenerator.WINDOW);
 		result = DataUtil.shrink(result, sd.framesPerBeat);
+		result = DataUtil.whitenSpectrum(result, sd.scaleInfo.notesInOctave);
 		result = DataUtil.toLogSpectrum(result);
-		result = DataUtil.reduce(result, sd.scaleInfo.getOctavesCount());
+		result = DataUtil.reduce(result, sd.scaleInfo.octaves);
 		DataUtil.scaleEachTo01(result);
-//		DataUtil.scaleTo01(result);
 		return result;
 	}
 
-	public static Chord[] prepareChords(final String binFileName, double delta) {
-		SpectrumData sd = SpectrumFileReader.read(binFileName);
+	public static Chord[] prepareChords(final String binFileName, final SpectrumData sd, double delta) {
 		String track = StringUtils.substringAfterLast(binFileName, PathConstants.SEP);
 		String labFileName = PathConstants.LAB_DIR + track.replace(PathConstants.EXT_WAV + PathConstants.EXT_BIN, PathConstants.EXT_LAB);
 		LabFileReader labReader = new LabFileReader(new File(labFileName));
 		Chord[] result = new Chord[sd.beatTimes.length - 1];
 		for (int i = 0; i < result.length; i++) {
-			result[i] = labReader.getChord(sd.beatTimes[i], delta);
+			result[i] = labReader.getChord(sd.beatTimes[i], 0.5);
 		}
 		return result;
 	}

@@ -12,7 +12,7 @@ public class NoteLabelProvider {
 		Note startNote = Note.byNumber(startNoteOffsetInSemitonesFromF0);
 		Note currentNote = startNote;
 		int currentOctave = startOctave;
-		int subNotes = scaleInfo.getNotesInOctaveCount() / 12;
+		int subNotes = scaleInfo.notesInOctave / 12;
 		String[] result = new String[scaleInfo.getTotalComponentsCount()];
 		for (int i = 0; i < scaleInfo.getTotalComponentsCount(); i++) {
 			if (i % subNotes == 0) {

@@ -2,6 +2,7 @@ package chordest.spectrum;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,10 +12,15 @@ import uk.co.labbookpages.WavFileException;
 import chordest.beat.BeatRootBeatTimesProvider;
 import chordest.configuration.Configuration.SpectrumProperties;
 import chordest.transform.CQConstants;
+import chordest.transform.DummyConstantQTransform;
+import chordest.transform.FFTTransformWrapper;
+import chordest.transform.ITransform;
 import chordest.transform.PooledTransformer;
+import chordest.transform.PooledTransformer.ITransformProvider;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
 import chordest.util.TuningFrequencyFinder;
+import chordest.wave.Buffer;
 import chordest.wave.WaveReader;
 
 public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
@@ -26,11 +32,11 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 	public WaveFileSpectrumDataProvider(String waveFileName, SpectrumProperties s) {
 		double[] beatTimes = new BeatRootBeatTimesProvider(waveFileName).getBeatTimes();
 		double[] expandedBeatTimes = DataUtil.makeMoreFrequent(beatTimes, s.framesPerBeat);
-		spectrumData = readSpectrum(s, waveFileName, expandedBeatTimes);
+		spectrumData = readSpectrum(s, waveFileName,  beatTimes,expandedBeatTimes);
 	}
 
 	public WaveFileSpectrumDataProvider(String waveFileName, SpectrumProperties s, double[] expandedBeatTimes) {
-		spectrumData = readSpectrum(s, waveFileName, expandedBeatTimes);
+		spectrumData = readSpectrum(s, waveFileName, expandedBeatTimes, expandedBeatTimes);
 	}
 
 	@Override
@@ -39,13 +45,13 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 	}
 
 	private SpectrumData readSpectrum(SpectrumProperties s, String waveFileName,
-			 double[] expandedBeatTimes) {
-		SpectrumData result = new SpectrumData();
+			 double[] beatTimes, double[] expandedBeatTimes) {
+		final SpectrumData result = new SpectrumData();
 		result.beatTimes = expandedBeatTimes;
 		result.scaleInfo = new ScaleInfo(s.octaves, s.notesPerOctave);
 		result.startNoteOffsetInSemitonesFromF0 = s.offsetFromF0InSemitones;
 		result.framesPerBeat = s.framesPerBeat;
-		result.f0 = TuningFrequencyFinder.getTuningFrequency(waveFileName, s.threadPoolSize);
+		result.f0 = TuningFrequencyFinder.getTuningFrequency(waveFileName, beatTimes, s.threadPoolSize);
 //		result.f0 = CQConstants.F0_DEFAULT;
 		WavFile wavFile = null;
 		try {
@@ -53,14 +59,27 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 			result.samplingRate = (int) wavFile.getSampleRate();
 			result.totalSeconds = wavFile.getNumFrames() * 1.0 / result.samplingRate;
 			
-			CQConstants cqConstants = CQConstants.getInstance(result.samplingRate,
+			final CQConstants cqConstants = CQConstants.getInstance(result.samplingRate,
 					result.scaleInfo, result.f0, result.startNoteOffsetInSemitonesFromF0);
 			int windowSize = cqConstants.getWindowLengthForComponent(0) + 1; // the longest window
+//			int windowSize = 8192;
 			// need to make windows centered at the beat positions, so shift them to the left
 			double[] windowBeginnings = shiftBeatsLeft(result.beatTimes, getWindowsShift(result));
 			WaveReader reader = new WaveReader(wavFile, windowBeginnings, windowSize);
+			ITransformProvider cqProvider = new ITransformProvider() {
+				@Override
+				public ITransform getTransform(Buffer buffer, CountDownLatch latch) {
+					return new DummyConstantQTransform(buffer, result.scaleInfo, latch, cqConstants);
+				}
+			};
+//			ITransformProvider fftProvider = new ITransformProvider() {
+//				@Override
+//				public ITransform getTransform(Buffer buffer, CountDownLatch latch) {
+//					return new FFTTransformWrapper(buffer, latch, cqConstants);
+//				}
+//			};
 			PooledTransformer transformer = new PooledTransformer(
-					reader, s.threadPoolSize, result.beatTimes.length, result.scaleInfo, cqConstants);
+					reader, s.threadPoolSize, result.beatTimes.length, cqProvider);
 			result.spectrum = transformer.run();
 		} catch (WavFileException e) {
 			LOG.error("Error when reading wave file " + waveFileName, e);

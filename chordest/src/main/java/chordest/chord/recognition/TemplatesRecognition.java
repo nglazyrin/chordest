@@ -8,10 +8,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import chordest.chord.templates.ITemplateProducer;
-import chordest.chord.templates.TemplateProducer;
 import chordest.model.Chord;
 import chordest.model.Key;
-import chordest.model.Note;
 import chordest.util.MapUtil;
 import chordest.util.metric.EuclideanMetric;
 import chordest.util.metric.IMetric;
