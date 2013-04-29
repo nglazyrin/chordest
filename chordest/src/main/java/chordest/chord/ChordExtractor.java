@@ -126,7 +126,7 @@ public class ChordExtractor {
 //		key = Key.recognizeKey(getTonalProfile(pcp, 0, pcp.length), startNote);
 		key = null;
 		Note startNote = Note.byNumber(spectrumData.startNoteOffsetInSemitonesFromF0);
-		ITemplateProducer producer = new TemplateProducer(startNote, true);
+		ITemplateProducer producer = new TemplateProducer(startNote, false);
 		IChordRecognition first = new TemplatesRecognition(producer, key);
 //		IChordRecognition first = new TonnetzRecognition(producer);
 		Chord[] temp = first.recognize(chromas, new ScaleInfo(1, 12));

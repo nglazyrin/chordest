@@ -6,9 +6,9 @@ import chordest.model.Note;
 
 public class TemplateProducer implements ITemplateProducer {
 
-	private static final int HARMONICS_COUNT = 3;
+	private static final int HARMONICS_COUNT = 4;
 	private static final double[] HARMONIC_CONTRIBUTIONS = new double[HARMONICS_COUNT];
-	private static final double CONTRIBUTION_REDUCTION = 0;
+	private static final double CONTRIBUTION_REDUCTION = 0.6;
 
 	static {
 		initializeHarmonicContributions();
