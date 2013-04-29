@@ -389,6 +389,7 @@ public class DataUtil {
 			if ((subnotesCount & 1) == 0) { // if subnotesCount is even
 				delta--; // to exclude the subnotes that are in the "middle" between 2 real notes
 			}
+			delta = Math.max(delta, 0);
 			for (int i = 0; i < 12; i++) {
 				double temp = 0;
 				for (int j = -delta; j <= delta; j++) {
