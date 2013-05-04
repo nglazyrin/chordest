@@ -1,8 +1,6 @@
 package chordest.chord;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import chordest.chord.recognition.IChordRecognition;
 import chordest.chord.recognition.TemplatesRecognition;
@@ -35,8 +33,6 @@ import chordest.util.Viterbi;
  */
 public class ChordExtractor {
 
-	private static final Logger LOG = LoggerFactory.getLogger(ChordExtractor.class);
-	
 	private final double[] originalBeatTimes;
 	private final SpectrumData spectrumData;
 	private final Chord[] chords;
@@ -54,7 +50,7 @@ public class ChordExtractor {
 			IExternalProcessor ex) {
 		this.externalProcessor = ex;
 		spectrumData = spectrumProvider.getSpectrumData();
-		removeUpperOctaves(spectrumData, 2);
+		getFirstOctaves(spectrumData, 4);
 		int framesPerBeat = spectrumData.framesPerBeat;
 		originalBeatTimes = new double[spectrumData.beatTimes.length / framesPerBeat + 1];
 		for (int i = 0; i < originalBeatTimes.length; i++) {
@@ -65,29 +61,33 @@ public class ChordExtractor {
 		labels = NoteLabelProvider.getNoteLabels(offset, spectrumData.scaleInfo);
 		labels1 = NoteLabelProvider.getNoteLabels(offset, new ScaleInfo(1, 12));
 		
-//		Visualizer.visualizeSpectrum(DataUtil.whitenSpectrum(spectrumData.spectrum, spectrumData.scaleInfo.notesInOctave), spectrumData.beatTimes, labels, "Spectrum as is");
 //		Visualizer.visualizeSpectrum(spectrumData.spectrum, spectrumData.beatTimes, labels, "Spectrum as is");
 		chords = doChordExtraction(p, spectrumData.spectrum);
 	}
 
-	private void removeUpperOctaves(SpectrumData sd, int octaves) {
+	private void getFirstOctaves(SpectrumData sd, int octaves) {
 		if (octaves > sd.scaleInfo.octaves) {
 			throw new IllegalArgumentException("Too many octaves to remove");
 		}
-		sd.scaleInfo = new ScaleInfo(sd.scaleInfo.octaves - octaves, sd.scaleInfo.notesInOctave);
+		sd.scaleInfo = new ScaleInfo(octaves, sd.scaleInfo.notesInOctave);
 		int newComponents = sd.scaleInfo.getTotalComponentsCount();
 		for (int i = 0; i < sd.spectrum.length; i++) {
 			sd.spectrum[i] = ArrayUtils.subarray(sd.spectrum[i], 0, newComponents);
 		}
-		sd.scaleInfo = new ScaleInfo(sd.scaleInfo.octaves - octaves, sd.scaleInfo.notesInOctave);
+	}
+
+	private double[][] getFirstRows(double[][] data, int rows) {
+		double[][] result = new double[data.length][rows];
+		for (int i = 0; i < data.length; i++) {
+			result[i] = ArrayUtils.subarray(data[i], 0, rows);
+		}
+		return result;
 	}
 
 	private Chord[] doChordExtraction(final ProcessProperties p, final double[][] spectrum) {
-		double[][] result = spectrum;
-//		double[] e = DataUtil.getSoundEnergyByFrequencyDistribution(result);
 //		Visualizer.visualizeXByFrequencyDistribution(e, scaleInfo, spectrum.startNoteOffsetInSemitonesFromF0);
 		
-		result = DataUtil.smoothHorizontallyMedian(result, p.medianFilterWindow);
+		double[][] result = DataUtil.smoothHorizontallyMedian(spectrum, p.medianFilterWindow);
 		result = DataUtil.shrink(result, spectrumData.framesPerBeat);
 		result = DataUtil.toLogSpectrum(result);
 //		result = DataUtil.whitenSpectrum(result, spectrumData.scaleInfo.notesInOctave);
@@ -97,10 +97,7 @@ public class ChordExtractor {
 //			Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Modified spectrum");
 		}
 
-//		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, 30, p.selfSimilarityTheta), spectrumData.scaleInfo.getNotesInOctaveCount());
-//		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, 20, p.selfSimilarityTheta), spectrumData.scaleInfo.getNotesInOctaveCount());
-//		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, 10, p.selfSimilarityTheta), spectrumData.scaleInfo.getNotesInOctaveCount());
-		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, p.crpFirstNonZero, p.selfSimilarityTheta), spectrumData.scaleInfo.notesInOctave);
+		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, p.crpFirstNonZero, p.selfSimilarityTheta), spectrumData.scaleInfo.octaves);
 	}
 
 	private double[][] doChromaReductionAndSelfSimSmooth(final double[][] spectrum,
@@ -119,26 +116,16 @@ public class ChordExtractor {
 		return result;
 	}
 
-	private Chord[] doTemplateMatching(final double[][] sp, int notesPerOctave) {
-		double[][] result = DataUtil.toSingleOctave(sp, notesPerOctave);
-		double[][] chromas = DataUtil.reduceTo12Notes(result);
+	private Chord[] doTemplateMatching(final double[][] sp, int octaves) {
+		double[][] result = DataUtil.reduce(sp, octaves);
+		double[][] chromas = DataUtil.toSingleOctave(result, 12);
 
 //		key = Key.recognizeKey(getTonalProfile(pcp, 0, pcp.length), startNote);
 		key = null;
 		Note startNote = Note.byNumber(spectrumData.startNoteOffsetInSemitonesFromF0);
 		ITemplateProducer producer = new TemplateProducer(startNote, false);
 		IChordRecognition first = new TemplatesRecognition(producer, key);
-//		IChordRecognition first = new TonnetzRecognition(producer);
 		Chord[] temp = first.recognize(chromas, new ScaleInfo(1, 12));
-//		LOG.info("Normalized diff: " + first.getDiffNormalized());
-		
-//		Map<Chord, double[]> newTemplates = TemplatesSmoother.smoothTemplates(chromas, temp);
-//		for (Entry<Chord, double[]> entry : newTemplates.entrySet()) {
-//			LOG.info(entry.getKey().toString() + " - " + Arrays.toString(entry.getValue()));
-//		}
-//		IChordRecognition second = new TemplatesRecognition(newTemplates.keySet(),
-//				new SimpleTemplateProducer(newTemplates));
-//		temp = second.recognize(chromas, new ScaleInfo(1, 12));
 		
 		return Harmony.smoothUsingHarmony(chromas, temp, new ScaleInfo(1, 12), producer);
 //		return new Viterbi(producer).decode(chromas);

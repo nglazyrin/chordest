@@ -38,9 +38,9 @@ public class TrainDataGenerator implements IExternalProcessor {
 	private static final String CSV_FILE = PathConstants.OUTPUT_DIR + "train_dA.csv";
 	
 	public static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "all_files0.txt";
-	public static final int WINDOW = 21;
+	public static final int WINDOW = 19;
 	public static final int OFFSET = 0;
-	public static final int INPUTS = 48;
+	public static final int INPUTS = 60;
 
 	private OutputStream csvOut;
 
@@ -76,7 +76,6 @@ public class TrainDataGenerator implements IExternalProcessor {
 		double[][] result = sd.spectrum;
 		result = DataUtil.smoothHorizontallyMedian(result, TrainDataGenerator.WINDOW);
 		result = DataUtil.shrink(result, sd.framesPerBeat);
-		result = DataUtil.whitenSpectrum(result, sd.scaleInfo.notesInOctave);
 		result = DataUtil.toLogSpectrum(result);
 		result = DataUtil.reduce(result, sd.scaleInfo.octaves);
 		DataUtil.scaleEachTo01(result);

@@ -99,7 +99,7 @@ public class TrainDataCircularGenerator {
 		if (chord.isEmpty()) {
 			double[] dataLocal = Arrays.copyOfRange(data, TrainDataGenerator.OFFSET, TrainDataGenerator.OFFSET + TrainDataGenerator.INPUTS);
 			chordOut.write(TrainDataGenerator.toByteArray(dataLocal, chord));
-			bassOut.write(TrainDataGenerator.toByteArrayForBass(dataLocal, chord));
+//			bassOut.write(TrainDataGenerator.toByteArrayForBass(dataLocal, chord));
 		} else {
 			Note[] notes = chord.getNotes();
 			for (int i = 0; i < 12; i++) {
@@ -110,7 +110,7 @@ public class TrainDataCircularGenerator {
 				}
 				Chord chordLocal = new Chord(newNotes);
 				chordOut.write(TrainDataGenerator.toByteArray(dataLocal, chordLocal));
-				bassOut.write(TrainDataGenerator.toByteArrayForBass(dataLocal, chordLocal));
+//				bassOut.write(TrainDataGenerator.toByteArrayForBass(dataLocal, chordLocal));
 			}
 		}
 //		} else if (chord.isMajor()) {
@@ -118,14 +118,14 @@ public class TrainDataCircularGenerator {
 //			for (int i = 0; i < 12; i++) {
 //				double[] dataLocal = Arrays.copyOfRange(data, i, i + TrainDataGenerator.INPUTS);
 //				Chord chordLocal = Chord.major(startNote.withOffset(-i));
-//				csvOut.write(TrainDataGenerator.toByteArray(dataLocal, chordLocal));
+//				chordOut.write(TrainDataGenerator.toByteArray(dataLocal, chordLocal));
 //			}
 //		} else if (chord.isMinor()) {
 //			Note startNote = chord.getRoot();
 //			for (int i = 0; i < 12; i++) {
 //				double[] dataLocal = Arrays.copyOfRange(data, i, i + TrainDataGenerator.INPUTS);
 //				Chord chordLocal = Chord.minor(startNote.withOffset(-i));
-//				csvOut.write(TrainDataGenerator.toByteArray(dataLocal, chordLocal));
+//				chordOut.write(TrainDataGenerator.toByteArray(dataLocal, chordLocal));
 //			}
 //		}
 	}
