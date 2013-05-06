@@ -12,8 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import uk.co.labbookpages.WavFile;
 import uk.co.labbookpages.WavFileException;
-
-import chordest.transform.ScaleInfo;
 import chordest.util.metric.EuclideanMetric;
 import chordest.wave.Buffer;
 
@@ -527,10 +525,6 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[] getFirstOctave(final double[] cqtSpectrum, final ScaleInfo scaleInfo) {
-		return Arrays.copyOf(cqtSpectrum, scaleInfo.notesInOctave);
-	}
-
 	public static double[][] getSelfSimilarity(final double[][] spectrum) {
 		if (spectrum == null) {
 			throw new NullPointerException("spectrum is null");
@@ -609,6 +603,31 @@ public class DataUtil {
 			result[i] = multiply(temp, 1.0 / sumOfWeights);
 		}
 		scaleTo01(result);
+		return result;
+	}
+
+	public static double[] getNochordness(final double[][] spectrum) {
+		if (spectrum == null) {
+			throw new NullPointerException("spectrum is null");
+		}
+		double[] result = new double[spectrum.length];
+		for (int i = 0; i < result.length; i++) {
+			double[] col = spectrum[i];
+			double max = 0;
+			double sum = 0;
+			double mean = 0;
+			for (int j = 0; j < col.length; j++) {
+				mean += col[j];
+				if (Math.abs(col[j]) > max) { max = Math.abs(col[j]); }
+				sum += Math.abs(col[j]);
+			}
+			mean /= col.length;
+			double dispersion = 0;
+			for (int j = 0; j < col.length; j++) {
+				dispersion = dispersion + (col[j] - mean) * (col[j] - mean);
+			}
+			result[i] = (dispersion / (col.length - 1)) * (max / sum);
+		}
 		return result;
 	}
 

@@ -71,6 +71,13 @@ public class Visualizer {
 				"Frequency", ds, 1000, 800, NoteLabelProvider.getNoteLabels(startNoteOffset, scaleInfo));
 	}
 
+	public static final void visualizeXByTimeDistribution(double[] array, double[] beatTimes) {
+		XYDataset ds = DatasetUtil.toXYDataset(beatTimes, array);
+		JFreeChartUtils.visualize("Value", "Time", "Value", ds);
+//		JFreeChartUtils.visualizeStringY("Energy by frequency distribution", "Energy", 
+//				"Frequency", ds, 1000, 800, NoteLabelProvider.getNoteLabels(startNoteOffset, scaleInfo));
+	}
+
 	private static final double[][] copy2dArray(double[][] source) {
 		double[][] result = new double[source.length][];
 		for (int i = 0; i < source.length; i++) {

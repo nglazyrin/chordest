@@ -37,6 +37,7 @@ public class TemplateProducer implements ITemplateProducer {
 		this.useModifiedTemplates = useModifiedTemplates;
 	}
 
+	@Override
 	public double[] getTemplateFor(Chord chord) {
 		double[] template = new double[12];
 		Note[] notes = chord.getNotes();

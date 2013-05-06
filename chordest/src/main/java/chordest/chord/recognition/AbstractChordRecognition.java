@@ -11,11 +11,16 @@ import chordest.chord.templates.ITemplateProducer;
 import chordest.model.Chord;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
+import chordest.util.metric.EuclideanMetric;
+import chordest.util.metric.IMetric;
 
 public abstract class AbstractChordRecognition implements IChordRecognition {
 
 	protected static final Logger LOG = LoggerFactory.getLogger(AbstractChordRecognition.class);
 
+	protected static final IMetric metric = new EuclideanMetric();
+
+	@Override
 	public Chord[] recognize(final double[][] cqtSpectrum, final ScaleInfo scaleInfo) {
 		if (cqtSpectrum == null) {
 			throw new NullPointerException("spectrum is null");
@@ -60,7 +65,7 @@ public abstract class AbstractChordRecognition implements IChordRecognition {
 	protected Map<Chord, double[]> getTemplatesForChords(ITemplateProducer templateProducer, Collection<Chord> chords) {
 		Map<Chord, double[]> map = new HashMap<Chord, double[]>();
 		for (Chord chord : chords) {
-			map.put(chord, templateProducer.getTemplateFor(chord));
+			map.put(chord, metric.normalize(templateProducer.getTemplateFor(chord)));
 		}
 		return map;
 	}

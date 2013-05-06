@@ -11,8 +11,6 @@ import chordest.chord.templates.TemplateProducer;
 import chordest.model.Chord;
 import chordest.model.Note;
 import chordest.util.MapUtil;
-import chordest.util.metric.EuclideanMetric;
-import chordest.util.metric.IMetric;
 import chordest.util.metric.L1Metric;
 
 public class TonnetzRecognition extends AbstractChordRecognition {
@@ -23,7 +21,6 @@ public class TonnetzRecognition extends AbstractChordRecognition {
 	public static final double[][] PHI = new double[6][];
 
 	private static final L1Metric L1 = new L1Metric();
-	private static final IMetric metric = new EuclideanMetric();
 
 	public final Map<Chord, double[]> possibleChords;
 

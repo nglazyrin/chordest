@@ -30,7 +30,7 @@ public class Roundtrip {
 	private static final String SEP = PathConstants.SEP;
 	public static final String CSV_ACTUAL_DIR = PathConstants.CSV_DIR + "actual" + SEP;
 	public static final String CSV_EXPECTED_DIR = PathConstants.CSV_DIR + "expected" + SEP;
-	public static final String FILE_LIST = "work" + PathConstants.SEP + "all_files.txt";
+	public static final String FILE_LIST = "work" + PathConstants.SEP + "bqz_bin.txt";
 
 	public static void main(String[] args) {
 		List<String> tracklist = TracklistCreator.readTrackList(FILE_LIST);

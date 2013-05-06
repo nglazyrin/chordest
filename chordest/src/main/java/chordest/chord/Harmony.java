@@ -15,7 +15,7 @@ import chordest.util.DataUtil;
 public class Harmony {
 
 	public static Chord[] smoothUsingHarmony(final double[][] pcp, final Chord[] chords, 
-			final ScaleInfo scaleInfo, final ITemplateProducer templateProducer) {
+			final ScaleInfo scaleInfo, final ITemplateProducer producer) {
 		if (pcp == null) {
 			throw new NullPointerException();
 		}
@@ -32,27 +32,49 @@ public class Harmony {
 		}
 		
 		final List<IntervalToCorrect> intervals = gatherIntervals(chords);
-		smoothChordSequence(pcp, result, intervals, templateProducer);
+		removeSameRootDifferentType(pcp, result, intervals, producer);
+		removeSingleBeatChords(pcp, result, producer);
 		return result;
 	}
 
-	private static void smoothChordSequence(final double[][] pcp, final Chord[] result,
-			final List<IntervalToCorrect> intervals, final ITemplateProducer templateProducer) {
+	private static void removeSingleBeatChords(double[][] pcp, Chord[] result,
+			ITemplateProducer producer) {
+		for (int i = 1; i < result.length - 1; i++) {
+			Chord prev = result[i - 1];
+			Chord curr = result[i];
+			Chord next = result[i + 1];
+			if (curr.equals(prev) || curr.equals(next)) {
+				// do nothing
+			} else if (prev.equals(next)) {
+				result[i] = prev;
+			} else {
+				final List<Chord> possibleChords = new ArrayList<Chord>(2);
+				possibleChords.add(prev);
+				possibleChords.add(next);
+				final Chord[] top = new TemplatesRecognition(possibleChords,
+						producer).recognize(new double[][] { pcp[i] }, new ScaleInfo(1,12));
+				result[i] = top[0];
+			}
+		}
+	}
+
+	private static void removeSameRootDifferentType(final double[][] pcp, final Chord[] result,
+			final List<IntervalToCorrect> intervals, final ITemplateProducer producer) {
 		for (IntervalToCorrect interval : intervals) {
 			final List<Chord> possibleChords = new ArrayList<Chord>(interval.chordTypes.size());
 			for (String shortHand : interval.chordTypes) {
 				possibleChords.add(new Chord(interval.root, shortHand));
 			}
-			
 			double[] sum = new double[12];
 			for (int i = interval.start; i < interval.end; i++) {
 				double[] col = pcp[i];
 				sum = DataUtil.add(sum, col);
 			}
 			final Chord[] top = new TemplatesRecognition(possibleChords,
-					templateProducer).recognize(new double[][] { sum }, new ScaleInfo(1,12));
+					producer).recognize(new double[][] { sum }, new ScaleInfo(1,12));
+			Chord best = top[0];
 			for (int i = interval.start; i < interval.end; i++) {
-				result[i] = top[0];
+				result[i] = best;
 			}
 		}
 	}

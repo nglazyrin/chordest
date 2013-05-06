@@ -67,7 +67,7 @@ public class ChordExtractor {
 
 	private void getFirstOctaves(SpectrumData sd, int octaves) {
 		if (octaves > sd.scaleInfo.octaves) {
-			throw new IllegalArgumentException("Too many octaves to remove");
+			throw new IllegalArgumentException("Too many octaves to get");
 		}
 		sd.scaleInfo = new ScaleInfo(octaves, sd.scaleInfo.notesInOctave);
 		int newComponents = sd.scaleInfo.getTotalComponentsCount();
@@ -104,14 +104,14 @@ public class ChordExtractor {
 			int simNZ,  double theta) {
 		double[][] red = DiscreteCosineTransform.doChromaReduction(spectrum, simNZ);
 //		double[][] red = spectrum;
-//		Visualizer.visualizeSpectrum(red, originalBeatTimes, labels, "Reduced " + simNZ);
+//		Visualizer.visualizeSpectrum(red, originalBeatTimes, labels, "Reduced");
 		double[][] selfSim = DataUtil.getSelfSimilarity(red);
 		selfSim = DataUtil.removeDissimilar(selfSim, theta);
 //		Visualizer.visualizeSelfSimilarity(selfSim, originalBeatTimes);
 		
 		double[][] result = red;
 //		double[][] result = spectrum;
-//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Reduced " + simNZ);
+//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Reduced + self-sim");
 		result = DataUtil.smoothWithSelfSimilarity(result, selfSim);
 		return result;
 	}
@@ -123,9 +123,17 @@ public class ChordExtractor {
 //		key = Key.recognizeKey(getTonalProfile(pcp, 0, pcp.length), startNote);
 		key = null;
 		Note startNote = Note.byNumber(spectrumData.startNoteOffsetInSemitonesFromF0);
-		ITemplateProducer producer = new TemplateProducer(startNote, false);
+		ITemplateProducer producer = new TemplateProducer(startNote);
 		IChordRecognition first = new TemplatesRecognition(producer, key);
 		Chord[] temp = first.recognize(chromas, new ScaleInfo(1, 12));
+		
+		double[] noChordness = DataUtil.getNochordness(sp);
+		for (int i = 0; i < noChordness.length; i++) {
+			if (noChordness[i] < 5e-6) {
+				temp[i] = Chord.empty();
+			}
+		}
+//		Visualizer.visualizeXByTimeDistribution(noChordness, originalBeatTimes);
 		
 		return Harmony.smoothUsingHarmony(chromas, temp, new ScaleInfo(1, 12), producer);
 //		return new Viterbi(producer).decode(chromas);

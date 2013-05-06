@@ -11,23 +11,15 @@ import chordest.chord.templates.ITemplateProducer;
 import chordest.model.Chord;
 import chordest.model.Key;
 import chordest.util.MapUtil;
-import chordest.util.metric.EuclideanMetric;
-import chordest.util.metric.IMetric;
 
 
 public class TemplatesRecognition extends AbstractChordRecognition {
 
-	public static final List<Chord> knownChords;
-
-//	public static final IMetric metric = new KLMetric();			// step 4
-	public static final IMetric metric = new EuclideanMetric();
-
-	static {
-		knownChords = Chord.getAllChordsWithShorthands(new String[] { Chord.MAJ, Chord.MIN, Chord.N });
-	}
+	public static final List<Chord> knownChords = Chord.getAllChordsWithShorthands(
+			new String[] { Chord.MAJ, Chord.MIN, Chord.N });
 
 	public static boolean isKnown(Chord chord) {
-		return chord.isEmpty() || knownChords.contains(chord);
+		return knownChords.contains(chord);
 	}
 
 	protected final Map<Chord, double[]> possibleChords;
@@ -37,6 +29,9 @@ public class TemplatesRecognition extends AbstractChordRecognition {
 	 */
 	public TemplatesRecognition(ITemplateProducer templateProducer) {
 		Map<Chord, double[]> map = getTemplatesForChords(templateProducer, knownChords);
+		for (Entry<Chord, double[]> entry : map.entrySet()) {
+			entry.setValue(metric.normalize(entry.getValue()));
+		}
 		possibleChords = Collections.unmodifiableMap(map);
 	}
 
@@ -70,7 +65,7 @@ public class TemplatesRecognition extends AbstractChordRecognition {
 		final Map<Chord, Double> distances = new HashMap<Chord, Double>();
 		final Map<Chord, double[]> chords = possibleChords;
 		for (Entry<Chord, double[]> entry : chords.entrySet()) {
-			distances.put(entry.getKey(), metric.distance(metric.normalize(entry.getValue()), vector));
+			distances.put(entry.getKey(), metric.distance(entry.getValue(), vector));
 		}
 		
 		// find element with minimal distance
