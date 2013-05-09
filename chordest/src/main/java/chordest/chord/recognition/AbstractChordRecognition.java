@@ -18,7 +18,7 @@ public abstract class AbstractChordRecognition implements IChordRecognition {
 
 	protected static final Logger LOG = LoggerFactory.getLogger(AbstractChordRecognition.class);
 
-	protected static final IMetric metric = new EuclideanMetric();
+	public static final IMetric metric = new EuclideanMetric();
 
 	@Override
 	public Chord[] recognize(final double[][] cqtSpectrum, final ScaleInfo scaleInfo) {
