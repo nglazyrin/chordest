@@ -30,6 +30,10 @@ public class Chord {
 	public static final String N =  "N";
 	public static final String NO_SHORTHAND = "";
 
+	public static final String[] START_WITH_MAJ_OR_MIN_OR_N = new String[] {
+		MAJ, MAJ7, DOM, MAJ6, NON, MAJ9, MIN, MIN7, MINMAJ7, MIN6, MIN9, N
+	};
+
 	//private Map<Integer, Note> components = new HashMap<Integer, Note>();
 	private final Note[] components;
 	private final String shorthand;
@@ -62,10 +66,17 @@ public class Chord {
 	}
 
 	public Chord(Note... notes) {
-		Set<Note> set = new HashSet<Note>();
-		set.addAll(Arrays.asList(notes));
-		set.remove(null);
-		Note[] array = set.toArray(new Note[set.size()]);
+//		Set<Note> set = new HashSet<Note>();
+//		set.addAll(Arrays.asList(notes));
+//		set.remove(null);
+//		Note[] array = set.toArray(new Note[set.size()]);
+		List<Note> temp = new ArrayList<Note>();
+		for (Note note : notes) {
+			if (note != null && ! temp.contains(note)) {
+				temp.add(note);
+			}
+		}
+		Note[] array = temp.toArray(new Note[temp.size()]);
 		if (array.length > 0) {
 			Note rootMaj = tryMajor(array);
 			Note rootMin = tryMinor(array);
@@ -213,6 +224,55 @@ public class Chord {
 			}
 		}
 		return common >= 3;
+	}
+
+	public boolean equalsToTriad(Chord triad) {
+		if (triad == null || triad.isEmpty() || this.isEmpty()) {
+			return equals(triad);
+		}
+		if (! (triad.isMajor() || triad.isMinor())) {
+			throw new IllegalArgumentException("Major or minor expected, but was: " + triad);
+		}
+		// so further assume that triad is either major or minor
+		if (! this.getRoot().equals(triad.getRoot())) {
+			return false;
+		}
+		if (this.isShortHandDefined()) {
+			if (triad.isMajor()) {
+				switch (this.getShortHand()) {
+				case MAJ:
+				case MAJ7:
+				case DOM:
+				case MAJ6:
+				case NON:
+				case MAJ9:
+					return true;
+				default:
+					return false;
+				}
+			} else if (triad.isMinor()) {
+				switch (this.getShortHand()) {
+				case MIN:
+				case MIN7:
+				case MINMAJ7:
+				case MIN6:
+				case MIN9:
+					return true;
+				default:
+					return false;
+				}
+			}
+		}
+//		throw new IllegalArgumentException("Unable to compare chords: " + this + " and " + triad);
+		// Otherwise need to compare intervals
+		if (this.components.length < 3) {
+			return false;
+		}
+		if (components[1].offsetFrom(components[0]) == triad.components[1].offsetFrom(triad.components[0]) &&
+				components[2].offsetFrom(components[0]) == triad.components[2].offsetFrom(triad.components[0])) {
+			return true;
+		}
+		return false;
 	}
 
 	@Override

@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import chordest.chord.recognition.TemplatesRecognition;
 import chordest.model.Chord;
 
@@ -17,6 +19,11 @@ public class ChordListsComparison {
 	private final Map<String, Double> errors = new HashMap<String, Double>();
 	private double overlapMeasure;
 	private double totalSeconds = 0;
+
+	public static boolean isKnown(Chord chord) {
+//		return ArrayUtils.contains(Chord.START_WITH_MAJ_OR_MIN_OR_N, chord.getShortHand());
+		return TemplatesRecognition.isKnown(chord);
+	}
 
 	public ChordListsComparison(final Chord[] expected, final double[] expectedTimestamps,
 			final Chord[] actual, final double[] actualTimestamps) {
@@ -67,11 +74,11 @@ public class ChordListsComparison {
 			if (previousTime == currentTime) {
 				continue;
 			}
-//			if (expectedChord.equals(actualChord)) {
-			if (TemplatesRecognition.isKnown(expectedChord)) {
+			if (isKnown(expectedChord)) {
 				double segmentLength = currentTime - previousTime;
-				if (expectedChord.equals(actualChord)) {
-//			if (expectedChord.hasCommon3Notes(actualChord) || (Chord.empty().equals(expectedChord) && Chord.empty().equals(actualChord))) {
+//				if (expectedChord.equals(actualChord)) {
+				if (expectedChord.equals(actualChord) || (Chord.empty().equals(expectedChord) && Chord.empty().equals(actualChord))) {
+//				if (expectedChord.equalsToTriad(actualChord) || (Chord.empty().equals(expectedChord) && Chord.empty().equals(actualChord))) {
 					result += segmentLength;
 				} else {
 					String key = expectedChord.toString() + "-" + actualChord.toString();

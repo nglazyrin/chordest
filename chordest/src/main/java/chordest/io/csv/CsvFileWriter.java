@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Locale;
 
-import chordest.chord.recognition.TemplatesRecognition;
+import chordest.chord.ChordListsComparison;
 import chordest.io.AbstractWriter;
 import chordest.model.Chord;
 
@@ -63,7 +63,7 @@ public class CsvFileWriter extends AbstractWriter {
 	private String getResultLine(double startTime, double endTime, Chord chord) {
 		String chordName = chord != null ? chord.toString() : "N";
 		chordName = chordName.replace(',', '-');
-		boolean isKnown = TemplatesRecognition.isKnown(chord);
+		boolean isKnown = ChordListsComparison.isKnown(chord);
 		return String.format(Locale.ENGLISH, "%f,%f,%s,%s\n", startTime, endTime, chordName, isKnown);
 	}
 

@@ -38,6 +38,18 @@ public class ChordParserTest {
 	}
 
 	@Test
+	public void testDmin7b7() {
+		try {
+			Chord c1 = ChordParser.parseString("D:min7/b7");
+			Chord c2 = ChordParser.parseString("D:min7");
+			Assert.assertEquals(c1, c2);
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail();
+		}
+	}
+
+	@Test
 	public void testFSharpMaj9() {
 		try {
 			Chord c1 = ChordParser.parseString("F#:(3,5,7,9)");
