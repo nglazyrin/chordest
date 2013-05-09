@@ -5,12 +5,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import chordest.chord.recognition.AbstractChordRecognition;
 import chordest.chord.recognition.TemplatesRecognition;
 import chordest.chord.templates.ITemplateProducer;
 import chordest.model.Chord;
 import chordest.model.Note;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
+import chordest.util.metric.EuclideanMetric;
+import chordest.util.metric.IMetric;
 
 public class Harmony {
 
@@ -48,14 +51,35 @@ public class Harmony {
 			} else if (prev.equals(next)) {
 				result[i] = prev;
 			} else {
-				final List<Chord> possibleChords = new ArrayList<Chord>(2);
-				possibleChords.add(prev);
-				possibleChords.add(next);
-				final Chord[] top = new TemplatesRecognition(possibleChords,
-						producer).recognize(new double[][] { pcp[i] }, new ScaleInfo(1,12));
-				result[i] = top[0];
+//				final List<Chord> possibleChords = new ArrayList<Chord>(2);
+//				possibleChords.add(prev);
+//				possibleChords.add(next);
+//				final Chord[] top = new TemplatesRecognition(possibleChords,
+//						producer).recognize(new double[][] { pcp[i] }, new ScaleInfo(1,12));
+//				result[i] = top[0];
+				double[] p = producer.getTemplateFor(prev);
+				double[] c = producer.getTemplateFor(curr);
+				double[] n = producer.getTemplateFor(next);
+				double ppn = d(pcp[i-1], p) + d(pcp[i], p) + d(pcp[i+1], n);
+				double pnn = d(pcp[i-1], p) + d(pcp[i], n) + d(pcp[i+1], n);
+				double ccn = d(pcp[i-1], c) + d(pcp[i], c) + d(pcp[i+1], n);
+				double pcc = d(pcp[i-1], p) + d(pcp[i], c) + d(pcp[i+1], c);
+				if (ppn < pnn && ppn < ccn && ppn < pcc) {
+					result[i] = prev;
+				} else if (pnn < ppn && pnn < ccn && pnn < pcc) {
+					result[i] = next;
+				} else if (ccn < ppn && ccn < pnn && ccn < pcc) {
+					result[i-1] = curr;
+				} else if (pcc < ppn && pcc < pnn && pcc < ccn) {
+					result[i+1] = curr;
+				}
 			}
 		}
+	}
+
+	private static double d(double[] v1, double[] v2) {
+		IMetric m = AbstractChordRecognition.metric;
+		return m.distance(m.normalize(v1), m.normalize(v2));
 	}
 
 	private static void removeSameRootDifferentType(final double[][] pcp, final Chord[] result,
