@@ -336,6 +336,7 @@ public class DataUtil {
 				for (int j = -delta; j <= delta; j++) {
 					// account neighbors with lower weights
 					temp += data[(totalNotes + i * subnotes + j) % totalNotes];// * Math.pow(0.6, Math.abs(j));
+//					temp = Math.max(temp, data[(totalNotes + i * subnotes + j) % totalNotes]);
 				}
 				result[i] = temp;
 			}
@@ -606,29 +607,37 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[] getNochordness(final double[][] spectrum) {
+	public static double[] getNochordness(final double[][] spectrum, int octaves) {
 		if (spectrum == null) {
 			throw new NullPointerException("spectrum is null");
 		}
 		double[] result = new double[spectrum.length];
+		int subnotes = spectrum[0].length / octaves / 12;
 		for (int i = 0; i < result.length; i++) {
 			double[] col = spectrum[i];
 			double max = 0;
 			double sum = 0;
-			double mean = 0;
+			double tonal = 0;
+			double atonal = 0;
 			for (int j = 0; j < col.length; j++) {
-				mean += col[j];
 				if (Math.abs(col[j]) > max) { max = Math.abs(col[j]); }
 				sum += Math.abs(col[j]);
+				if (j % subnotes == 0) {
+					tonal += Math.abs(col[j]);
+				} else {
+					atonal += Math.abs(col[j]);
+				}
 			}
-			mean /= col.length;
-			double dispersion = 0;
-			for (int j = 0; j < col.length; j++) {
-				dispersion = dispersion + (col[j] - mean) * (col[j] - mean);
-			}
-			result[i] = (dispersion / (col.length - 1)) * (max / sum);
+			result[i] = (max / sum) * (tonal / atonal);
 		}
-		return result;
+		
+		double[] reResult = Arrays.copyOf(result, result.length);
+		int w = 2;
+		for (int i = w; i < result.length - w; i++) {
+			reResult[i] = findKthSmallest(result, i - w, i + w, w + 1);
+		}
+		
+		return reResult;
 	}
 
 	public static double[] add(final double[] a1, final double[] a2) {
@@ -674,7 +683,7 @@ public class DataUtil {
 	 * @param k - the order of value
 	 * @return k-th smallest element in the given array
 	 */
-	private static double findKthSmallest(final double[] a, final int start, final int end, int k) {
+	public static double findKthSmallest(final double[] a, final int start, final int end, int k) {
 		int size = end - start;
 		double[] left = new double[size], right = new double[size];
 		int l = 0, r = 0;
