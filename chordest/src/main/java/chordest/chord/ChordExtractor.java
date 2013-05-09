@@ -76,49 +76,41 @@ public class ChordExtractor {
 		}
 	}
 
-	private double[][] getFirstRows(double[][] data, int rows) {
-		double[][] result = new double[data.length][rows];
-		for (int i = 0; i < data.length; i++) {
-			result[i] = ArrayUtils.subarray(data[i], 0, rows);
-		}
-		return result;
-	}
-
 	private Chord[] doChordExtraction(final ProcessProperties p, final double[][] spectrum) {
 //		Visualizer.visualizeXByFrequencyDistribution(e, scaleInfo, spectrum.startNoteOffsetInSemitonesFromF0);
 		
 		double[][] result = DataUtil.smoothHorizontallyMedian(spectrum, p.medianFilterWindow);
 		result = DataUtil.shrink(result, spectrumData.framesPerBeat);
 		result = DataUtil.toLogSpectrum(result);
+		
 //		result = DataUtil.whitenSpectrum(result, spectrumData.scaleInfo.notesInOctave);
 //		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Original spectrum");
-		if (externalProcessor != null) {
-			result = externalProcessor.process(result);
+//		if (externalProcessor != null) {
+//			result = externalProcessor.process(result);
 //			Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Modified spectrum");
-		}
+//		}
 
 		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, p.crpFirstNonZero, p.selfSimilarityTheta), spectrumData.scaleInfo.octaves);
 	}
 
 	private double[][] doChromaReductionAndSelfSimSmooth(final double[][] spectrum,
 			int simNZ,  double theta) {
-		double[][] red = DiscreteCosineTransform.doChromaReduction(spectrum, simNZ);
-//		double[][] red = spectrum;
-//		Visualizer.visualizeSpectrum(red, originalBeatTimes, labels, "Reduced");
-		double[][] selfSim = DataUtil.getSelfSimilarity(red);
+//		double[][] result = DataUtil.reduce(spectrum, 4);
+		double[][] result = DiscreteCosineTransform.doChromaReduction(spectrum, simNZ);
+//		double[][] result = spectrum;
+//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Reduced");
+		double[][] selfSim = DataUtil.getSelfSimilarity(result);
 		selfSim = DataUtil.removeDissimilar(selfSim, theta);
 //		Visualizer.visualizeSelfSimilarity(selfSim, originalBeatTimes);
 		
-		double[][] result = red;
-//		double[][] result = spectrum;
-//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Reduced + self-sim");
 		result = DataUtil.smoothWithSelfSimilarity(result, selfSim);
+//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Reduced + self-sim");
 		return result;
 	}
 
 	private Chord[] doTemplateMatching(final double[][] sp, int octaves) {
-		double[][] result = DataUtil.reduce(sp, octaves);
-		double[][] chromas = DataUtil.toSingleOctave(result, 12);
+		double[][] sp12 = DataUtil.reduce(sp, octaves);
+		double[][] chromas = DataUtil.toSingleOctave(sp12, 12);
 
 //		key = Key.recognizeKey(getTonalProfile(pcp, 0, pcp.length), startNote);
 		key = null;
@@ -127,9 +119,9 @@ public class ChordExtractor {
 		IChordRecognition first = new TemplatesRecognition(producer, key);
 		Chord[] temp = first.recognize(chromas, new ScaleInfo(1, 12));
 		
-		double[] noChordness = DataUtil.getNochordness(sp);
+		double[] noChordness = DataUtil.getNochordness(sp, octaves);
 		for (int i = 0; i < noChordness.length; i++) {
-			if (noChordness[i] < 5e-6) {
+			if (noChordness[i] < 0.0015) {
 				temp[i] = Chord.empty();
 			}
 		}
