@@ -102,7 +102,7 @@ public class DataUtilTest {
 		double[] result = DataUtil.reduce(array, 2);
 		Assert.assertEquals(24, result.length);
 		for (int i = 0; i < 24; i++) {
-			Assert.assertEquals(3.2, result[i]);
+			Assert.assertEquals(2.0, result[i]);
 		}
 	}
 
