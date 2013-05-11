@@ -18,11 +18,13 @@ public class ChordListsComparison {
 	private final double[] actualTimestamps;
 	private final Map<String, Double> errors = new HashMap<String, Double>();
 	private double overlapMeasure;
-	private double totalSeconds = 0;
+	private double segmentation;
+	private double effectiveSeconds = 0;
+	private double totalSeconds;
 
 	public static boolean isKnown(Chord chord) {
-//		return ArrayUtils.contains(Chord.START_WITH_MAJ_OR_MIN_OR_N, chord.getShortHand());
-		return TemplatesRecognition.isKnown(chord);
+		return ArrayUtils.contains(Chord.START_WITH_MAJ_OR_MIN_OR_N, chord.getShortHand());
+//		return TemplatesRecognition.isKnown(chord);
 	}
 
 	public ChordListsComparison(final Chord[] expected, final double[] expectedTimestamps,
@@ -55,6 +57,58 @@ public class ChordListsComparison {
 		this.actualTimestamps = actualTimestamps;
 		
 		process();
+		calculateSegmentation();
+	}
+
+	private void calculateSegmentation() {
+		double ea = getSegmentation(expectedTimestamps, actualTimestamps);
+		double ae = getSegmentation(actualTimestamps, expectedTimestamps);
+		totalSeconds = Math.max(expectedTimestamps[expectedTimestamps.length - 1], actualTimestamps[actualTimestamps.length - 1]);
+		segmentation = 1 - Math.max(ea, ae) / totalSeconds;
+	}
+
+	private double getSegmentation(double[] from, double[] to) {
+		int toIdx = 0;
+		int maxIntersectIdx = 0;
+		double value = 0;
+		for (int i = 0; i < from.length - 1; i++) {
+			double start = from[i];
+			double end = from[i+1];
+			double maxIntersect = 0;
+			toIdx = maxIntersectIdx;
+			while (toIdx < to.length-1 && to[toIdx] <= end) {
+				double intersect = getIntersect(start, end, to[toIdx], to[toIdx + 1]);
+				if (intersect > maxIntersect) {
+					maxIntersect = intersect;
+					maxIntersectIdx = toIdx;
+				}
+				toIdx++;
+			}
+			value += (end - start - maxIntersect);
+		}
+		return value;
+	}
+
+	private double getIntersect(double start, double end, double t1, double t2) {
+		if (t1 > t2 || start > end) {
+			throw new IllegalArgumentException("Start > end:" + start + ", " + end + ", " + t1 + ", " + t2);
+		}
+		if (t2 < start || t1 > end) {
+			return 0;
+		}
+		if (t1 >= start && t2 <= end) {
+			return t2 - t1;
+		}
+		if (t1 <= start && t2 <= end) {
+			return t2 - start;
+		}
+		if (t1 >= start && t2 >= end) {
+			return end - t1;
+		}
+		if (t1 <= start && t2 >= end) {
+			return end - start;
+		}
+		throw new IllegalArgumentException("Start > end:" + start + ", " + end + ", " + t1 + ", " + t2);
 	}
 
 	private void process() {
@@ -77,8 +131,8 @@ public class ChordListsComparison {
 			if (isKnown(expectedChord)) {
 				double segmentLength = currentTime - previousTime;
 //				if (expectedChord.equals(actualChord)) {
-				if (expectedChord.equals(actualChord) || (Chord.empty().equals(expectedChord) && Chord.empty().equals(actualChord))) {
-//				if (expectedChord.equalsToTriad(actualChord) || (Chord.empty().equals(expectedChord) && Chord.empty().equals(actualChord))) {
+//				if (expectedChord.equals(actualChord) || (Chord.empty().equals(expectedChord) && Chord.empty().equals(actualChord))) {
+				if (expectedChord.equalsToTriad(actualChord) || (Chord.empty().equals(expectedChord) && Chord.empty().equals(actualChord))) {
 					result += segmentLength;
 				} else {
 					String key = expectedChord.toString() + "-" + actualChord.toString();
@@ -88,7 +142,7 @@ public class ChordListsComparison {
 					}
 					errors.put(key, value);
 				}
-				totalSeconds += segmentLength;
+				effectiveSeconds += segmentLength;
 			}
 			int expectedPos = Arrays.binarySearch(expectedTimestamps, currentTime);
 			int actualPos = Arrays.binarySearch(actualTimestamps, currentTime);
@@ -108,19 +162,27 @@ public class ChordListsComparison {
 			}
 			previousTime = currentTime;
 		}
-		this.overlapMeasure = result / totalSeconds;
+		this.overlapMeasure = result / effectiveSeconds;
 	}
 
 	public double getOverlapMeasure() {
-		return this.overlapMeasure;
+		return overlapMeasure;
 	}
 
 	public Map<String, Double> getErrors() {
-		return this.errors;
+		return errors;
+	}
+
+	public double getSegmentation() {
+		return segmentation;
+	}
+
+	public double getEffectiveSeconds() {
+		return effectiveSeconds;
 	}
 
 	public double getTotalSeconds() {
-		return this.totalSeconds;
+		return totalSeconds;
 	}
 
 }

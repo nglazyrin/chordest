@@ -45,7 +45,7 @@ public class AccuracyCalculator {
 					expectedReader.getChords(), expectedReader.getTimestamps(),
 					actualReader.getChords(), actualReader.getTimestamps());
 			double overlap = sim.getOverlapMeasure();
-			double effectiveSeconds = sim.getTotalSeconds();
+			double effectiveSeconds = sim.getEffectiveSeconds();
 			totalOverlap += overlap;
 			totalWeightedOverlap += (overlap * effectiveSeconds);
 			totalLength += effectiveSeconds;

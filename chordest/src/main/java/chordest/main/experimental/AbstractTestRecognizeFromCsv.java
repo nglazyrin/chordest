@@ -51,6 +51,7 @@ public abstract class AbstractTestRecognizeFromCsv {
 
 		LOG.info("AOR: " + acc.getAOR());
 		LOG.info("WAOR: " + acc.getWAOR());
+		LOG.info("Segmentation: " + acc.getAverageSegm());
 		int top = 40;
 		LOG.info(String.format("Errors TOP-%d:", top));
 		List<Entry<String, Double>> errors = acc.getErrors();
@@ -69,9 +70,11 @@ public abstract class AbstractTestRecognizeFromCsv {
 		beatTimes = Arrays.copyOf(beatTimes, beatTimes.length + 1);
 		if (beatTimes.length > 2) {
 			double beatLength = beatTimes[1] - beatTimes[0];
-			double lastSound = beatTimes[beatTimes.length - 3] + beatLength;
-			beatTimes[beatTimes.length - 1] = beatTimes[beatTimes.length - 2];
-			beatTimes[beatTimes.length - 2] = lastSound;
+//			double lastSound = beatTimes[beatTimes.length - 3] + beatLength;
+//			beatTimes[beatTimes.length - 1] = beatTimes[beatTimes.length - 2];
+//			beatTimes[beatTimes.length - 2] = lastSound;
+			double lastSound = beatTimes[beatTimes.length - 2] + beatLength;
+			beatTimes[beatTimes.length - 1] = lastSound;
 		}
 		LabFileWriter lw = new LabFileWriter(chords, beatTimes);
 		File temp = null;
@@ -97,7 +100,8 @@ public abstract class AbstractTestRecognizeFromCsv {
 		acc.append(cmp);
 		
 		SIM_LOG.info(expectedLab.substring(4).replace(',', '_').replace('\\', '/') + "," + 
-				cmp.getOverlapMeasure() + "," + cmp.getTotalSeconds() + "," + sd.totalSeconds);
+				cmp.getOverlapMeasure() + "," + cmp.getSegmentation() + "," +
+				cmp.getEffectiveSeconds() + "," + sd.totalSeconds);
 		
 		return cmp.getOverlapMeasure();
 	}

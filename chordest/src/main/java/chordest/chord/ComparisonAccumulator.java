@@ -11,16 +11,18 @@ public class ComparisonAccumulator {
 
 	private double totalOverlap = 0;
 	private double totalWeightedOverlap = 0;
+	private double totalSegmentation = 0;
 	private int totalTracks = 0;
-	private double totalLength = 0;
+	private double totalEffectiveLength = 0;
 	private final Map<String, Double> errors = new HashMap<String, Double>();
 
 	public void append(ChordListsComparison cmp) {
 		final double overlap = cmp.getOverlapMeasure();
-		final double effectiveSeconds = cmp.getTotalSeconds();
+		final double effectiveSeconds = cmp.getEffectiveSeconds();
 		totalOverlap += overlap;
 		totalWeightedOverlap += (overlap * effectiveSeconds);
-		totalLength += effectiveSeconds;
+		totalSegmentation += cmp.getSegmentation();
+		totalEffectiveLength += effectiveSeconds;
 		totalTracks++;
 		
 		Map<String, Double> errorsCurrent = cmp.getErrors();
@@ -39,7 +41,11 @@ public class ComparisonAccumulator {
 	}
 
 	public double getWAOR() {
-		return totalWeightedOverlap / totalLength;
+		return totalWeightedOverlap / totalEffectiveLength;
+	}
+
+	public double getAverageSegm() {
+		return totalSegmentation / totalTracks;
 	}
 
 	public List<Entry<String, Double>> getErrors() {
