@@ -9,7 +9,7 @@ import chordest.io.beat.Beat2FileReader;
 
 public class FileBeatBarTimesProvider implements IBeatTimesProvider {
 
-	private static Logger LOG = LoggerFactory.getLogger(FileBeatTimesProvider.class);
+	private static Logger LOG = LoggerFactory.getLogger(FileBeatBarTimesProvider.class);
 
 	private final double[] beatTimes;
 
