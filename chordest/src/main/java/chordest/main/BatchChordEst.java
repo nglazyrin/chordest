@@ -7,13 +7,13 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import chordest.beat.FileBeatBarTimesProvider;
 import chordest.chord.ChordExtractor;
 import chordest.configuration.Configuration;
 import chordest.configuration.LogConfiguration;
-import chordest.io.beat.BeatFileWriter;
 import chordest.io.lab.LabFileWriter;
-import chordest.io.spectrum.SpectrumFileWriter;
 import chordest.spectrum.WaveFileSpectrumDataProvider;
+import chordest.util.PathConstants;
 import chordest.util.TracklistCreator;
 
 public class BatchChordEst {
@@ -27,17 +27,24 @@ public class BatchChordEst {
 		}
 		args[1] = addTrailingSeparatorIfMissing(args[1]);
 		args[2] = addTrailingSeparatorIfMissing(args[2]);
-		boolean saveSpectra = args.length > 3 && args[3] != null && args[3].contains("s");
-		boolean saveBeats = args.length > 3 && args[3] != null && args[3].contains("b");
 		
 		LogConfiguration.setLogFileDirectory(args[1]);
 		List<String> tracklist = TracklistCreator.readTrackList(args[0]);
 		
 		Configuration c = new Configuration();
 		for (final String wavFileName : tracklist) {
-			String labFileName = new File(wavFileName).getName() + ".txt";
-			ChordExtractor ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(wavFileName, c.spectrum));
-
+			String trackName = new File(wavFileName).getName();
+			String labFileName = trackName + ".txt";
+			String beatFileName = args[1] + trackName + PathConstants.EXT_BEAT;
+			ChordExtractor ce;
+			if (new File(beatFileName).exists()) {
+				ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(
+						wavFileName, c.spectrum, new FileBeatBarTimesProvider(beatFileName)));
+			} else {
+				ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(
+						wavFileName, c.spectrum));
+			}
+			
 			LabFileWriter labWriter = new LabFileWriter(ce);
 			try {
 				labWriter.writeTo(new File(args[2] + labFileName));
@@ -45,22 +52,9 @@ public class BatchChordEst {
 				LOG.error("Error when saving lab file", e);
 			}
 			
-			if (saveSpectra) {
-				String spectrumFilePath = args[1] + new File(wavFileName).getName() + ".bin";
-				SpectrumFileWriter.write(spectrumFilePath, ce.getSpectrum());
-			}
-			if (saveBeats) {
-				String fileName = args[1] + new File(wavFileName).getName() + ".beat";
-				BeatFileWriter.write(fileName, ce.getOriginalBeatTimes());
-			}
-			
 			LOG.info("Done: " + labFileName);
 		}
 		LOG.info(tracklist.size() + " files have been processed. The end.");
-	}
-
-	public BatchChordEst() {
-		
 	}
 
 	private static String addTrailingSeparatorIfMissing(String str) {
