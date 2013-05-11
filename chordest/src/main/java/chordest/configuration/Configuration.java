@@ -6,7 +6,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Configuration {
+
+	private static final Logger LOG = LoggerFactory.getLogger(Configuration.class);
 
 	private static final String SPECTRUM_OCTAVES_KEY = "spectrum.octaves";
 	private static final String SPECTRUM_NOTES_PER_OCTAVE_KEY = "spectrum.notesPerOctave";
@@ -29,6 +34,7 @@ public class Configuration {
 
 	public Configuration(String propertiesFile) {
 		Properties prop = new Properties();
+		LOG.info("Trying to read configuration from " + propertiesFile);
 		FileInputStream input;
 		try {
 			input = new FileInputStream(propertiesFile);
@@ -58,7 +64,21 @@ public class Configuration {
         double theta = Double.parseDouble(prop.getProperty(PROCESS_SELF_SIMILARITY_THETA_KEY));
         int crpFirstNonZero = Integer.parseInt(prop.getProperty(PROCESS_CRP_FIRST_NON_ZERO_KEY));
         this.process = new ProcessProperties(window, theta, crpFirstNonZero);
+        
+        printConfiguration();
 	};
+
+	private void printConfiguration() {
+		LOG.info("Following configuration will be used:");
+		LOG.info("\t" + SPECTRUM_OCTAVES_KEY + " = " + spectrum.octaves);
+		LOG.info("\t" + SPECTRUM_NOTES_PER_OCTAVE_KEY + " = " + spectrum.notesPerOctave);
+		LOG.info("\t" + SPECTRUM_OFFSET_FROM_F0_IN_SEMITONES_KEY + " = " + spectrum.offsetFromF0InSemitones);
+		LOG.info("\t" + SPECTRUM_FRAMES_PER_BEAT_KEY + " = " + spectrum.framesPerBeat);
+		LOG.info("\t" + SPECTRUM_THREAD_POOL_SIZE_KEY + " = " + spectrum.threadPoolSize);
+		LOG.info("\t" + PROCESS_MEDIAN_FILTER_WINDOW_KEY + " = " + process.medianFilterWindow);
+		LOG.info("\t" + PROCESS_SELF_SIMILARITY_THETA_KEY + " = " + process.selfSimilarityTheta);
+		LOG.info("\t" + PROCESS_CRP_FIRST_NON_ZERO_KEY + " = " + process.crpFirstNonZero);
+	}
 
 	public static class SpectrumProperties {
 		private static final int OCTAVES_DEFAULT = 4;
