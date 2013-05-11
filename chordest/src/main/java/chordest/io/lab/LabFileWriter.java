@@ -2,7 +2,6 @@ package chordest.io.lab;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Arrays;
 import java.util.Locale;
 
 import chordest.chord.ChordExtractor;
@@ -45,24 +44,7 @@ public class LabFileWriter extends AbstractWriter {
 	 * @param ce
 	 */
 	public LabFileWriter(ChordExtractor ce) {
-		if (ce == null) {
-			throw new NullPointerException("Chord extractor is null");
-		}
-		if (ce.getChords().length + 1 != ce.getOriginalBeatTimes().length) {
-			throw new IllegalArgumentException(String.format(
-					"timestamps.length = %d is not equal to chords.length + 1 = %d",
-					ce.getOriginalBeatTimes().length, ce.getChords().length + 1));
-		}
-		chords = Arrays.copyOf(ce.getChords(), ce.getChords().length + 1);
-		chords[chords.length - 1] = Chord.empty();
-		double[] beatTimes = Arrays.copyOf(ce.getOriginalBeatTimes(), ce.getOriginalBeatTimes().length + 1);
-		if (beatTimes.length > 2) {
-			double beatLength = beatTimes[1] - beatTimes[0];
-			double lastSound = beatTimes[beatTimes.length - 3] + beatLength;
-			beatTimes[beatTimes.length - 1] = beatTimes[beatTimes.length - 2];
-			beatTimes[beatTimes.length - 2] = lastSound;
-		}
-		this.timestamps = beatTimes;
+		this(ce.getChords(), ce.getOriginalBeatTimes());
 	}
 
 	@Override
