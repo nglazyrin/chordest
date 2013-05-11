@@ -57,9 +57,9 @@ public class BeatRootBeatTimesProvider implements IBeatTimesProvider {
 		gui.dispose();
 		audioProcessor.closeStreams();
 		double[] result = beats.toOnsetArray();
-		if (result.length == 0) {
-			result = generateDefaultBeats(wavFilePath);
-		}
+//		if (result.length == 0) {
+//			result = generateDefaultBeats(wavFilePath);
+//		}
 		return result;
 	}
 

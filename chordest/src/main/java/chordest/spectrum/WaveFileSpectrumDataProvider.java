@@ -10,10 +10,11 @@ import org.slf4j.LoggerFactory;
 import uk.co.labbookpages.WavFile;
 import uk.co.labbookpages.WavFileException;
 import chordest.beat.BeatRootBeatTimesProvider;
+import chordest.beat.IBeatTimesProvider;
+import chordest.beat.QmulVampBeatTimesProvider;
 import chordest.configuration.Configuration.SpectrumProperties;
 import chordest.transform.CQConstants;
 import chordest.transform.DummyConstantQTransform;
-import chordest.transform.FFTTransformWrapper;
 import chordest.transform.ITransform;
 import chordest.transform.PooledTransformer;
 import chordest.transform.PooledTransformer.ITransformProvider;
@@ -27,21 +28,31 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 
 	private static final Logger LOG = LoggerFactory.getLogger(WaveFileSpectrumDataProvider.class);
 
+	private final double[] beatTimes;
+
 	private final SpectrumData spectrumData;
 
 	public WaveFileSpectrumDataProvider(String waveFileName, SpectrumProperties s) {
-		double[] beatTimes = new BeatRootBeatTimesProvider(waveFileName).getBeatTimes();
-		double[] expandedBeatTimes = DataUtil.makeMoreFrequent(beatTimes, s.framesPerBeat);
-		spectrumData = readSpectrum(s, waveFileName,  beatTimes,expandedBeatTimes);
+		this(waveFileName, s, new BeatRootBeatTimesProvider(waveFileName));
 	}
 
-	public WaveFileSpectrumDataProvider(String waveFileName, SpectrumProperties s, double[] expandedBeatTimes) {
-		spectrumData = readSpectrum(s, waveFileName, expandedBeatTimes, expandedBeatTimes);
+	public WaveFileSpectrumDataProvider(String waveFileName, SpectrumProperties s, IBeatTimesProvider provider) {
+		double[] temp = provider.getBeatTimes();
+		if (temp.length == 0) {
+			temp = new QmulVampBeatTimesProvider(waveFileName).getBeatTimes();
+		}
+		beatTimes = temp;
+		double[] expandedBeatTimes = DataUtil.makeMoreFrequent(beatTimes, s.framesPerBeat);
+		spectrumData = readSpectrum(s, waveFileName, beatTimes, expandedBeatTimes);
 	}
 
 	@Override
 	public SpectrumData getSpectrumData() {
 		return spectrumData;
+	}
+
+	public double[] getBeatTimes() {
+		return beatTimes;
 	}
 
 	private SpectrumData readSpectrum(SpectrumProperties s, String waveFileName,
