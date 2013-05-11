@@ -18,6 +18,8 @@ public class BeatFileWriter extends AbstractWriter {
 
 	private final double[] timestamps;
 
+	private int i = 0;
+
 	public static void write(String fileName, double[] timestamps) {
 		File file = new File(fileName);
 		try {
@@ -49,7 +51,8 @@ public class BeatFileWriter extends AbstractWriter {
 	}
 
 	private String getResultLine(double time) {
-		return String.format(Locale.ENGLISH, "%f\n", time);
+		i = i % 4 + 1;
+		return String.format(Locale.ENGLISH, "%f: %d\n", time, i);
 	}
 
 }

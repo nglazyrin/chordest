@@ -12,27 +12,36 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class BeatFileReader {
+public class Beat2FileReader {
 
-	private static final Logger LOG = LoggerFactory.getLogger(BeatFileReader.class);
+	private static final Logger LOG = LoggerFactory.getLogger(Beat2FileReader.class);
 	private final double[] timestamps;
+	private final int[] bars;
 	
-	public BeatFileReader(File lab) {
+	public Beat2FileReader(File beat) {
 		List<Double> timestampsTemp = new LinkedList<Double>();
+		List<Integer> barsTemp = new LinkedList<Integer>();
 		Scanner scanner = null;
 		try {
-			scanner = new Scanner(lab);
+			scanner = new Scanner(beat);
 			scanner.useLocale(Locale.ENGLISH);
 			double time = 0;
+			int bar = 0;
 			while (scanner.hasNext()) {
-				time = scanner.nextDouble();
+				String s = scanner.nextLine();
+				String[] timeBar = s.split(": ");
+				time = Double.parseDouble(timeBar[0]);
+				bar = Integer.parseInt(timeBar[1]);
 				timestampsTemp.add(time);
+				barsTemp.add(bar);
 			}
 			timestamps = new double[timestampsTemp.size()];
+			bars = new int[barsTemp.size()];
 			for (int i = 0; i < timestampsTemp.size(); i++) {
 				timestamps[i] = timestampsTemp.get(i);
+				bars[i] = barsTemp.get(i);
 			}
-			LOG.info("Beat times were read from " + lab.getAbsolutePath());
+			LOG.info("Beat times were read from " + beat.getAbsolutePath());
 		} catch (FileNotFoundException e) {
 			throw new IllegalArgumentException(e);
 		} catch (InputMismatchException e) {
@@ -48,6 +57,10 @@ public class BeatFileReader {
 
 	public double[] getTimestamps() {
 		return timestamps;
+	}
+
+	public int[] getBars() {
+		return bars;
 	}
 
 }
