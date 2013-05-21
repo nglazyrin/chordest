@@ -39,7 +39,7 @@ public abstract class AbstractTestRecognizeFromCsv {
 
 	public void recognizeFromCsv() {
 		List<String> tracklist = TracklistCreator.readTrackList(TestDataGenerator.TEST_FILE_LIST);
-		SIM_LOG.info("name,overlap,effective_length,full_length");
+		SIM_LOG.info("name,overlap,segmentation,effective_length,full_length");
 		for (String item : tracklist) {
 			String track = StringUtils.substringAfterLast(item, PathConstants.SEP);
 			String binFile = item;
