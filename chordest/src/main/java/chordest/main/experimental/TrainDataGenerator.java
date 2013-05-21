@@ -88,7 +88,7 @@ public class TrainDataGenerator implements IExternalProcessor {
 		LabFileReader labReader = new LabFileReader(new File(labFileName));
 		Chord[] result = new Chord[sd.beatTimes.length - 1];
 		for (int i = 0; i < result.length; i++) {
-			result[i] = labReader.getChord(sd.beatTimes[i], 0.5);
+			result[i] = labReader.getChord(sd.beatTimes[i], delta);
 		}
 		return result;
 	}
