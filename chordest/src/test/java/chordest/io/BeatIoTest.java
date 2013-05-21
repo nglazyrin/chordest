@@ -1,4 +1,4 @@
-package beat;
+package chordest.io;
 
 import java.io.File;
 import java.io.IOException;
