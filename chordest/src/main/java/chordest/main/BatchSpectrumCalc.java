@@ -42,7 +42,7 @@ public class BatchSpectrumCalc {
 				BeatFileWriter.write(beatFileName, dp.getBeatTimes());
 			}
 			
-			String spectrumFilePath = args[1] + new File(wavFileName).getName() + ".bin";
+			String spectrumFilePath = args[2] + new File(wavFileName).getName() + ".bin";
 			SpectrumFileWriter.write(spectrumFilePath, dp.getSpectrumData());
 		}
 		LOG.info(tracklist.size() + " files have been processed. The end.");
