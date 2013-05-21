@@ -30,13 +30,13 @@ public class Roundtrip {
 	private static final String SEP = PathConstants.SEP;
 	public static final String CSV_ACTUAL_DIR = PathConstants.CSV_DIR + "actual" + SEP;
 	public static final String CSV_EXPECTED_DIR = PathConstants.CSV_DIR + "expected" + SEP;
-	public static final String FILE_LIST = "work" + PathConstants.SEP + "bqz_bin.txt";
+	public static final String FILE_LIST = "work" + PathConstants.SEP + "bqrz_bin.txt";
 
 	public static void main(String[] args) {
 		List<String> tracklist = TracklistCreator.readTrackList(FILE_LIST);
 		ComparisonAccumulator acc = new ComparisonAccumulator();
 		Configuration c = new Configuration();
-		SIM_LOG.info("name,key,overlap,effective_length,full_length");
+		SIM_LOG.info("name,key,overlap,segmentation,effective_length,full_length");
 		for (final String binFileName : tracklist) {
 			String temp = StringUtils.substringAfterLast(binFileName, PathConstants.SEP);
 			String track = StringUtils.substringBeforeLast(temp, PathConstants.EXT_WAV + PathConstants.EXT_BIN);
@@ -64,9 +64,11 @@ public class Roundtrip {
 			
 			LOG.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 			LOG.info(labFileName + ": " + sim.getOverlapMeasure());
+			LOG.info(labFileName + ": " + sim.getSegmentation());
 			LOG.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 			SIM_LOG.info(labFileName.replace(',', '_').replace('\\', '/') + "," + ce.getKey() + "," +
-					sim.getOverlapMeasure() + "," + sim.getTotalSeconds() + "," + ce.getSpectrum().totalSeconds);
+					sim.getOverlapMeasure() + "," + sim.getSegmentation() + "," +
+					sim.getEffectiveSeconds() + "," + ce.getSpectrum().totalSeconds);
 		}
 		
 		LOG.info("Test finished");
@@ -79,6 +81,7 @@ public class Roundtrip {
 		logger.info("");
 		logger.info("Average chord overlap ratio: " + acc.getAOR());
 		logger.info("Weighted average chord overlap ratio: " + acc.getWAOR());
+		logger.info("Average segmentation: " + acc.getAverageSegm());
 		logger.info(String.format("Errors TOP-%d:", top));
 		List<Entry<String, Double>> errors = acc.getErrors();
 		for (int i = 0; i < top && i < errors.size(); i++) {
