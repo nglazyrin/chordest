@@ -31,23 +31,30 @@ import chordest.util.TracklistCreator;
 public class TrainDataCircularGenerator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TrainDataGenerator.class);
-	private static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "r_test.txt";
+	private static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "bqrz_bin1train.txt";
 	private static final String CSV_FILE = PathConstants.OUTPUT_DIR + "train_dA_c.csv";
 	private static final String CSV_FILE_B = PathConstants.OUTPUT_DIR + "train_dA_bass_c.csv";
 
 	private final File chordFile;
 	private final File bassFile;
 
+	private int majors = 0;
+	private int minors = 0;
+
+	private static final double DELTA = 0.5;
+	private static final int L = 100;
+
 	public static void main(String[] args) {
 		List<String> tracklist = TracklistCreator.readTrackList(TRAIN_FILE_LIST);
 		TrainDataGenerator.deleteIfExists(CSV_FILE);
 		TrainDataGenerator.deleteIfExists(CSV_FILE_B);
 		int filesProcessed = 0;
+
 		for (final String binFileName : tracklist) {
 			TrainDataCircularGenerator tdg = new TrainDataCircularGenerator(CSV_FILE, CSV_FILE_B);
 			SpectrumData sd = SpectrumFileReader.read(binFileName);
 			double[][] result = TrainDataGenerator.prepareSpectrum(sd);
-			Chord[] chords = TrainDataGenerator.prepareChords(binFileName, sd, 0.5);
+			Chord[] chords = TrainDataGenerator.prepareChords(binFileName, sd, DELTA);
 			tdg.process(result, chords);
 			if (++filesProcessed % 10 == 0) {
 				LOG.info(filesProcessed + " files processed");
@@ -100,17 +107,30 @@ public class TrainDataCircularGenerator {
 			double[] dataLocal = Arrays.copyOfRange(data, TrainDataGenerator.OFFSET, TrainDataGenerator.OFFSET + TrainDataGenerator.INPUTS);
 			chordOut.write(TrainDataGenerator.toByteArray(dataLocal, chord));
 //			bassOut.write(TrainDataGenerator.toByteArrayForBass(dataLocal, chord));
-		} else {
-			Note[] notes = chord.getNotes();
-			for (int i = 0; i < 12; i++) {
-				double[] dataLocal = Arrays.copyOfRange(data, TrainDataGenerator.OFFSET + i, TrainDataGenerator.OFFSET + i + TrainDataGenerator.INPUTS);
-				Note[] newNotes = new Note[notes.length];
-				for (int j = 0; j < notes.length; j++) {
-					newNotes[j] = notes[j].withOffset(-i);
+		} else if (chord.equalsToTriad(Chord.major(chord.getRoot())) || chord.equalsToTriad(Chord.minor(chord.getRoot()))) {
+			if (chord.equalsToTriad(Chord.major(chord.getRoot()))) {
+				chord = Chord.major(chord.getRoot());
+				if (majors - minors < L) {
+					majors++;
 				}
-				Chord chordLocal = new Chord(newNotes);
-				chordOut.write(TrainDataGenerator.toByteArray(dataLocal, chordLocal));
-//				bassOut.write(TrainDataGenerator.toByteArrayForBass(dataLocal, chordLocal));
+			} else if (chord.equalsToTriad(Chord.minor(chord.getRoot()))) {
+				chord = Chord.minor(chord.getRoot());
+				if (minors - majors < L) {
+					minors++;
+				}
+			}
+			if (Math.abs(majors - minors) < L) {
+				Note[] notes = chord.getNotes();
+				for (int i = 0; i < 12; i++) {
+					double[] dataLocal = Arrays.copyOfRange(data, TrainDataGenerator.OFFSET + i, TrainDataGenerator.OFFSET + i + TrainDataGenerator.INPUTS);
+					Note[] newNotes = new Note[notes.length];
+					for (int j = 0; j < notes.length; j++) {
+						newNotes[j] = notes[j].withOffset(-i);
+					}
+					Chord chordLocal = new Chord(newNotes);
+					chordOut.write(TrainDataGenerator.toByteArray(dataLocal, chordLocal));
+	//				bassOut.write(TrainDataGenerator.toByteArrayForBass(dataLocal, chordLocal));
+				}
 			}
 		}
 //		} else if (chord.isMajor()) {
