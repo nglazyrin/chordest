@@ -16,7 +16,7 @@ public class NoteLabelProvider {
 		String[] result = new String[scaleInfo.getTotalComponentsCount()];
 		for (int i = 0; i < scaleInfo.getTotalComponentsCount(); i++) {
 			if (i % subNotes == 0) {
-				result[i] = currentNote.toString() + currentOctave;
+				result[i] = currentNote.getShortName() + currentOctave;
 				currentNote = currentNote.next();
 				if (Note.C.equals(currentNote)) {
 					currentOctave++;
