@@ -89,8 +89,8 @@ class LogisticRegression(object):
         self.b = b
 
         # compute vector of class-membership probabilities in symbolic form
-        #self.p_y_given_x = T.nnet.softmax(T.dot(input, self.W) + self.b)
-        self.p_y_given_x = T.tanh(T.dot(input, self.W) + self.b)
+        self.p_y_given_x = T.nnet.softmax(T.dot(input, self.W) + self.b)
+        #self.p_y_given_x = T.tanh(T.dot(input, self.W) + self.b)
 
         # compute prediction as class whose probability is maximal in
         # symbolic form
@@ -129,8 +129,8 @@ class LogisticRegression(object):
         return -T.mean(T.log(self.p_y_given_x)[T.arange(y.shape[0]), y])
 
     def quadratic_loss(self, y):
-        #return T.mean(T.sqrt(T.sum(T.sqr(T.sub(self.p_y_given_x, y)), axis=1)))
-        return T.mean(T.sum(T.sqr(T.sub(self.p_y_given_x, y)), axis=1))
+        return T.mean(T.sqrt(T.sum(T.sqr(T.sub(self.p_y_given_x, y)), axis=1)))
+        #return T.mean(T.sum(T.sqr(T.sub(self.p_y_given_x, y)), axis=1))
 
     def errors(self, y):
         """Return a float representing the number of errors in the minibatch

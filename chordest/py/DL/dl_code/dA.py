@@ -143,12 +143,12 @@ class dA(object):
 
         if not bvis:
             bvis = theano.shared(value=numpy.zeros(n_visible,
-                                         dtype=theano.config.floatX),
+                                 dtype=theano.config.floatX),
                                  borrow=True)
 
         if not bhid:
             bhid = theano.shared(value=numpy.zeros(n_hidden,
-                                                   dtype=theano.config.floatX),
+                                 dtype=theano.config.floatX),
                                  name='b',
                                  borrow=True)
 
@@ -192,9 +192,13 @@ class dA(object):
                 correctly as it only support float32 for now.
 
         """
-        return  self.theano_rng.binomial(size=input.shape, n=1,
-                                         p=1 - corruption_level,
-                                         dtype=theano.config.floatX) * input
+        noise = self.theano_rng.normal(size=input.shape, std=corruption_level, dtype=theano.config.floatX)
+        act = self.theano_rng.binomial(size=input.shape, n=1, p=1 - 0.3, dtype=theano.config.floatX)
+        return noise * act + input
+#        return T.sum(input, noise)
+#        return  self.theano_rng.binomial(size=input.shape, n=1,
+#                                         p=1 - corruption_level,
+#                                         dtype=theano.config.floatX) * input
 
     def get_hidden_values(self, input):
         """ Computes the values of the hidden layer """

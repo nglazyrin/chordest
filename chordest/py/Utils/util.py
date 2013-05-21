@@ -9,11 +9,36 @@ import math
 import numpy
 import cPickle
 import theano
-import theano.tensor as T
 
 from random import shuffle
-from mlp_modified import MLP2
-from SdA_modified import SdA
+
+chord_list = ['A#-C#-F',    # F#
+              'A#-C#-F#',   # A#:min
+              'A#-D#-F#',   # D#:min
+              'A#-D#-G',    # D#
+              'A#-D-F',     # A#
+              'A#-D-G',     # G:min
+              'A-C#-E',     # A
+              'A-C#-F#',    # F#:min
+              'A-C-E',      # A:min
+              'A-C-F',      # F
+              'A-D-F',      # D:min
+              'A-D-F#',     # D
+              'B-D#-F#',    # B
+              'B-D#-G#',    # G#:min
+              'B-D-F#',     # B:min
+              'B-D-G',      # G
+              'B-E-G',      # E:min
+              'B-E-G#',     # E
+              'C#-E-G#',    # C#:min
+              'C#-F-G#',    # C#
+              'C-D#-G',     # C:min
+              'C-D#-G#',    # G#
+              'C-E-G',      # C
+              'C-F-G#',     # F:min
+              'N']
+          
+notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'N']
 
 class Phi(object):
     def __init__(self):
@@ -43,6 +68,10 @@ def asarray(array):
     return theano.shared(numpy.asarray(array, dtype=theano.config.floatX),
                                  borrow=True)
 
+def as_int_array(array):
+    return theano.shared(numpy.asarray(array, dtype='int32'),
+                                 borrow=True)
+
 def asmatrix(array):
     return theano.shared(numpy.asmatrix(array, dtype=theano.config.floatX),
                                  borrow=True)
@@ -53,7 +82,6 @@ def to_note_list(chord):
 def to_note_numbers(note_list):
     if ('N' == note_list[0]):
         return []
-    notes = ('C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B')
     return map(lambda x: notes.index(x), note_list)
     
 def to_chroma_template(note_numbers):
@@ -64,6 +92,17 @@ def to_chroma(chord):
         return to_chroma_template(to_note_numbers(to_note_list(chord)))
     return None
 
+def to_chord_index(chord):
+    result = [0] * len(chord_list)
+    result[chord_list.index(chord)] = 1
+    return result
+
+def to_chord_indexes(chords):
+    return map(lambda x: chord_list.index(x), chords)
+
+def to_note_indexes(notes_list):
+    return [notes.index(x) for x in notes_list]
+    
 def to_tonnetz(chords):
     phi = Phi()
     return map(lambda x: phi.prod(to_chroma(x)), chords)
@@ -85,67 +124,28 @@ def to_tile(array, size):
         return [0] * size
     return result.tolist()
 
-def list_spectrum_data(reader, components=200, allow_no_chord=False):
-    spectral_components = components
+def list_spectrum_data(reader, components=200, allow_no_chord=False, allow_non_majmin=True):
     array = []
     chords = []
     for row in reader:
-        if (len(row) != spectral_components + 1):
+        if (len(row) != components + 1):
             raise OverflowError()
         chord = row[-1]
-        if (chord or allow_no_chord):
+        if ((chord or allow_no_chord) and (allow_non_majmin or chord in chord_list)):
             r = [ float(x) for x in row[:-1] ]
             array.append(r)
             chords.append(row[-1])
     return (array, chords)
-
-def through_cnn(cnn, data):
-    m = theano.shared(numpy.asmatrix(data, dtype=theano.config.floatX),
-                                     borrow=True)
-    return cnn.get_result(m)
 
 def through_da(data):
     with open('model/corruption_30.dat', 'rb') as d:
         da = cPickle.load(d)
     return da.encode_m(data)
 
-def through_mlp(data, l=None):
-    with open('model/mlp.dat', 'rb') as f:
-        (hidden, out) = cPickle.load(f)
-    if (l):
-        data = map(lambda x: to_uniform(x, l), data)
-    m = theano.shared(numpy.asmatrix(data, dtype=theano.config.floatX),
-                                     borrow=True)
-    rng = numpy.random.RandomState(1234)
-    x = T.matrix('x')
-    mlp = MLP2(rng=rng, input=x, hidden=hidden, out=out)
-    t = mlp.get_result(x)
-    f = theano.function([], t, givens={x: m})
-    return f()
-
-def restore_sda(dA_layers, sigmoid_layers, log_layer):
-    layers = (dA_layers, sigmoid_layers)
-    hidden_layers_sizes = map(lambda x: x.n_hidden, dA_layers)
-    n_ins = dA_layers[0].n_visible
-    rng = numpy.random.RandomState(1234)
-    sda = SdA(numpy_rng=rng, n_ins=n_ins, n_outs=6,
-              hidden_layers_sizes=hidden_layers_sizes,
-              layers=layers, log_layer=log_layer)
-    return sda
-
-def through_sda(sda, data):
-    m = theano.shared(numpy.asmatrix(data, dtype=theano.config.floatX),
-                                     borrow=True)
-    return sda.get_result(m)
-
 def through_sda_layers(sda, data):
     m = theano.shared(numpy.asmatrix(data, dtype=theano.config.floatX),
                                      borrow=True)
     return sda.get_sda_features(m)
-
-def through(data, l=None):
-    features = through_da(data)
-    return through_mlp(features, l)
 
 def shuffle_2(list1, list2):
     list1_shuf = []
@@ -157,5 +157,11 @@ def shuffle_2(list1, list2):
         list2_shuf.append(list2[i])
     return (list1_shuf, list2_shuf)
 
-#chords = ('B-E-G#', 'A-C#-E', 'N', None)
-#print to_tonnetz(chords)
+def get_root(chord):
+    root = None
+    for x in notes:
+        if chord.startswith(x): root = x
+    return root
+        
+
+#print notes.index(get_root("A:min"))
