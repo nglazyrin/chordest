@@ -20,7 +20,7 @@ import chordest.util.Visualizer;
 import chordest.util.Viterbi;
 
 /**
- * This class incapsulates all the chord extraction logic. All you need is to
+ * This class encapsulates all the chord extraction logic. All you need is to
  * pass a name of the wave file as a constructor parameter. When the
  * constructor finishes, all the extracted information is available. It
  * includes the positions of all the beats in the file (extracted with
@@ -36,8 +36,9 @@ public class ChordExtractor {
 	private final double[] originalBeatTimes;
 	private final SpectrumData spectrumData;
 	private final Chord[] chords;
+	private double[][] chroma;
 	private Key key;
-	private IExternalProcessor externalProcessor;
+//	private IExternalProcessor externalProcessor;
 
 	private final String[] labels;
 	private final String[] labels1;
@@ -48,7 +49,7 @@ public class ChordExtractor {
 
 	public ChordExtractor(ProcessProperties p, ISpectrumDataProvider spectrumProvider,
 			IExternalProcessor ex) {
-		this.externalProcessor = ex;
+//		this.externalProcessor = ex;
 		spectrumData = spectrumProvider.getSpectrumData();
 		getFirstOctaves(spectrumData, 4);
 		int framesPerBeat = spectrumData.framesPerBeat;
@@ -110,14 +111,14 @@ public class ChordExtractor {
 
 	private Chord[] doTemplateMatching(final double[][] sp, int octaves) {
 		double[][] sp12 = DataUtil.reduce(sp, octaves);
-		double[][] chromas = DataUtil.toSingleOctave(sp12, 12);
+		chroma = DataUtil.toSingleOctave(sp12, 12);
 
 //		key = Key.recognizeKey(getTonalProfile(pcp, 0, pcp.length), startNote);
 		key = null;
 		Note startNote = Note.byNumber(spectrumData.startNoteOffsetInSemitonesFromF0);
 		ITemplateProducer producer = new TemplateProducer(startNote);
 		IChordRecognition first = new TemplatesRecognition(producer, key);
-		Chord[] temp = first.recognize(chromas, new ScaleInfo(1, 12));
+		Chord[] temp = first.recognize(chroma, new ScaleInfo(1, 12));
 		
 		double[] noChordness = DataUtil.getNochordness(sp, octaves);
 		for (int i = 0; i < noChordness.length; i++) {
@@ -127,8 +128,9 @@ public class ChordExtractor {
 		}
 //		Visualizer.visualizeXByTimeDistribution(noChordness, originalBeatTimes);
 		
-		return Harmony.smoothUsingHarmony(chromas, temp, new ScaleInfo(1, 12), producer);
-//		return new Viterbi(producer).decode(chromas);
+//		return temp;
+		return Harmony.smoothUsingHarmony(chroma, temp, new ScaleInfo(1, 12), producer);
+//		return new Viterbi(producer).decode(chroma);
 	}
 
 	public double[] getOriginalBeatTimes() {
@@ -137,6 +139,10 @@ public class ChordExtractor {
 
 	public Chord[] getChords() {
 		return chords;
+	}
+
+	public double[][] getChroma() {
+		return chroma;
 	}
 
 	public Key getKey() {

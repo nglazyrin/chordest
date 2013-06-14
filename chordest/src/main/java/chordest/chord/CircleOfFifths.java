@@ -30,10 +30,10 @@ public class CircleOfFifths {
 
 	public int distance(Chord c1, Chord c2) {
 		if (! (c1.isMajor() || c1.isMinor())) {
-			throw new IllegalArgumentException("c1 must be major or minor");
+			throw new IllegalArgumentException("c1 must be major or minor: " + c1);
 		}
 		if (! (c2.isMajor() || c2.isMinor())) {
-			throw new IllegalArgumentException("c2 must be major or minor");
+			throw new IllegalArgumentException("c2 must be major or minor: " + c2);
 		}
 		int typeDif = 0;
 		if (c1.isMajor() && c2.isMinor()) {

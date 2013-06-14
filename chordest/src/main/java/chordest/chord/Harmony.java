@@ -12,7 +12,6 @@ import chordest.model.Chord;
 import chordest.model.Note;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
-import chordest.util.metric.EuclideanMetric;
 import chordest.util.metric.IMetric;
 
 public class Harmony {
@@ -40,7 +39,7 @@ public class Harmony {
 		return result;
 	}
 
-	private static void removeSingleBeatChords(double[][] pcp, Chord[] result,
+	private static void removeSingleBeatChords(final double[][] pcp, Chord[] result,
 			ITemplateProducer producer) {
 		for (int i = 1; i < result.length - 1; i++) {
 			Chord prev = result[i - 1];
