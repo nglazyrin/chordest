@@ -12,12 +12,27 @@ import org.slf4j.LoggerFactory;
 import chordest.util.PathConstants;
 import chordest.util.TracklistCreator;
 
+/**
+ * A class that runs QMUL (Davies) beat tracker to obtain beat sequence for a
+ * given wave file. Vamp simple host is required and qm-vamp-plugins need to be
+ * installed on your system. See the string constants below.
+ * @author Nikolay
+ *
+ */
 public class QmulVampBeatTimesProvider implements IBeatTimesProvider {
 
 	private static Logger LOG = LoggerFactory.getLogger(QmulVampBeatTimesProvider.class);
 
 	private static final String TARGET_DIR = PathConstants.BEAT_DIR;
 
+	private static final String PATH_TO_EXE = "work\\vamp\\vamp-simple-host.exe";
+
+	private static final String PLUGIN_NAME = "qm-vamp-plugins:qm-barbeattracker:beats";
+
+	/**
+	 * Quick and dirty way to do beat extraction in batch mode.
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		List<String> tracklist = TracklistCreator.readTrackList("work\\all_wav.txt");
 		int filesProcessed = 0;
@@ -36,7 +51,7 @@ public class QmulVampBeatTimesProvider implements IBeatTimesProvider {
 		LOG.info("Performing beat detection for " + wavFilePath + " ...");
 		String track = StringUtils.substringAfterLast(wavFilePath, File.separator);
 		String beatFilePath = TARGET_DIR + track + PathConstants.EXT_BEAT;
-		String[] cmd = { "work\\vamp\\vamp-simple-host.exe", "qm-vamp-plugins:qm-barbeattracker:beats", wavFilePath, "-o", beatFilePath };
+		String[] cmd = { PATH_TO_EXE, PLUGIN_NAME, wavFilePath, "-o", beatFilePath };
 		try {
 			Process p = Runtime.getRuntime().exec(cmd);
 	        p.waitFor();

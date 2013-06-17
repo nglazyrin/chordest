@@ -15,6 +15,11 @@ import at.ofai.music.beatroot.BeatTrackDisplay;
 import at.ofai.music.beatroot.GUI;
 import at.ofai.music.util.EventList;
 
+/**
+ * A class that runs Beatroot to obtain beat sequence for a given wave file
+ * @author Nikolay
+ *
+ */
 public class BeatRootBeatTimesProvider implements IBeatTimesProvider {
 
 	private static Logger LOG = LoggerFactory.getLogger(BeatRootBeatTimesProvider.class);

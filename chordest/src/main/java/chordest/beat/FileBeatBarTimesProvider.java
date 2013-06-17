@@ -7,6 +7,18 @@ import org.slf4j.LoggerFactory;
 
 import chordest.io.beat.Beat2FileReader;
 
+/**
+ * A class to read beat times and bar numbers from a string file having format:
+ * <pre>
+ 0.394739229: 2
+ 0.661768707: 3
+ 1.033287981: 4
+ 1.381587301: 1
+	...
+ * </pre>
+ * @author Nikolay
+ *
+ */
 public class FileBeatBarTimesProvider implements IBeatTimesProvider {
 
 	private static Logger LOG = LoggerFactory.getLogger(FileBeatBarTimesProvider.class);
