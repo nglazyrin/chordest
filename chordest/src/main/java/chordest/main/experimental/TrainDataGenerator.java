@@ -13,7 +13,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.chord.ChordExtractor.IExternalProcessor;
 import chordest.io.lab.LabFileReader;
 import chordest.io.spectrum.SpectrumFileReader;
 import chordest.model.Chord;
@@ -30,7 +29,7 @@ import chordest.util.TracklistCreator;
  * @author Nikolay
  *
  */
-public class TrainDataGenerator implements IExternalProcessor {
+public class TrainDataGenerator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TrainDataGenerator.class);
 	public static final String DELIMITER = ",";
@@ -101,12 +100,6 @@ public class TrainDataGenerator implements IExternalProcessor {
 			LOG.error("Error when creating resulting .csv file", e);
 			System.exit(-2);
 		}
-	}
-
-	@Override
-	public double[][] process(double[][] data) {
-		process(data, new Chord[data.length], OFFSET, data[0].length);
-		return data;
 	}
 
 	public double[][] process(double[][] data, int offset, int components) {

@@ -15,8 +15,6 @@ import chordest.spectrum.SpectrumData;
 import chordest.transform.DiscreteCosineTransform;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
-import chordest.util.NoteLabelProvider;
-import chordest.util.Visualizer;
 import chordest.util.Viterbi;
 
 /**
@@ -39,9 +37,6 @@ public class ChordExtractor {
 	private double[][] chroma;
 	private Key key;
 
-	private final String[] labels;
-	private final String[] labels1;
-
 	public ChordExtractor(ProcessProperties p, ISpectrumDataProvider spectrumProvider) {
 		spectrumData = spectrumProvider.getSpectrumData();
 		getFirstOctaves(spectrumData, 4);
@@ -50,10 +45,6 @@ public class ChordExtractor {
 		for (int i = 0; i < originalBeatTimes.length; i++) {
 			originalBeatTimes[i] = spectrumData.beatTimes[framesPerBeat * i];
 		}
-		
-		int offset = spectrumData.startNoteOffsetInSemitonesFromF0;
-		labels = NoteLabelProvider.getNoteLabels(offset, spectrumData.scaleInfo);
-		labels1 = NoteLabelProvider.getNoteLabels(offset, new ScaleInfo(1, 12));
 		
 		chords = doChordExtraction(p, spectrumData.spectrum);
 	}
@@ -130,10 +121,6 @@ public class ChordExtractor {
 
 	public SpectrumData getSpectrum() {
 		return spectrumData;
-	}
-
-	public static interface IExternalProcessor {
-		public double[][] process(double[][] data);
 	}
 
 }
