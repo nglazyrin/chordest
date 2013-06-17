@@ -7,6 +7,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Models chord as an ordered set of notes. Knows all Harte's chord labels and
+ * provides some specific methods.
+ * @author Nikolay
+ *
+ */
 public class Chord {
 
 	public static final String MAJ = "maj";

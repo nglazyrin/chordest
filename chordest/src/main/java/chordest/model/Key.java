@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Major and minor keys + a method to detect key using Krumhansl's profiles.
+ * @author Nikolay
+ *
+ */
 public class Key {
 
 	private static final int[] majorOffsets = { 2, 2, 1, 2, 2, 2, 1 };

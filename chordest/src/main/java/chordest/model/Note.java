@@ -1,5 +1,10 @@
 package chordest.model;
 
+/**
+ * The notes, their labels (long and short), a pair of specific methods.
+ * @author Nikolay
+ *
+ */
 public enum Note {
 
 	A,

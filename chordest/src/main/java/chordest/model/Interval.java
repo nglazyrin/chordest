@@ -1,5 +1,11 @@
 package chordest.model;
 
+/**
+ * Intervals are mostly used to construct chords. Symbolic names just for
+ * better understanding.
+ * @author Nikolay
+ *
+ */
 public class Interval {
 
 	public final static int TONIC = 0;
