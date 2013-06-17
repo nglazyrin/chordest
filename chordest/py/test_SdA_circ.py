@@ -22,12 +22,13 @@ class test_SdA_circ(TestIterator):
     
     def process_file(self, source, target):
         ins = 72
+        subnotes = 1
         with open(source, 'rb') as i:
             reader = csv.reader(i)
             (before, chords) = util.list_spectrum_data(reader, components=ins, allow_no_chord=True)
         result = None
         for offset in range(12):
-            data = self.getFirstColumns(before, offset, ins-12)
+            data = self.getFirstColumns(before, offset * subnotes, ins-12 * subnotes)
             temp = self.through_sda(self.model, data)
             temp = numpy.roll(temp, offset, axis=1)
             if result == None:

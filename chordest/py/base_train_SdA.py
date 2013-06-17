@@ -23,15 +23,15 @@ class SdATrainer(object):
         self.layers_file = layers_file
         self.sda_file = sda_file
         self.ins = 60
-        self.layers_sizes = [48, 36]
-        self.corruption_levels = [.3, .2, .2]
+        self.layers_sizes = [120, 60]
+        self.corruption_levels = [.2, .2, .2]
         self.outs = outs
         self.pretrain_lr=0.03
-        self.finetune_lr=0.01
+        self.finetune_lr=0.01 # was 0.01
         self.pretraining_epochs=15
         self.finetune_epochs=15
         self.training_epochs=1000
-        self.batch_size=10
+        self.batch_size=5
         self.log_activation = log_activation
         self.is_vector_y = is_vector_y
 
@@ -41,11 +41,15 @@ class SdATrainer(object):
     def chords_to_array(self, chords):
         raise NotImplementedError("error message")
 
+    def prepare_data(self, array):
+        return array
+
     def read_data(self):
         with open(self.train_file, 'rb') as f:
             reader = csv.reader(f)
             (array, chords) = list_spectrum_data(reader, components=self.ins)
-        (array, chords) = shuffle_2(array, chords)
+#        (array, chords) = shuffle_2(array, chords)
+        array = self.prepare_data(array)
         chords = self.prepare_chords(chords)
         train = int(0.7 * len(array))
         test = int(0.85 * len(array))
@@ -181,7 +185,7 @@ class SdATrainer(object):
     
         while (epoch < self.training_epochs) and (not done_looping):
             for minibatch_index in xrange(n_train_batches):
-                minibatch_avg_cost = train_fn(minibatch_index)
+                [pre_act, minibatch_avg_cost] = train_fn(minibatch_index)
                 iter = epoch * n_train_batches + minibatch_index
     
                 if (iter + 1) % validation_frequency == 0:

@@ -21,10 +21,11 @@ class test_SdA(TestIterator):
         return restore_sda(dA_layers, sigmoid_layers, log_layer)
     
     def process_file(self, source, target):
+        ins = 240
         with open(source, 'rb') as i:
             reader = csv.reader(i)
-            (before, chords) = util.list_spectrum_data(reader, components=72, allow_no_chord=True)
-        before = self.getFirstColumns(before, 0, 60)
+            (before, chords) = util.list_spectrum_data(reader, components=ins + 60, allow_no_chord=True)
+        before = self.getFirstColumns(before, 0, ins)
         result = self.through_sda(self.model, before)
         with open(target, 'wb') as o:
             writer = csv.writer(o)

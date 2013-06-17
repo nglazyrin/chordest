@@ -73,3 +73,39 @@ class HiddenLayer(object):
                        else activation(lin_output))
         # parameters of the model
         self.params = [self.W, self.b]
+
+class HiddenRecurrentLayer(HiddenLayer):
+    def __init__(self, rng, input, n_in, n_out, W=None, b=None,
+                 U=None, activation=T.tanh):
+        HiddenLayer.__init__(self, rng, input, n_in, n_out, W, b, activation)
+        if U is None:
+            U_values = numpy.asarray(rng.uniform(
+                    low=-numpy.sqrt(6. / (n_out + n_out)),
+                    high=numpy.sqrt(6. / (n_out + n_out)),
+                    size=(n_out, n_out)), dtype=theano.config.floatX)
+            if activation == theano.tensor.nnet.sigmoid:
+                U_values *= 4
+            U = theano.shared(value=U_values, name='U', borrow=True)
+        self.U = U
+
+        prev_values = numpy.zeros((n_out,), dtype=theano.config.floatX)
+        self.prev = theano.shared(value=prev_values, name='prev', borrow=True)
+        
+#        lin_output = T.dot(input, self.W) + self.b + T.dot(self.prev, self.U)
+#        self.output = (lin_output if activation is None
+#                       else activation(lin_output))
+        # parameters of the model
+        self.params = [self.W, self.b, self.U]
+        
+        # recurrent function (using tanh activation function) and linear output
+        # activation function
+        def step(x_t, h_tm1):
+            lin_t = T.dot(x_t, self.W) + self.b + T.dot(h_tm1, self.U)
+            y_t = activation(lin_t)
+            return y_t, lin_t
+
+        # the hidden state `h` for the entire sequence, and the output for the
+        # entire sequence `y` (first dimension is always time)
+        [self.output, self.lin_output], _ = theano.scan(step,
+                                               sequences=self.input,
+                                               outputs_info=[self.prev, None])

@@ -13,7 +13,7 @@ import theano.tensor as T
 from theano.tensor.shared_randomstreams import RandomStreams
 
 from logistic_regression_modified import LogisticRegression
-from hidden_layer_modified import HiddenLayer
+from hidden_layer_modified import HiddenLayer, HiddenRecurrentLayer
 from dA_modified import dA
 
 class SdA(object):
@@ -99,7 +99,17 @@ class SdA(object):
                 layer_input = self.sigmoid_layers[-1].output
 
             if (layers):
-                sigmoid_layer = HiddenLayer(rng=numpy_rng,
+                if isinstance(layers[1][i], HiddenRecurrentLayer):
+                    sigmoid_layer = HiddenRecurrentLayer(rng=numpy_rng,
+                                        input=layer_input,
+                                        n_in=input_size,
+                                        n_out=hidden_layers_sizes[i],
+                                        activation=T.nnet.sigmoid,
+                                        W=layers[1][i].W,
+                                        b=layers[1][i].b,
+                                        U=layers[1][i].U)
+                else:
+                    sigmoid_layer = HiddenLayer(rng=numpy_rng,
                                         input=layer_input,
                                         n_in=input_size,
                                         n_out=hidden_layers_sizes[i],
@@ -107,7 +117,14 @@ class SdA(object):
                                         W=layers[1][i].W,
                                         b=layers[1][i].b)
             else:
-                sigmoid_layer = HiddenLayer(rng=numpy_rng,
+                if i == self.n_layers - 5:  # no recurrent layers
+                    sigmoid_layer = HiddenRecurrentLayer(rng=numpy_rng,
+                                        input=layer_input,
+                                        n_in=input_size,
+                                        n_out=hidden_layers_sizes[i],
+                                        activation=T.nnet.sigmoid)
+                else:
+                    sigmoid_layer = HiddenLayer(rng=numpy_rng,
                                         input=layer_input,
                                         n_in=input_size,
                                         n_out=hidden_layers_sizes[i],
@@ -153,13 +170,13 @@ class SdA(object):
         if (is_vector_y):
             # compute the cost for second phase of training,
             # defined as the negative log likelihood
-            self.finetune_cost = self.logLayer.negative_log_likelihood(self.y)
+            [self.pre_act, self.finetune_cost] = self.logLayer.negative_log_likelihood(self.y)
             # compute the gradients with respect to the model parameters
             # symbolic variable that points to the number of errors made on the
             # minibatch given by self.x and self.y
             self.errors = self.logLayer.errors(self.y)
         else:
-            self.quadratic_loss = self.logLayer.quadratic_loss(self.y)
+            [self.pre_act, self.quadratic_loss] = self.logLayer.quadratic_loss(self.y)
 
     def pretraining_functions(self, train_set_x, batch_size):
         ''' Generates a list of functions, each of them implementing one
@@ -263,23 +280,26 @@ class SdA(object):
         updates = {}
         for param, gparam in zip(self.params, gparams):
             updates[param] = param - gparam * learning_rate
+        updates=collections.OrderedDict(updates.items())
+#        if isinstance(self.sigmoid_layers[-1], HiddenRecurrentLayer):
+#            updates[self.sigmoid_layers[-1].prev] = self.sigmoid_layers[-1].output
 
         if (useQuadratic):
             train_fn = theano.function(inputs=[index],
-                  outputs=self.quadratic_loss,
-                  updates=collections.OrderedDict(updates.items()),
+                  outputs=[self.pre_act, self.quadratic_loss],
+                  updates=updates,
                   givens={
                     self.x: train_set_x[index * batch_size:
                                         (index + 1) * batch_size],
                     self.y: train_set_y[index * batch_size:
                                         (index + 1) * batch_size]})
-            test_score_i = theano.function([index], self.quadratic_loss,
+            test_score_i = theano.function([index], [self.pre_act, self.quadratic_loss],
                   givens={
                     self.x: test_set_x[index * batch_size:
                                         (index + 1) * batch_size],
                     self.y: test_set_y[index * batch_size:
                                         (index + 1) * batch_size]})
-            valid_score_i = theano.function([index], self.quadratic_loss,
+            valid_score_i = theano.function([index], [self.pre_act, self.quadratic_loss],
                   givens={
                     self.x: valid_set_x[index * batch_size:
                                         (index + 1) * batch_size],
@@ -310,11 +330,11 @@ class SdA(object):
 
         # Create a function that scans the entire validation set
         def valid_score():
-            return [valid_score_i(i) for i in xrange(n_valid_batches)]
+            return [valid_score_i(i)[1] for i in xrange(n_valid_batches)]
 
         # Create a function that scans the entire test set
         def test_score():
-            return [test_score_i(i) for i in xrange(n_test_batches)]
+            return [test_score_i(i)[1] for i in xrange(n_test_batches)]
 
         return train_fn, valid_score, test_score
 

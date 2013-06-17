@@ -137,6 +137,15 @@ def list_spectrum_data(reader, components=200, allow_no_chord=False, allow_non_m
             chords.append(row[-1])
     return (array, chords)
 
+def list_spectrum_only(reader, components=200):
+    array = []
+    for row in reader:
+        if (len(row) != components):
+            raise OverflowError()
+        r = [ float(x) for x in row ]
+        array.append(r)
+    return array
+
 def through_da(data):
     with open('model/corruption_30.dat', 'rb') as d:
         da = cPickle.load(d)

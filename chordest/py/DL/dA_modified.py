@@ -185,6 +185,7 @@ class dA(object):
         tilde_x = self.get_corrupted_input(self.x, corruption_level)
         y = self.get_hidden_values(tilde_x)
         z = self.get_reconstructed_input(y)
+        act = T.dot(tilde_x, self.W) + self.b
         # note : we sum over the size of a datapoint; if we are using
         #        minibatches, L will be a vector, with one entry per
         #        example in minibatch
@@ -196,7 +197,8 @@ class dA(object):
         #        the minibatch
         
         L = T.sqrt(T.sum(T.sqr(T.sub(self.x, z)), axis=1))
-        cost = T.mean(L)
+        reg = T.constant(0.01) * (T.mean(act) - T.constant(0.05))
+        cost = T.mean(L) + reg
 
         # compute the gradients of the cost of the `dA` with respect
         # to its parameters

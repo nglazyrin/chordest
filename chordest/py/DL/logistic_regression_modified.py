@@ -53,7 +53,8 @@ class LogisticRegression(object):
         self.b = b
 
         # compute vector of class-membership probabilities in symbolic form
-        self.p_y_given_x = activation(T.dot(input, self.W) + self.b)
+        self.pre_act = T.dot(input, self.W) + self.b
+        self.p_y_given_x = activation(self.pre_act)
         #self.p_y_given_x = T.tanh(T.dot(input, self.W) + self.b)
 
         # compute prediction as class whose probability is maximal in
@@ -90,10 +91,10 @@ class LogisticRegression(object):
         # LP[n-1,y[n-1]]] and T.mean(LP[T.arange(y.shape[0]),y]) is
         # the mean (across minibatch examples) of the elements in v,
         # i.e., the mean log-likelihood across the minibatch.
-        return -T.mean(T.log(self.p_y_given_x)[T.arange(y.shape[0]), y])
+        return [self.pre_act, -T.mean(T.log(self.p_y_given_x)[T.arange(y.shape[0]), y])]
 
     def quadratic_loss(self, y):
-        return T.mean(T.sqrt(T.sum(T.sqr(T.sub(self.p_y_given_x, y)), axis=1)))
+        return [self.pre_act, T.mean(T.sqrt(T.sum(T.sqr(T.sub(self.p_y_given_x, y)), axis=1)))]
         #return T.mean(T.sum(T.sqr(T.sub(self.p_y_given_x, y)), axis=1))
 
     def errors(self, y):

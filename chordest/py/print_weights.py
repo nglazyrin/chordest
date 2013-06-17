@@ -11,7 +11,7 @@ import matplotlib.pyplot as p
 
 with open('model/SdA12.dat', 'rb') as f:
     (da, logl, sigmoid) = cPickle.load(f)
-s = da[0].W[3]
+s = logl[1].U[6]
 #s = sigmoid.W[2]
 f = theano.function([], s)
 y = f()
