@@ -11,7 +11,11 @@ import org.slf4j.LoggerFactory;
 
 import chordest.io.AbstractWriter;
 
-
+/**
+ * Writes a sequence of beat times to the file and adds dummy bar numbers.
+ * @author Nikolay
+ *
+ */
 public class BeatFileWriter extends AbstractWriter {
 
 	private static final Logger LOG = LoggerFactory.getLogger(BeatFileWriter.class);

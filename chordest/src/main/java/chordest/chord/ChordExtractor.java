@@ -18,14 +18,11 @@ import chordest.util.DataUtil;
 import chordest.util.Viterbi;
 
 /**
- * This class encapsulates all the chord extraction logic. All you need is to
- * pass a name of the wave file as a constructor parameter. When the
+ * This class encapsulates all the chord extraction logic. When the
  * constructor finishes, all the extracted information is available. It
- * includes the positions of all the beats in the file (extracted with
- * BeatRoot), the positions that were used for recognition (which are
- * essentially the original beat positions supplemented with intermediate
- * points), the array of recognized chords, the recognized mode and the
- * resulting spectrum as a double[][]. 
+ * includes the positions of all the beats in the file (obtained from a
+ * beat tracker), the array of recognized chords, the array of chroma vectors,
+ * the recognized key and the resulting spectrum as a double[][].
  * @author Nikolay
  *
  */
@@ -49,6 +46,12 @@ public class ChordExtractor {
 		chords = doChordExtraction(p, spectrumData.spectrum);
 	}
 
+	/**
+	 * Preservs first <code>octaves</code> in SpectrumData and removes others.
+	 * ScaleInfo is also corrected. No changes are saved to disk.
+	 * @param sd
+	 * @param octaves
+	 */
 	private void getFirstOctaves(SpectrumData sd, int octaves) {
 		if (octaves > sd.scaleInfo.octaves) {
 			throw new IllegalArgumentException("Too many octaves to get");

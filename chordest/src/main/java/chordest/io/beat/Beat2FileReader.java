@@ -11,7 +11,12 @@ import java.util.Scanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+/**
+ * Used together with FileBeatBarTimesProvider. Encapsulates low level
+ * reading and parsing of the beat and bars file.
+ * @author Nikolay
+ *
+ */
 public class Beat2FileReader {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Beat2FileReader.class);
