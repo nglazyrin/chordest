@@ -15,6 +15,7 @@ import chordest.chord.ComparisonAccumulator;
 import chordest.configuration.Configuration;
 import chordest.io.AbstractWriter;
 import chordest.io.csv.CsvFileWriter;
+import chordest.io.csv.CsvSpectrumFileWriter;
 import chordest.io.lab.LabFileReader;
 import chordest.io.lab.LabFileWriter;
 import chordest.spectrum.FileSpectrumDataProvider;
@@ -29,8 +30,9 @@ public class Roundtrip {
 
 	private static final String SEP = PathConstants.SEP;
 	public static final String CSV_ACTUAL_DIR = PathConstants.CSV_DIR + "actual" + SEP;
+	public static final String CSV_CHROMA_DIR = PathConstants.CSV_DIR + "chroma" + SEP;
 	public static final String CSV_EXPECTED_DIR = PathConstants.CSV_DIR + "expected" + SEP;
-	public static final String FILE_LIST = "work" + PathConstants.SEP + "bqrz_bin.txt";
+	public static final String FILE_LIST = PathConstants.RESOURCES_DIR + "filelists" + SEP + "bqz_bin.txt";
 
 	public static void main(String[] args) {
 		List<String> tracklist = TracklistCreator.readTrackList(FILE_LIST);
@@ -51,6 +53,7 @@ public class Roundtrip {
 			}
 
 			write(new LabFileWriter(ce), PathConstants.OUTPUT_DIR + labFileName);
+			write(new CsvSpectrumFileWriter(ce.getChroma()), CSV_CHROMA_DIR + csvFileName);
 
 			LabFileReader labReaderActual = new LabFileReader(new File(PathConstants.OUTPUT_DIR + labFileName));
 			write(new CsvFileWriter(ce.getChords(), ce.getOriginalBeatTimes()), CSV_ACTUAL_DIR + csvFileName);

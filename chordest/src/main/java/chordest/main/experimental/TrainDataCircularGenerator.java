@@ -31,10 +31,10 @@ import chordest.util.TracklistCreator;
 public class TrainDataCircularGenerator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TrainDataGenerator.class);
-	private static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "bqz_bin0train.txt";
+	private static final String TRAIN_FILE_LIST = PathConstants.RESOURCES_DIR + "filelists" + PathConstants.SEP + "bqz_bin1train.txt";
 	private static final String CSV_FILE = PathConstants.OUTPUT_DIR + "train_dA_c.csv";
 
-	private static final boolean SEQUENTIAL = true;
+	private static final boolean SEQUENTIAL = false;
 
 	private final File chordFile;
 

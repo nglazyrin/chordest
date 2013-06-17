@@ -37,7 +37,7 @@ public class TrainDataGenerator implements IExternalProcessor {
 	public static final String ENCODING = "utf-8";
 	private static final String CSV_FILE = PathConstants.OUTPUT_DIR + "train_dA.csv";
 	
-	public static final String TRAIN_FILE_LIST = "work" + PathConstants.SEP + "all_files0.txt";
+	public static final String TRAIN_FILE_LIST = PathConstants.RESOURCES_DIR + "filelists" + PathConstants.SEP + "all_files0.txt";
 	public static final int WINDOW = 19;
 	public static final int OFFSET = 0;
 	public static final int INPUTS = 60;
