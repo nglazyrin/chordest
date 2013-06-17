@@ -9,6 +9,11 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Chordest configuration. Possible keys and default values are defined here.
+ * @author Nikolay
+ *
+ */
 public class Configuration {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Configuration.class);

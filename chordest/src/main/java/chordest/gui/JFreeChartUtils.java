@@ -18,7 +18,11 @@ import org.jfree.chart.urls.StandardXYZURLGenerator;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYZDataset;
 
-
+/**
+ * Utility class to wrap JFreeChart calls.
+ * @author Nikolay
+ *
+ */
 public class JFreeChartUtils {
 
 	public static JFreeChart createXYBlockChart(
