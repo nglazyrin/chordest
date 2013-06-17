@@ -14,8 +14,12 @@ import chordest.spectrum.FileSpectrumDataProvider;
 import chordest.spectrum.WaveFileSpectrumDataProvider;
 import chordest.util.Visualizer;
 
-
-
+/**
+ * Performs chord estimation only for a given file. Spectrum can be given as
+ * a .bin file, otherwise it will also be computed.
+ * @author Nikolay
+ *
+ */
 public class SingleFile {
 
 //	private static final String SEP = PathConstants.SEP;

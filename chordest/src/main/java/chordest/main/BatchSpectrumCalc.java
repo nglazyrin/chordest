@@ -15,6 +15,12 @@ import chordest.spectrum.WaveFileSpectrumDataProvider;
 import chordest.util.PathConstants;
 import chordest.util.TracklistCreator;
 
+/**
+ * Computes spectra for a list of files and saves them, but does not perform
+ * chord estimation. These spectra can be then used in Roundtrip.
+ * @author Nikolay
+ *
+ */
 public class BatchSpectrumCalc {
 
 	private static final Logger LOG = LoggerFactory.getLogger(BatchSpectrumCalc.class);

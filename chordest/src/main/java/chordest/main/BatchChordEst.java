@@ -16,6 +16,12 @@ import chordest.spectrum.WaveFileSpectrumDataProvider;
 import chordest.util.PathConstants;
 import chordest.util.TracklistCreator;
 
+/**
+ * This class is run during MIREX testing. It gets a list of files, performs
+ * chord estimation, writes the results.
+ * @author Nikolay
+ *
+ */
 public class BatchChordEst {
 
 	private static final Logger LOG = LoggerFactory.getLogger(BatchChordEst.class);

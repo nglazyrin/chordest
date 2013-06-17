@@ -36,12 +36,16 @@ public class SpectrumVisualizer {
 //		spectrum = DataUtil.shrink(spectrum, sd.framesPerBeat);
 //		spectrum = DataUtil.toLogSpectrum(spectrum);
 		DataUtil.scaleTo01(spectrum);
-		double[][] ss = DataUtil.getSelfSimilarity(spectrum);
-		ss = DataUtil.removeDissimilar(ss, c.process.selfSimilarityTheta);
-		Visualizer.visualizeSelfSimilarity(ss, sd.beatTimes);
+//		double[][] ss = DataUtil.getSelfSimilarity(spectrum);
+//		ss = DataUtil.removeDissimilar(ss, c.process.selfSimilarityTheta);
+//		Visualizer.visualizeSelfSimilarity(ss, sd.beatTimes);
 		
 		String[] labels = NoteLabelProvider.getNoteLabels(sd.startNoteOffsetInSemitonesFromF0, sd.scaleInfo);
-		String[] labels1 = NoteLabelProvider.getNoteLabels(sd.startNoteOffsetInSemitonesFromF0, new ScaleInfo(1, 12));
+//		String[] labels1 = NoteLabelProvider.getNoteLabels(sd.startNoteOffsetInSemitonesFromF0, new ScaleInfo(1, 12));
+		labels = new String[190];
+		for (int i = 0; i < labels.length; i ++) {
+			labels[i] = "" + (22050.0 * i / 4096);
+		}
 		Visualizer.visualizeSpectrum(spectrum, sd.beatTimes, labels, "Spectrum");
 		
 //		double[][] sp12 = DataUtil.reduce(spectrum, 4);

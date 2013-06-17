@@ -14,6 +14,12 @@ import chordest.io.lab.LabFileReader;
 import chordest.util.MapUtil;
 import chordest.util.TracklistCreator;
 
+/**
+ * Calculates chord recognition quality (AOR and WAOR) using two given lists
+ * of .lab files.
+ * @author Nikolay
+ *
+ */
 public class AccuracyCalculator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Roundtrip.class);

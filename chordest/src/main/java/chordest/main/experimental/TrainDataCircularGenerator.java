@@ -41,7 +41,18 @@ public class TrainDataCircularGenerator {
 	private int majors = 0;
 	private int minors = 0;
 
+	/**
+	 * Minimal remaining distance from the estimated beat position to the right
+	 * chord boundary. If the distance is less than DELTA, corresponding
+	 * spectrogram column will not be included into training data. Therefore
+	 * the training data becomes more accurate.
+	 */
 	private static final double DELTA = 0.5;
+	
+	/**
+	 * Maximum affordable difference between the number of major and minor
+	 * chords (but rotation makes it 12 times greater).
+	 */
 	private static final int L = 100;
 
 	public static void main(String[] args) {

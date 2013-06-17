@@ -22,6 +22,12 @@ import chordest.io.lab.LabFileWriter;
 import chordest.spectrum.WaveFileSpectrumDataProvider;
 import chordest.util.PathConstants;
 
+/**
+ * Shows a frame where you can drop a wave file, wait some seconds/minutes
+ * and get its sequence of chords as a text file in the same folder.
+ * @author Nikolay
+ *
+ */
 public class DropHereWindow extends Component implements Runnable {
 
 	private static final long serialVersionUID = 1L;

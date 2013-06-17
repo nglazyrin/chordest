@@ -23,6 +23,12 @@ import chordest.spectrum.WaveFileSpectrumDataProvider;
 import chordest.util.PathConstants;
 import chordest.util.TracklistCreator;
 
+/**
+ * This class is mostly used to estimate chord recognition quality during
+ * development. Works with pre-calculated spectra to make it faster.
+ * @author Nikolay
+ *
+ */
 public class Roundtrip {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Roundtrip.class);
