@@ -232,7 +232,7 @@ function vis(track) {
 }
 
 function toId(s) {
-	var trackname =  s.substring(s.lastIndexOf('_-_') + 3, s.lastIndexOf('.'));
+	var trackname = '_' + s
 	return trackname.replace(/\W/g, "_");
 }
 
@@ -241,7 +241,7 @@ function processTracks(trackFile) {
 		data.sort(function(a,b) { return a.overlap - b.overlap; }); // sort by overlap score ascending
 		var tr = d3.select("body").append("table").selectAll("tr").data(data).enter().append("tr");
 		var td = tr.selectAll("td")
-			.data(function(d) { return [d.name, d.key, d.overlap, d3.round(d.effective_length), d3.round(d.full_length)]; })
+			.data(function(d) { return [d.name, d.key, d.overlap, d.segmentation, d3.round(d.effective_length), d3.round(d.full_length)]; })
 			.enter().append("td")
 			.attr("class", function(d,i) { return i == 0 ? "name" : ""; })
 			.text(function(d, i) { return i != 0 ? d : ""; });
