@@ -38,18 +38,11 @@ public class ChordExtractor {
 	private final Chord[] chords;
 	private double[][] chroma;
 	private Key key;
-//	private IExternalProcessor externalProcessor;
 
 	private final String[] labels;
 	private final String[] labels1;
 
 	public ChordExtractor(ProcessProperties p, ISpectrumDataProvider spectrumProvider) {
-		this(p, spectrumProvider, null);
-	}
-
-	public ChordExtractor(ProcessProperties p, ISpectrumDataProvider spectrumProvider,
-			IExternalProcessor ex) {
-//		this.externalProcessor = ex;
 		spectrumData = spectrumProvider.getSpectrumData();
 		getFirstOctaves(spectrumData, 4);
 		int framesPerBeat = spectrumData.framesPerBeat;
@@ -62,7 +55,6 @@ public class ChordExtractor {
 		labels = NoteLabelProvider.getNoteLabels(offset, spectrumData.scaleInfo);
 		labels1 = NoteLabelProvider.getNoteLabels(offset, new ScaleInfo(1, 12));
 		
-//		Visualizer.visualizeSpectrum(spectrumData.spectrum, spectrumData.beatTimes, labels, "Spectrum as is");
 		chords = doChordExtraction(p, spectrumData.spectrum);
 	}
 
@@ -78,19 +70,9 @@ public class ChordExtractor {
 	}
 
 	private Chord[] doChordExtraction(final ProcessProperties p, final double[][] spectrum) {
-//		Visualizer.visualizeXByFrequencyDistribution(e, scaleInfo, spectrum.startNoteOffsetInSemitonesFromF0);
-		
 		double[][] result = DataUtil.smoothHorizontallyMedian(spectrum, p.medianFilterWindow);
 		result = DataUtil.shrink(result, spectrumData.framesPerBeat);
 		result = DataUtil.toLogSpectrum(result);
-		
-//		result = DataUtil.whitenSpectrum(result, spectrumData.scaleInfo.notesInOctave);
-//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Original spectrum");
-//		if (externalProcessor != null) {
-//			result = externalProcessor.process(result);
-//			Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Modified spectrum");
-//		}
-
 		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, p.crpFirstNonZero, p.selfSimilarityTheta), spectrumData.scaleInfo.octaves);
 	}
 
@@ -99,13 +81,9 @@ public class ChordExtractor {
 //		double[][] result = DataUtil.reduce(spectrum, 4);
 		double[][] result = DiscreteCosineTransform.doChromaReduction(spectrum, simNZ);
 //		double[][] result = spectrum;
-//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Reduced");
 		double[][] selfSim = DataUtil.getSelfSimilarity(result);
 		selfSim = DataUtil.removeDissimilar(selfSim, theta);
-//		Visualizer.visualizeSelfSimilarity(selfSim, originalBeatTimes);
-		
 		result = DataUtil.smoothWithSelfSimilarity(result, selfSim);
-//		Visualizer.visualizeSpectrum(result, originalBeatTimes, labels, "Reduced + self-sim");
 		return result;
 	}
 
@@ -126,7 +104,6 @@ public class ChordExtractor {
 				temp[i] = Chord.empty();
 			}
 		}
-//		Visualizer.visualizeXByTimeDistribution(noChordness, originalBeatTimes);
 		
 //		return temp;
 		return Harmony.smoothUsingHarmony(chroma, temp, new ScaleInfo(1, 12), producer);
@@ -134,7 +111,9 @@ public class ChordExtractor {
 	}
 
 	public double[] getOriginalBeatTimes() {
-		return ArrayUtils.add(originalBeatTimes, spectrumData.totalSeconds);
+		double beatLength = originalBeatTimes[1] - originalBeatTimes[0];
+		double lastSound = originalBeatTimes[originalBeatTimes.length - 1] + beatLength;
+		return ArrayUtils.add(originalBeatTimes, lastSound);
 	}
 
 	public Chord[] getChords() {
