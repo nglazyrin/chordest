@@ -14,7 +14,11 @@ import chordest.model.Note;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
 
-
+/**
+ * Not used now because of unstable key detection.
+ * @author Nikolay
+ *
+ */
 public class TemplatesAndKeyRecognition extends TemplatesRecognition {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TemplatesAndKeyRecognition.class);

@@ -4,6 +4,12 @@ import chordest.model.Chord;
 import chordest.model.Interval;
 import chordest.model.Note;
 
+/**
+ * A utility class just to calculate the distance between two chords as the
+ * number of steps in the shortest path between them on the circle of fifths.
+ * @author Nikolay
+ *
+ */
 public class CircleOfFifths {
 
 	public Chord getRelativeMajor(Chord chord) {

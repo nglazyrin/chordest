@@ -12,7 +12,14 @@ import chordest.model.Chord;
 import chordest.model.Key;
 import chordest.util.MapUtil;
 
-
+/**
+ * This class implements the simplest chord recognition algorithm: a chroma
+ * vector is compared to the templates of all known chords, and the nearest
+ * chord is selected as the result. Distance is calculated using metric
+ * defined in AbstractChordRecognition (Euclidean distance is used now).
+ * @author Nikolay
+ *
+ */
 public class TemplatesRecognition extends AbstractChordRecognition {
 
 	public static final List<Chord> knownChords = Chord.getAllChordsWithShorthands(

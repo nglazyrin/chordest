@@ -3,7 +3,12 @@ package chordest.chord.templates;
 import chordest.model.Chord;
 import chordest.model.Note;
 
-
+/**
+ * This class produces templates and adds a specified number of harmonics.
+ * The returned templates are not normalized.
+ * @author Nikolay
+ *
+ */
 public class TemplateProducer implements ITemplateProducer {
 
 	private static final int HARMONICS_COUNT = 4;
@@ -26,6 +31,7 @@ public class TemplateProducer implements ITemplateProducer {
 
 	private final Note startNote;
 
+	/** You don't want to use them now, templates with harmonics perform better */
 	private final boolean useModifiedTemplates;
 
 	public TemplateProducer(Note startNote) {

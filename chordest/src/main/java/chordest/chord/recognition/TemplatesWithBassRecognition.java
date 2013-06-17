@@ -11,6 +11,14 @@ import chordest.model.Note;
 import chordest.transform.ScaleInfo;
 import chordest.util.MapUtil;
 
+/**
+ * A try to incorporate information about estimated bass note into the process
+ * of chord recognition. No success for now, bass note estimation is also
+ * unstable, more efforts are needed to combine it with the distance betweeen
+ * template and chroma vector.
+ * @author Nikolay
+ *
+ */
 public class TemplatesWithBassRecognition extends TemplatesRecognition {
 
 	private final double[][] bass;

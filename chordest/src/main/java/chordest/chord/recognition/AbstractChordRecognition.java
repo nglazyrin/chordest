@@ -14,6 +14,12 @@ import chordest.util.DataUtil;
 import chordest.util.metric.EuclideanMetric;
 import chordest.util.metric.IMetric;
 
+/**
+ * Abstract class to hold all methods common for different chord recognition
+ * strategies.
+ * @author Nikolay
+ *
+ */
 public abstract class AbstractChordRecognition implements IChordRecognition {
 
 	protected static final Logger LOG = LoggerFactory.getLogger(AbstractChordRecognition.class);

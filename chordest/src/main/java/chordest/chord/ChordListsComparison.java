@@ -9,7 +9,21 @@ import org.apache.commons.lang3.ArrayUtils;
 import chordest.chord.recognition.TemplatesRecognition;
 import chordest.model.Chord;
 
-
+/**
+ * An in-home solution to calculate chord overlap and segmentation. The code
+ * is not based on MIREX code, so there is no guarantee the results will be 
+ * the same. They were at least similar, though. Also MIREX chord recognition
+ * metrics have been changing from year to year, see 
+ * http://recherche.ircam.fr/anasyn/peeters/ARTICLES/Pauwels_2013_ICASSP_EvalChord.pdf .
+ * 
+ * The current version of code maps all chords from ground truth that start
+ * from major third + minor third or minor third + major third to major and
+ * minor chords correspondingly. Other chords are discarded and do not
+ * contribute to the result.
+ * 
+ * @author Nikolay
+ *
+ */
 public class ChordListsComparison {
 
 	private final Chord[] expected;
@@ -22,6 +36,13 @@ public class ChordListsComparison {
 	private double effectiveSeconds = 0;
 	private double totalSeconds;
 
+	/**
+	 * Determines whether this chord from the ground truth will contribute to
+	 * the result or not. Unknown chords are not considered during the
+	 * calculation of metrics.
+	 * @param chord
+	 * @return
+	 */
 	public static boolean isKnown(Chord chord) {
 		return ArrayUtils.contains(Chord.START_WITH_MAJ_OR_MIN_OR_N, chord.getShortHand());
 //		return TemplatesRecognition.isKnown(chord);
@@ -60,6 +81,9 @@ public class ChordListsComparison {
 		calculateSegmentation();
 	}
 
+	/**
+	 * See Mathias Mauch's PhD, p. 52 (2010) for details.
+	 */
 	private void calculateSegmentation() {
 		double ea = getSegmentation(expectedTimestamps, actualTimestamps);
 		double ae = getSegmentation(actualTimestamps, expectedTimestamps);
@@ -112,14 +136,12 @@ public class ChordListsComparison {
 	}
 
 	private void process() {
-//		final double expectedTotalTime = expectedTimestamps[expectedTimestamps.length - 1];
-//		final double actualTotalTime = actualTimestamps[actualTimestamps.length - 1];
-//		final double totalTime = Math.max(expectedTotalTime, actualTotalTime);
-		
+		// merge 2 lists of timestamps
 		final double[] times = new double[expectedTimestamps.length + actualTimestamps.length];
 		System.arraycopy(expectedTimestamps, 0, times, 0, expectedTimestamps.length);
 		System.arraycopy(actualTimestamps, 0, times, expectedTimestamps.length, actualTimestamps.length);
 		Arrays.sort(times);
+		
 		Chord expectedChord = expectedTimestamps[0] == 0 ? expected[0] : Chord.empty();
 		Chord actualChord = actualTimestamps[0] == 0 ? actual[0] : Chord.empty();
 		double previousTime = 0;

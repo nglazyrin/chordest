@@ -19,6 +19,12 @@ import chordest.util.MapUtil;
 import chordest.util.metric.EuclideanMetric;
 import chordest.util.metric.IMetric;
 
+/**
+ * A wrapper for TonnetzRecognition that does not follow the
+ * AbstractRecognition contract.
+ * @author Nikolay
+ *
+ */
 public class PureTonnetzRecognition {
 
 	private static final Logger LOG = LoggerFactory.getLogger(PureTonnetzRecognition.class);

@@ -7,6 +7,13 @@ import java.util.Map.Entry;
 
 import chordest.util.MapUtil;
 
+/**
+ * To be used together with ChordListsComparison to accumulate statistics over
+ * a number of tracks. Returns aggregated metrics and all errors sorted by
+ * total time in descending orger.
+ * @author Nikolay
+ *
+ */
 public class ComparisonAccumulator {
 
 	private double totalOverlap = 0;

@@ -13,6 +13,13 @@ import chordest.model.Note;
 import chordest.util.MapUtil;
 import chordest.util.metric.L1Metric;
 
+/**
+ * As opposed to other recognition strategies, deals with 6-dimensional tonnetz
+ * (or tonal centroid) vectors. Chroma vectors are first converted to tonnetz,
+ * then the Euclidean distance in the 6-dimensional space is calculated.
+ * @author Nikolay
+ *
+ */
 public class TonnetzRecognition extends AbstractChordRecognition {
 
 	public static final double R1 = 1;
