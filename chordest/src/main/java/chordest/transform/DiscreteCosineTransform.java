@@ -1,5 +1,13 @@
 package chordest.transform;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import chordest.transform.PooledTransformer.ITransformProvider;
+import chordest.wave.Buffer;
+import chordest.wave.ITaskProvider;
+import chordest.wave.ReadOnlyBuffer;
+
 
 public class DiscreteCosineTransform {
 
@@ -42,10 +50,47 @@ public class DiscreteCosineTransform {
 		return inverse(dct);
 	}
 
-	public static double[][] doChromaReduction(double[][] data, int firstNonZero) {
-		double[][] result = new double[data.length][];
-		for (int i = 0; i < data.length; i++) {
-			result[i] = doChromaReduction(data[i], firstNonZero);
+	public static double[][] doChromaReduction(final double[][] data, final int firstNonZero) {
+		ITaskProvider taskProvider = new ITaskProvider() {
+			private AtomicInteger idx = new AtomicInteger(0);
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+			}
+
+			@Override
+			public Buffer poll() throws InterruptedException {
+				int currentIdx = idx.getAndAdd(1);
+				if (currentIdx >= data.length) {
+					return null;
+				}
+				Buffer buffer = new Buffer(data[currentIdx].length, currentIdx);
+				buffer.append(data[currentIdx]);
+				return buffer;
+			} };
+		ITransformProvider transformProvider = new ITransformProvider() {
+			@Override
+			public ITransform getTransform(final Buffer buffer, final CountDownLatch latch) {
+				return new ITransform() {
+					@Override
+					public Buffer call() throws Exception {
+						try {
+							double[] result = doChromaReduction(buffer.getData(), firstNonZero);
+							return new ReadOnlyBuffer(result, buffer.getTimeStamp());
+						} finally {
+							latch.countDown();
+						}
+					}};
+			} };
+		final PooledTransformer transformer = new PooledTransformer(
+				taskProvider, 8, data.length, transformProvider);
+		double[][] result;
+		try {
+			result = transformer.run();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
 		}
 		return result;
 	}
