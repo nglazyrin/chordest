@@ -3,9 +3,13 @@ package chordest.model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import org.apache.commons.lang3.ArrayUtils;
 
 /**
  * Models chord as an ordered set of notes. Knows all Harte's chord labels and
@@ -39,6 +43,28 @@ public class Chord {
 		MAJ, MAJ7, DOM, MAJ6, NON, MAJ9, MIN, MIN7, MINMAJ7, MIN6, MIN9, N
 	};
 
+	private static final Map<String, int[]> shorthandToIntervals = new HashMap<String, int[]>();
+
+	static {
+		shorthandToIntervals.put(MAJ, new int[] { Interval.MAJOR_THIRD, Interval.PERFECT_FIFTH });
+		shorthandToIntervals.put(MIN, new int[] { Interval.MINOR_THIRD, Interval.PERFECT_FIFTH });
+		shorthandToIntervals.put(DIM, new int[] { Interval.MINOR_THIRD, Interval.DIMINISHED_FIFTH });
+		shorthandToIntervals.put(AUG, new int[] { Interval.MAJOR_THIRD, Interval.AUGMENTED_FIFTH });
+		shorthandToIntervals.put(SUS2, new int[] { Interval.MAJOR_SECOND, Interval.PERFECT_FIFTH });
+		shorthandToIntervals.put(SUS4, new int[] { Interval.PERFECT_FOURTH, Interval.PERFECT_FIFTH });
+		shorthandToIntervals.put(MAJ7, new int[] { Interval.MAJOR_THIRD, Interval.PERFECT_FIFTH, Interval.MAJOR_SEVENTH });
+		shorthandToIntervals.put(MIN7, new int[] { Interval.MINOR_THIRD, Interval.PERFECT_FIFTH, Interval.MINOR_SEVENTH });
+		shorthandToIntervals.put(DOM, new int[] { Interval.MAJOR_THIRD, Interval.PERFECT_FIFTH, Interval.MINOR_SEVENTH });
+		shorthandToIntervals.put(DIM7, new int[] { Interval.MINOR_THIRD, Interval.DIMINISHED_FIFTH, Interval.DIMINISHED_SEVENTH });
+		shorthandToIntervals.put(HDIM7, new int[] { Interval.MINOR_THIRD, Interval.DIMINISHED_FIFTH, Interval.MAJOR_SEVENTH });
+		shorthandToIntervals.put(MINMAJ7, new int[] { Interval.MINOR_THIRD, Interval.PERFECT_FIFTH, Interval.MAJOR_SEVENTH });
+		shorthandToIntervals.put(MAJ6, new int[] { Interval.MAJOR_THIRD, Interval.PERFECT_FIFTH, Interval.MAJOR_SIXTH });
+		shorthandToIntervals.put(MIN6, new int[] { Interval.MINOR_THIRD, Interval.PERFECT_FIFTH, Interval.MAJOR_SIXTH });
+		shorthandToIntervals.put(NON, new int[] { Interval.MAJOR_THIRD, Interval.PERFECT_FIFTH, Interval.MINOR_SEVENTH, Interval.NINTH });
+		shorthandToIntervals.put(MAJ9, new int[] { Interval.MAJOR_THIRD, Interval.PERFECT_FIFTH, Interval.MAJOR_SEVENTH, Interval.NINTH });
+		shorthandToIntervals.put(MIN9, new int[] { Interval.MINOR_THIRD, Interval.PERFECT_FIFTH, Interval.MINOR_SEVENTH, Interval.NINTH });
+	}
+
 	//private Map<Integer, Note> components = new HashMap<Integer, Note>();
 	private final Note[] components;
 	private final String shorthand;
@@ -71,11 +97,8 @@ public class Chord {
 	}
 
 	public Chord(Note... notes) {
-//		Set<Note> set = new HashSet<Note>();
-//		set.addAll(Arrays.asList(notes));
-//		set.remove(null);
-//		Note[] array = set.toArray(new Note[set.size()]);
 		List<Note> temp = new ArrayList<Note>();
+		// remove duplicates
 		for (Note note : notes) {
 			if (note != null && ! temp.contains(note)) {
 				temp.add(note);
@@ -83,20 +106,26 @@ public class Chord {
 		}
 		Note[] array = temp.toArray(new Note[temp.size()]);
 		if (array.length > 0) {
-			Note rootMaj = tryMajor(array);
-			Note rootMin = tryMinor(array);
-			if (rootMaj != null) {
-				this.shorthand = Chord.MAJ;
-				this.components = new Note[] { rootMaj, rootMaj.withOffset(Interval.MAJOR_THIRD), rootMaj.withOffset(Interval.PERFECT_FIFTH) };
-			} else if (rootMin != null) {
-				this.shorthand = Chord.MIN;
-				this.components = new Note[] { rootMin, rootMin.withOffset(Interval.MINOR_THIRD), rootMin.withOffset(Interval.PERFECT_FIFTH) };
-			} else {
-				int i = 0;
-				while (i < array.length && array[i] != null) { i++; }
-				this.shorthand = NO_SHORTHAND;
-				this.components = Arrays.copyOf(array, i);
+			// first try to build a chord with a known shorthand from the given set of notes
+			for (String shorthand : shorthandToIntervals.keySet()) {
+				int[] intervals = shorthandToIntervals.get(shorthand);
+				Note root = tryIntervals(array, intervals);
+				if (root != null) {
+					this.shorthand = shorthand;
+					List<Note> components = new ArrayList<Note>();
+					components.add(root);
+					for (int i = 0; i < intervals.length; i++) {
+						components.add(root.withOffset(intervals[i]));
+					}
+					this.components = components.toArray(new Note[components.size()]);
+					return;
+				}
 			}
+			// if falied, just copy the notes and don't assign any shorthand
+			int i = 0;
+			while (i < array.length && array[i] != null) { i++; }
+			this.shorthand = NO_SHORTHAND;
+			this.components = Arrays.copyOf(array, i);
 		} else {
 			this.shorthand = NO_SHORTHAND;
 			this.components = new Note[0];
@@ -105,48 +134,70 @@ public class Chord {
 
 	public Chord(Note root, String shortHand) {
 		this.shorthand = String.copyValueOf(shortHand.toCharArray());
-		if (MAJ.equals(shortHand)) {
-			this.components = new Note[] { root, root.withOffset(Interval.MAJOR_THIRD), root.withOffset(Interval.PERFECT_FIFTH) };
-		} else if (MIN.equals(shortHand)) {
-			this.components = new Note[] { root, root.withOffset(Interval.MINOR_THIRD), root.withOffset(Interval.PERFECT_FIFTH) };
-		} else if (DIM.equals(shortHand)) {
-			this.components = new Note[] { root, root.withOffset(Interval.MINOR_THIRD), root.withOffset(Interval.DIMINISHED_FIFTH) };
-		} else if (AUG.equals(shortHand)) {
-			this.components = new Note[] { root, root.withOffset(Interval.MAJOR_THIRD), root.withOffset(Interval.AUGMENTED_FIFTH) };
-		} else if (MAJ7.equals(shortHand)) {
-			this.components = new Note[] { root, root.withOffset(Interval.MAJOR_THIRD), root.withOffset(Interval.PERFECT_FIFTH), root.withOffset(Interval.MAJOR_SEVENTH) };
-		} else if (MIN7.equals(shortHand)) {
-			this.components = new Note[] { root, root.withOffset(Interval.MINOR_THIRD), root.withOffset(Interval.PERFECT_FIFTH), root.withOffset(Interval.MINOR_SEVENTH) };
-		} else if (DOM.equals(shortHand)) {
-			this.components = new Note[] { root, root.withOffset(Interval.MAJOR_THIRD), root.withOffset(Interval.PERFECT_FIFTH), root.withOffset(Interval.MINOR_SEVENTH) };
-		} else if (DIM7.equals(shortHand)) {
-			this.components = new Note[] { root, root.withOffset(Interval.MINOR_THIRD), root.withOffset(Interval.DIMINISHED_FIFTH), root.withOffset(Interval.DIMINISHED_SEVENTH) };
-		} else if (HDIM7.equals(shortHand)) {
-			this.components = new Note[] { root, root.withOffset(Interval.MINOR_THIRD), root.withOffset(Interval.DIMINISHED_FIFTH), root.withOffset(Interval.MINOR_SEVENTH) };
-		} else if (MINMAJ7.equals(shortHand)) {
-			this.components = new Note[] { root, root.withOffset(Interval.MINOR_THIRD), root.withOffset(Interval.PERFECT_FIFTH), root.withOffset(Interval.MAJOR_SEVENTH) };
-		} else if (MAJ6.equals(shortHand)) {
-			this.components = new Note[] { root, root.withOffset(Interval.MAJOR_THIRD), root.withOffset(Interval.PERFECT_FIFTH), root.withOffset(Interval.MAJOR_SIXTH) };
-		} else if (MIN6.equals(shortHand)) {
-			this.components = new Note[] { root, root.withOffset(Interval.MINOR_THIRD), root.withOffset(Interval.PERFECT_FIFTH), root.withOffset(Interval.MAJOR_SIXTH) };
-		} else if (NON.equals(shortHand)) {
-			this.components = new Note[] { root, root.withOffset(Interval.MAJOR_THIRD), root.withOffset(Interval.PERFECT_FIFTH), root.withOffset(Interval.MINOR_SEVENTH), root.withOffset(Interval.NINTH) };
-		} else if (MAJ9.equals(shortHand)) {
-			this.components = new Note[] { root, root.withOffset(Interval.MAJOR_THIRD), root.withOffset(Interval.PERFECT_FIFTH), root.withOffset(Interval.MAJOR_SEVENTH), root.withOffset(Interval.NINTH) };
-		} else if (MIN9.equals(shortHand)) {
-			this.components = new Note[] { root, root.withOffset(Interval.MINOR_THIRD), root.withOffset(Interval.PERFECT_FIFTH), root.withOffset(Interval.MINOR_SEVENTH), root.withOffset(Interval.NINTH) };
-		} else if (SUS2.equals(shortHand)) {
-			this.components = new Note[] { root, root.withOffset(Interval.MAJOR_SECOND), root.withOffset(Interval.PERFECT_FIFTH) };
-		} else if (SUS4.equals(shortHand)) {
-			this.components = new Note[] { root, root.withOffset(Interval.PERFECT_FOURTH), root.withOffset(Interval.PERFECT_FIFTH) };
-		} else if (N.equals(shortHand)) {
+		if (N.equals(shortHand)) {
 			this.components = new Note[0];
 			// do nothing
+		} else if (shorthandToIntervals.containsKey(shortHand)) {
+			int[] intervals = shorthandToIntervals.get(shortHand);
+			List<Note> notes = new ArrayList<Note>();
+			notes.add(root);
+			for (int interval : intervals) {
+				notes.add(root.withOffset(interval));
+			}
+			this.components = notes.toArray(new Note[notes.size()]);
 		} else {
 			if (root != null) {
 				this.components = new Note[] { root };
 			} else {
 				this.components = new Note[0];
+			}
+		}
+	}
+
+	private Note tryIntervals(Note[] notes, int[] intervals) {
+		if (notes == null || notes.length != intervals.length + 1) {
+			return null;
+		}
+		int[][] permutations = getAllPermutations(notes.length);
+		for (int[] permutation : permutations) {
+			Note[] tempNotes = new Note[notes.length];
+			for (int i = 0; i < permutation.length; i++) {
+				tempNotes[i] = notes[permutation[i]];
+			}
+			if (matchesIntervals(tempNotes, intervals)) {
+				return tempNotes[0];
+			}
+		}
+		return null;
+	}
+
+	private Boolean matchesIntervals(Note[] notes, int[] intervals) {
+		Note root = notes[0];
+		for (int i = 0; i < intervals.length; i++) {
+			if (((notes[i+1].ordinal() - root.ordinal() + 12) % 12) != intervals[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	// see http://stackoverflow.com/questions/4240080/generating-all-permutations-of-a-given-string
+	private int[][] getAllPermutations(int k) {
+		List<int[]> result = new ArrayList<int[]>();
+		int[] array = new int[k];
+		for (int i = 0; i < k; i++) { array[i] = i; }
+		getPermutations(result, k, new int[0], array);
+		return result.toArray(new int[result.size()][]);
+	}
+
+	private void getPermutations(List<int[]> result, int k, int[] prefix, int[] array) {
+		if (array.length == 0) {
+			result.add(prefix);
+			return;
+		} else {
+			for (int i = 0; i < array.length; i++) {
+				getPermutations(result, k, ArrayUtils.add(prefix, array[i]),
+						ArrayUtils.addAll(ArrayUtils.subarray(array, 0, i), ArrayUtils.subarray(array, i+1, array.length)));
 			}
 		}
 	}
@@ -214,8 +265,10 @@ public class Chord {
 	@Override
 	public int hashCode() {
 		int result = 0;
+		int i = 2;
 		for (Note note : getNotes()) {
-			result += note.hashCode(); 
+			result += i * note.hashCode();
+			i++;
 		}
 		return result;
 	}
@@ -231,7 +284,7 @@ public class Chord {
 		return common >= 3;
 	}
 
-	public boolean equalsToTriad(Chord triad) {
+	public boolean containsTriad(Chord triad) {
 		if (triad == null || triad.isEmpty() || this.isEmpty()) {
 			return equals(triad);
 		}
@@ -239,45 +292,13 @@ public class Chord {
 			throw new IllegalArgumentException("Major or minor expected, but was: " + triad);
 		}
 		// so further assume that triad is either major or minor
-		if (! this.getRoot().equals(triad.getRoot())) {
-			return false;
-		}
-		if (this.isShortHandDefined()) {
-			if (triad.isMajor()) {
-				switch (this.getShortHand()) {
-				case MAJ:
-				case MAJ7:
-				case DOM:
-				case MAJ6:
-				case NON:
-				case MAJ9:
-					return true;
-				default:
-					return false;
-				}
-			} else if (triad.isMinor()) {
-				switch (this.getShortHand()) {
-				case MIN:
-				case MIN7:
-				case MINMAJ7:
-				case MIN6:
-				case MIN9:
-					return true;
-				default:
-					return false;
-				}
+		int common = 0;
+		for (Note note : triad.components) {
+			if (this.hasNote(note)) {
+				common++;
 			}
 		}
-//		throw new IllegalArgumentException("Unable to compare chords: " + this + " and " + triad);
-		// Otherwise need to compare intervals
-		if (this.components.length < 3) {
-			return false;
-		}
-		if (components[1].offsetFrom(components[0]) == triad.components[1].offsetFrom(triad.components[0]) &&
-				components[2].offsetFrom(components[0]) == triad.components[2].offsetFrom(triad.components[0])) {
-			return true;
-		}
-		return false;
+		return common >= 3;
 	}
 
 	@Override
@@ -318,55 +339,24 @@ public class Chord {
 	}
 
 	public boolean isMajor() {
-		return MAJ.equals(shorthand);
+		return isOfType(MAJ);
 	}
 
 	public boolean isMinor() {
-		return MIN.equals(shorthand);
-	}
-
-	private Note tryMajor(Note[] notes) {
-		if (notes == null || notes.length != 3) {
-			return null;
-		}
-		if (isMajorWithRootN0(notes[0], notes[1], notes[2]) || isMajorWithRootN0(notes[0], notes[2], notes[1])) {
-			return notes[0];
-		} else if (isMajorWithRootN0(notes[1], notes[0], notes[2]) || isMajorWithRootN0(notes[1], notes[2], notes[0])) {
-			return notes[1];
-		} else if (isMajorWithRootN0(notes[2], notes[0], notes[1]) || isMajorWithRootN0(notes[2], notes[1], notes[0])) {
-			return notes[2];
-		}
-		return null;
-	}
-
-	private boolean isMajorWithRootN0(Note n0, Note n1, Note n2) {
-		return (n1.ordinal() - n0.ordinal() + 12) % 12 == Interval.MAJOR_THIRD &&
-				(n2.ordinal() - n0.ordinal() + 12) % 12 == Interval.PERFECT_FIFTH;
-	}
-
-	private Note tryMinor(Note[] notes) {
-		if (notes == null || notes.length != 3) {
-			return null;
-		}
-		if (isMinorWithRootN0(notes[0], notes[1], notes[2]) || isMinorWithRootN0(notes[0], notes[2], notes[1])) {
-			return notes[0];
-		} else if (isMinorWithRootN0(notes[1], notes[0], notes[2]) || isMinorWithRootN0(notes[1], notes[2], notes[0])) {
-			return notes[1];
-		} else if (isMinorWithRootN0(notes[2], notes[0], notes[1]) || isMinorWithRootN0(notes[2], notes[1], notes[0])) {
-			return notes[2];
-		}
-		return null;
-	}
-
-	private boolean isMinorWithRootN0(Note n0, Note n1, Note n2) {
-		return (n1.ordinal() - n0.ordinal() + 12) % 12 == Interval.MINOR_THIRD &&
-				(n2.ordinal() - n0.ordinal() + 12) % 12 == Interval.PERFECT_FIFTH;
+		return isOfType(MIN);
 	}
 
 	public boolean isEmpty() {
 		return this.components.length == 0 || N.equals(this.shorthand);
 	}
-	
+
+	public boolean isOfType(String shortHand) {
+		if (shortHand == null) {
+			return false;
+		}
+		return shortHand.equals(this.shorthand);
+	}
+
 	private boolean isShortHandDefined() {
 		return ! NO_SHORTHAND.equals(shorthand);
 	}
