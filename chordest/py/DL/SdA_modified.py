@@ -28,7 +28,7 @@ class SdA(object):
     """
 
     def __init__(self, n_ins, hidden_layers_sizes, n_outs,
-                 layers=None, log_layer=None, 
+                 layers=None, log_layer=None, recurrent_layer=-1,
                  is_vector_y=False, log_activation=T.nnet.softmax):
         """ This class is made to support a variable number of layers.
 
@@ -88,7 +88,12 @@ class SdA(object):
                 input_size = n_ins
             else:
                 input_size = hidden_layers_sizes[i - 1]
-
+                
+            if (hidden_layers_sizes[i] - input_size > 0):
+                beta = 0.1
+            else:
+                beta = 0
+                
             # the input to this layer is either the activation of the hidden
             # layer below or the input of the SdA if you are on the first
             # layer
@@ -117,7 +122,7 @@ class SdA(object):
                                         W=layers[1][i].W,
                                         b=layers[1][i].b)
             else:
-                if i == self.n_layers - 5:  # no recurrent layers
+                if i == recurrent_layer:
                     sigmoid_layer = HiddenRecurrentLayer(rng=numpy_rng,
                                         input=layer_input,
                                         n_in=input_size,
@@ -138,6 +143,7 @@ class SdA(object):
                       theano_rng=theano_rng,
                       input=layer_input,
                       n_visible=input_size,
+                      beta = beta,
                       n_hidden=hidden_layers_sizes[i],
                       W=sigmoid_layer.W,
                       bhid=sigmoid_layer.b)
@@ -330,7 +336,7 @@ class SdA(object):
 
         # Create a function that scans the entire validation set
         def valid_score():
-            return [valid_score_i(i)[1] for i in xrange(n_valid_batches)]
+            return [valid_score_i(i) for i in xrange(n_valid_batches)]
 
         # Create a function that scans the entire test set
         def test_score():

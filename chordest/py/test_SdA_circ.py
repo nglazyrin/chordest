@@ -21,16 +21,24 @@ class test_SdA_circ(TestIterator):
         return restore_sda(dA_layers, sigmoid_layers, log_layer)
     
     def process_file(self, source, target):
-        ins = 72
+        extra_octave = True
+        ins = 48
+        if extra_octave:
+            ins = ins + 12
         subnotes = 1
         with open(source, 'rb') as i:
             reader = csv.reader(i)
             (before, chords) = util.list_spectrum_data(reader, components=ins, allow_no_chord=True)
         result = None
         for offset in range(12):
-            data = self.getFirstColumns(before, offset * subnotes, ins-12 * subnotes)
+            data = numpy.asmatrix(before, dtype=theano.config.floatX)
+            if extra_octave:
+                start, end = offset * subnotes, offset * subnotes + ins - 12 * subnotes
+                data = data[:,start:end]
+            else:
+                data = numpy.roll(data, -offset * subnotes, axis=1)
             temp = self.through_sda(self.model, data)
-            temp = numpy.roll(temp, offset, axis=1)
+            temp = numpy.roll(temp, offset * subnotes, axis=1)
             if result == None:
                 result = numpy.zeros(temp.shape)
             result = numpy.add(result, temp)
@@ -40,12 +48,12 @@ class test_SdA_circ(TestIterator):
             writer.writerows(result)
     
     def through_sda(self, sda, data):
-        m = theano.shared(numpy.asmatrix(data, dtype=theano.config.floatX),
-                                         borrow=True)
+        m = theano.shared(data, borrow=True)
         return sda.get_result(m)
     
-    def rotateLeft(self, data, n):
-        return [x.tolist()[n:] + x.tolist()[:n] for x in data]
+#    def rotateLeft(self, data, n):
+#        return [x.tolist()[n:] + x.tolist()[:n] for x in data]
+#        return [x[n:] + x[:n] for x in data]
 
 def main():
     input_dir = "E:\\Dev\\git\\my_repository\\chordest\\csv\\test"

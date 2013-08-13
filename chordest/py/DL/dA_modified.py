@@ -37,7 +37,7 @@ class dA(object):
     """
 
     def __init__(self, numpy_rng, theano_rng=None, input=None,
-                 n_visible=784, n_hidden=500,
+                 n_visible=784, n_hidden=500, beta=0,
                  W=None, bhid=None, bvis=None):
         """
         Initialize the dA class by specifying the number of visible units (the
@@ -87,6 +87,7 @@ class dA(object):
         """
         self.n_visible = n_visible
         self.n_hidden = n_hidden
+        self.beta = beta
 
         # create a Theano random generator that gives symbolic random values
         if not theano_rng:
@@ -197,8 +198,11 @@ class dA(object):
         #        the minibatch
         
         L = T.sqrt(T.sum(T.sqr(T.sub(self.x, z)), axis=1))
-        reg = T.constant(0.01) * (T.mean(act) - T.constant(0.05))
-        cost = T.mean(L) + reg
+        reg = T.sum(y, axis=0) / T.shape(y)[0] # sum over training set
+        rho = T.constant(0.05)
+        beta = T.constant(self.beta)
+        reg1 = T.sum(rho * T.log(rho / reg) + (1-rho) * T.log((1-rho) / (1-reg)))
+        cost = T.mean(L) + beta * reg1
 
         # compute the gradients of the cost of the `dA` with respect
         # to its parameters

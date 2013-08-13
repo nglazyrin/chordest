@@ -11,10 +11,21 @@ import matplotlib.pyplot as p
 
 with open('model/SdA12.dat', 'rb') as f:
     (da, logl, sigmoid) = cPickle.load(f)
-s = logl[1].U[6]
-#s = sigmoid.W[2]
+with open('model/sda_layers.dat', 'rb') as f:
+    (da0, sigmoid0) = cPickle.load(f)
+idx0 = 0
+idx1 = 10
+s = da[idx0].W[idx1]
+#s0 = da0[idx0].W[idx1]
+s0 = sigmoid.W[15]
 f = theano.function([], s)
+f0 = theano.function([], s0)
 y = f()
+y0 = f0()
 x = range(len(y))
+x0 = range(len(y0))
+p.subplots = 2
 p.plot(x,y)
+p.plot(x0,y0)
+p.legend(["autoencoder", "final"])
 p.show()

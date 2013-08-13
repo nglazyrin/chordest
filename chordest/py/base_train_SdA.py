@@ -10,6 +10,7 @@ import time
 import csv
 import numpy
 import cPickle
+import theano
 
 from DL.SdA_modified import SdA
 from Utils.util import list_spectrum_data, shuffle_2, asarray
@@ -22,8 +23,9 @@ class SdATrainer(object):
         self.train_file = train_file
         self.layers_file = layers_file
         self.sda_file = sda_file
-        self.ins = 60
-        self.layers_sizes = [120, 60]
+        self.ins = 48
+        self.layers_sizes = [96, 48]
+        self.recurrent_layer = -1
         self.corruption_levels = [.2, .2, .2]
         self.outs = outs
         self.pretrain_lr=0.03
@@ -48,7 +50,7 @@ class SdATrainer(object):
         with open(self.train_file, 'rb') as f:
             reader = csv.reader(f)
             (array, chords) = list_spectrum_data(reader, components=self.ins)
-#        (array, chords) = shuffle_2(array, chords)
+        (array, chords) = shuffle_2(array, chords)
         array = self.prepare_data(array)
         chords = self.prepare_chords(chords)
         train = int(0.7 * len(array))
@@ -118,7 +120,8 @@ class SdATrainer(object):
         else:
             sda = SdA(n_ins=self.ins, hidden_layers_sizes=self.layers_sizes,
                       n_outs=self.outs, log_activation=self.log_activation,
-                      is_vector_y=self.is_vector_y)
+                      is_vector_y=self.is_vector_y,
+                      recurrent_layer = self.recurrent_layer)
     
         #########################
         # PRETRAINING THE MODEL #
@@ -190,7 +193,7 @@ class SdATrainer(object):
     
                 if (iter + 1) % validation_frequency == 0:
                     validation_losses = validate_model()
-                    this_validation_loss = numpy.mean(validation_losses)
+                    this_validation_loss = numpy.mean(validation_losses, axis=0)[1]
                     print('epoch %i, minibatch %i/%i, validation error %f %%' %
                           (epoch, minibatch_index + 1, n_train_batches,
                            this_validation_loss * 100.))
