@@ -131,6 +131,49 @@ public class ChordParserTest {
 			Chord c2 = new Chord(Note.C, Chord.MAJ);
 			Assert.assertEquals(c2, c1);
 			Assert.assertEquals(c2.getRoot(), c1.getRoot());
+			Assert.assertEquals(c2.getShortHand(), c1.getShortHand());
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail();
+		}
+	}
+
+	@Test
+	public void testDomWithBassNoteOn3rd() {
+		try {
+			Chord c1 = ChordParser.parseString("A:7/3");
+			Chord c2 = new Chord(Note.A, Chord.DOM);
+			Assert.assertEquals(c2, c1);
+			Assert.assertEquals(c2.getRoot(), c1.getRoot());
+			Assert.assertEquals(c2.getShortHand(), c1.getShortHand());
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail();
+		}
+	}
+
+	@Test
+	public void testMaj6WithBassNoteOn5th() {
+		try {
+			Chord c1 = ChordParser.parseString("G:maj6/5");
+			Chord c2 = new Chord(Note.G, Chord.MAJ6);
+			Assert.assertEquals(c2, c1);
+			Assert.assertEquals(c2.getRoot(), c1.getRoot());
+			Assert.assertEquals(c2.getShortHand(), c1.getShortHand());
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail();
+		}
+	}
+
+	@Test
+	public void testSus4WithAdditionalb7() {
+		try {
+			Chord c1 = ChordParser.parseString("G:sus4(b7)");
+			Chord c2 = new Chord(Note.G, Note.C, Note.D, Note.F);
+			Assert.assertEquals(c2, c1);
+			Assert.assertEquals(c2.getRoot(), c1.getRoot());
+			Assert.assertEquals(c2.getShortHand(), c1.getShortHand());
 		} catch (Exception e) {
 			e.printStackTrace();
 			Assert.fail();
