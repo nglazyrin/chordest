@@ -163,6 +163,49 @@ public class DataUtil {
 	}
 
 	/**
+	 * Performs horizontal smoothing of the array: replaces each value with
+	 * the median of the value and its <code>window/2</code> left and
+	 * its <code>window/2</code> right successive neighbors.
+	 * @param data Array of columns
+	 * @param window Size of smoothing window
+	 * @return
+	 */
+	public static double[][] smoothHorizontallyMedianAndShrink(final double[][] data, final int window, int step) {
+		if (data == null) {
+			throw new NullPointerException("data is null");
+		}
+		if (window < 0) {
+			throw new IllegalArgumentException("Window size must be >= 0 but was: " + window);
+		} else if (window > data.length) {
+			LOG.warn("Window is too large: " + window + ", only " + data.length + " values are available. Skip smoothing.");
+			return data;
+		}
+		LOG.debug("Performing horizontal smooth with window size: " + window);
+		int cols = data.length;
+		int resultLength = data.length / step;
+		if (data.length % step != 0) {
+			resultLength++;
+		}
+		double[][] result = new double[resultLength][];
+		int halfWindow = window / 2;
+		for (int col = 0; col < data.length; col += step) {
+			if (col < halfWindow || col >= cols - halfWindow) {
+				result[col / step] = data[col];
+			} else {
+				result[col / step] = new double[data[col].length];
+				for (int row = 0; row < data[col].length; row++) {
+					double[] array = new double[2 * halfWindow + 1];
+					for (int i = -halfWindow; i <= halfWindow; i++) {
+						array[i + halfWindow] = data[col + i][row];
+					}
+					result[col / step][row] = findKthSmallest(array, 0, array.length, halfWindow + 1);
+				}
+			}
+		}
+		return result;
+	}
+
+	/**
 	 * A variant of Prewitt operator for horizontal edge detection. Tries to
 	 * detect the lines of width <= 3 points. 
 	 * Following matrix is used:
