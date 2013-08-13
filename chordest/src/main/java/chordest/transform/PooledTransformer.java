@@ -51,8 +51,6 @@ public class PooledTransformer {
 		while (!isCancelRequested && latch.getCount() > 0) {
 			final Buffer buffer = provider.poll();
 			if (buffer != null) {
-//				final ITransform transform = new DummyConstantQTransform(
-//						buffer, scaleInfo, latch, cqConstants);
 				final ITransform transform = transProvider.getTransform(buffer, latch);
 				// simplest way to limit the queue size of the thread pool
 				while (threadPool.getQueue().size() > threadPoolQueueSize) {
