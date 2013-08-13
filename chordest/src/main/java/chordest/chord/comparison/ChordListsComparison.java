@@ -1,4 +1,4 @@
-package chordest.chord;
+package chordest.chord.comparison;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,6 +26,7 @@ import chordest.model.Chord;
  */
 public class ChordListsComparison {
 
+	public static final IEvaluationMetric metric = new Mirex2010();
 	private final Chord[] expected;
 	private final double[] expectedTimestamps;
 	private final Chord[] actual;
@@ -44,7 +45,8 @@ public class ChordListsComparison {
 	 * @return
 	 */
 	public static boolean isKnown(Chord chord) {
-		return ArrayUtils.contains(Chord.START_WITH_MAJ_OR_MIN_OR_N, chord.getShortHand());
+		return metric.map(chord) != null;
+//		return ArrayUtils.contains(Chord.START_WITH_MAJ_OR_MIN_OR_N, chord.getShortHand());
 //		return TemplatesRecognition.isKnown(chord);
 	}
 
@@ -154,9 +156,9 @@ public class ChordListsComparison {
 				double segmentLength = currentTime - previousTime;
 //				if (expectedChord.equals(actualChord)) {
 //				if (expectedChord.equals(actualChord) || (Chord.empty().equals(expectedChord) && Chord.empty().equals(actualChord))) {
-				if (expectedChord.equalsToTriad(actualChord) || (Chord.empty().equals(expectedChord) && Chord.empty().equals(actualChord))) {
-					result += segmentLength;
-				} else {
+				double score = metric.score(metric.map(expectedChord), metric.map(actualChord));
+				result += (score * segmentLength);
+				if (score == 0) {
 					String key = expectedChord.toString() + "-" + actualChord.toString();
 					double value = segmentLength;
 					if (errors.containsKey(key)) {
@@ -164,6 +166,16 @@ public class ChordListsComparison {
 					}
 					errors.put(key, value);
 				}
+//				if (expectedChord.equalsToTriad(actualChord) || (Chord.empty().equals(expectedChord) && Chord.empty().equals(actualChord))) {
+//					result += segmentLength;
+//				} else {
+//					String key = expectedChord.toString() + "-" + actualChord.toString();
+//					double value = segmentLength;
+//					if (errors.containsKey(key)) {
+//						value += errors.get(key);
+//					}
+//					errors.put(key, value);
+//				}
 				effectiveSeconds += segmentLength;
 			}
 			int expectedPos = Arrays.binarySearch(expectedTimestamps, currentTime);

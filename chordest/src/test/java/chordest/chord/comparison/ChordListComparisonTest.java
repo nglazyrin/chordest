@@ -1,10 +1,10 @@
-package chordest.chord;
+package chordest.chord.comparison;
 
 import junit.framework.Assert;
 
 import org.junit.Test;
 
-import chordest.chord.ChordListsComparison;
+import chordest.chord.comparison.ChordListsComparison;
 import chordest.model.Chord;
 import chordest.model.Note;
 

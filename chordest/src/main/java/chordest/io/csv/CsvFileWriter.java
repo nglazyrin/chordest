@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Locale;
 
-import chordest.chord.ChordListsComparison;
+import chordest.chord.comparison.ChordListsComparison;
 import chordest.io.AbstractWriter;
 import chordest.model.Chord;
 

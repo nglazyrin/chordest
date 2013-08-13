@@ -1,4 +1,4 @@
-package chordest.chord;
+package chordest.chord.comparison;
 
 import java.util.HashMap;
 import java.util.List;
