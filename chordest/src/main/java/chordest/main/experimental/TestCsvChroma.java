@@ -85,26 +85,25 @@ public class TestCsvChroma extends AbstractTestRecognizeFromCsv {
 //		return temp;
 	}
 
-	private double[][] getBinChroma(double[][] spectrum, int octaves) {
-		double[][] chroma = DataUtil.reduce(spectrum, octaves);
-		chroma =  DataUtil.toSingleOctave(chroma, 12);
-		DataUtil.scaleEachTo01(chroma);
-		return chroma;
-	}
-
-	private double[][] getBinSpectrum(File csvFile, int octaves) {
-		String binFileName = StringUtils.substringBeforeLast(csvFile.getName(), PathConstants.EXT_CSV);
-		SpectrumData sd = SpectrumFileReader.read("spectrum8-60-6\\" + binFileName);
-		VisualDebugger.getOctaves(sd, 0, octaves);
-		double[][] spectrum = sd.spectrum;
-		spectrum = DataUtil.smoothHorizontallyMedian(spectrum, c.process.medianFilterWindow);
-		spectrum = DataUtil.shrink(spectrum, sd.framesPerBeat);
-		spectrum = DataUtil.toLogSpectrum(spectrum);
-		spectrum = DiscreteCosineTransform.doChromaReduction(spectrum, c.process.crpFirstNonZero);
-		double[][] selfSim = DataUtil.getSelfSimilarity(spectrum);
-		selfSim = DataUtil.removeDissimilar(selfSim, c.process.selfSimilarityTheta);
-		spectrum = DataUtil.smoothWithSelfSimilarity(spectrum, selfSim);
-		return spectrum;
-	}
+//	private double[][] getBinChroma(double[][] spectrum, int octaves) {
+//		double[][] chroma = DataUtil.reduce(spectrum, octaves);
+//		chroma =  DataUtil.toSingleOctave(chroma, 12);
+//		DataUtil.scaleEachTo01(chroma);
+//		return chroma;
+//	}
+//
+//	private double[][] getBinSpectrum(File csvFile, int octaves) {
+//		String binFileName = StringUtils.substringBeforeLast(csvFile.getName(), PathConstants.EXT_CSV);
+//		SpectrumData sd = SpectrumFileReader.read("spectrum8-60-6\\" + binFileName);
+//		VisualDebugger.getOctaves(sd, 0, octaves);
+//		double[][] spectrum = sd.spectrum;
+//		spectrum = DataUtil.smoothHorizontallyMedianAndShrink(spectrum, c.process.medianFilterWindow, sd.framesPerBeat);
+//		spectrum = DataUtil.toLogSpectrum(spectrum);
+//		spectrum = DiscreteCosineTransform.doChromaReduction(spectrum, c.process.crpFirstNonZero);
+//		double[][] selfSim = DataUtil.getSelfSimilarity(spectrum);
+//		selfSim = DataUtil.removeDissimilar(selfSim, c.process.selfSimilarityTheta);
+//		spectrum = DataUtil.smoothWithSelfSimilarity(spectrum, selfSim);
+//		return spectrum;
+//	}
 
 }

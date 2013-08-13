@@ -39,7 +39,7 @@ public class TestDataGenerator {
 			TrainDataGenerator tdg = new TrainDataGenerator(csvFileName, false);
 			SpectrumData sd = SpectrumFileReader.read(binFileName);
 			double[][] result = TrainDataGenerator.prepareSpectrum(sd);
-			tdg.process(result, TrainDataGenerator.OFFSET, TrainDataGenerator.INPUTS + 12);
+			tdg.process(result, 0, TrainDataGenerator.INPUTS + 12);
 			if (++filesProcessed % 10 == 0) {
 				LOG.info(filesProcessed + " files processed");
 			}
