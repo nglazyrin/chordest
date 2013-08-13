@@ -11,8 +11,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.chord.ChordListsComparison;
-import chordest.chord.ComparisonAccumulator;
+import chordest.chord.comparison.ChordListsComparison;
+import chordest.chord.comparison.ComparisonAccumulator;
 import chordest.io.csv.CsvFileWriter;
 import chordest.io.lab.LabFileReader;
 import chordest.io.lab.LabFileWriter;
@@ -38,7 +38,7 @@ public abstract class AbstractTestRecognizeFromCsv {
 	public abstract Chord[] recognize(File csvFile);
 
 	public void recognizeFromCsv() {
-		List<String> tracklist = TracklistCreator.readTrackList(TestDataGenerator.TEST_FILE_LIST);
+		List<String> tracklist = TracklistCreator.readTrackList(TrainTestDataCircularGenerator.TEST_FILE_LIST);
 		SIM_LOG.info("name,overlap,segmentation,effective_length,full_length");
 		for (String item : tracklist) {
 			String track = StringUtils.substringAfterLast(item, PathConstants.SEP);
