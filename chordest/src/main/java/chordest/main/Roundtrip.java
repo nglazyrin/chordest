@@ -10,8 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import chordest.chord.ChordExtractor;
-import chordest.chord.ChordListsComparison;
-import chordest.chord.ComparisonAccumulator;
+import chordest.chord.comparison.ChordListsComparison;
+import chordest.chord.comparison.ComparisonAccumulator;
 import chordest.configuration.Configuration;
 import chordest.io.AbstractWriter;
 import chordest.io.csv.CsvFileWriter;

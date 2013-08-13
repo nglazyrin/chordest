@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.chord.ChordListsComparison;
+import chordest.chord.comparison.ChordListsComparison;
 import chordest.io.lab.LabFileReader;
 import chordest.util.MapUtil;
 import chordest.util.TracklistCreator;

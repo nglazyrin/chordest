@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import chordest.chord.ChordExtractor;
-import chordest.chord.ChordListsComparison;
+import chordest.chord.comparison.ChordListsComparison;
 import chordest.configuration.Configuration;
 import chordest.io.lab.LabFileReader;
 import chordest.io.lab.LabFileWriter;
