@@ -500,6 +500,21 @@ public class DataUtil {
 		return result;
 	}
 
+	public static double[] toAllBeatTimes(final double[] framePositions, final int framesPerBeat) {
+		int resultLength = framePositions.length / framesPerBeat;
+		if (framePositions.length % framesPerBeat != 0) {
+			resultLength++;
+		}
+		double[] result = new double[resultLength + 1]; // for trailing timestamp
+		for (int i = 0; i < resultLength; i++) {
+			result[i] = framePositions[framesPerBeat * i];
+		}
+		double beatLength = result[1] - result[0];
+		double lastSound = result[result.length - 2] + beatLength;
+		result[result.length - 1] = lastSound;
+		return result;
+	}
+
 	/**
 	 * For each pair of successive elements in an array inserts intermediate 
 	 * values evenly between them. The resulting array has length times * L - 1

@@ -2,7 +2,6 @@ package chordest.main.experimental;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -20,6 +19,7 @@ import chordest.io.spectrum.SpectrumFileReader;
 import chordest.main.Roundtrip;
 import chordest.model.Chord;
 import chordest.spectrum.SpectrumData;
+import chordest.util.DataUtil;
 import chordest.util.PathConstants;
 import chordest.util.TracklistCreator;
 
@@ -63,19 +63,8 @@ public abstract class AbstractTestRecognizeFromCsv {
 	private double doChordRecognition(String binFile, String csvFile, String expectedLab) {
 		SpectrumData sd = SpectrumFileReader.read(binFile);
 		Chord[] chords = recognize(new File(csvFile));
-		double[] beatTimes = new double[sd.beatTimes.length / sd.framesPerBeat + 1];
-		for (int i = 0; i < beatTimes.length; i++) {
-			beatTimes[i] = sd.beatTimes[sd.framesPerBeat * i];
-		}
-		beatTimes = Arrays.copyOf(beatTimes, beatTimes.length + 1);
-		if (beatTimes.length > 2) {
-			double beatLength = beatTimes[1] - beatTimes[0];
-//			double lastSound = beatTimes[beatTimes.length - 3] + beatLength;
-//			beatTimes[beatTimes.length - 1] = beatTimes[beatTimes.length - 2];
-//			beatTimes[beatTimes.length - 2] = lastSound;
-			double lastSound = beatTimes[beatTimes.length - 2] + beatLength;
-			beatTimes[beatTimes.length - 1] = lastSound;
-		}
+		double[] beatTimes = DataUtil.toAllBeatTimes(sd.beatTimes, sd.framesPerBeat);
+		
 		LabFileWriter lw = new LabFileWriter(chords, beatTimes);
 		File temp = null;
 		try {

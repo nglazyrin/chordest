@@ -15,7 +15,6 @@ import chordest.spectrum.SpectrumData;
 import chordest.transform.DiscreteCosineTransform;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
-import chordest.util.Viterbi;
 
 /**
  * This class encapsulates all the chord extraction logic. When the
@@ -37,11 +36,7 @@ public class ChordExtractor {
 	public ChordExtractor(ProcessProperties p, ISpectrumDataProvider spectrumProvider) {
 		spectrumData = spectrumProvider.getSpectrumData();
 		getFirstOctaves(spectrumData, 4);
-		int framesPerBeat = spectrumData.framesPerBeat;
-		originalBeatTimes = new double[spectrumData.beatTimes.length / framesPerBeat + 1];
-		for (int i = 0; i < originalBeatTimes.length; i++) {
-			originalBeatTimes[i] = spectrumData.beatTimes[framesPerBeat * i];
-		}
+		originalBeatTimes = DataUtil.toAllBeatTimes(spectrumData.beatTimes, spectrumData.framesPerBeat);
 		
 		chords = doChordExtraction(p, spectrumData.spectrum);
 	}
@@ -64,8 +59,12 @@ public class ChordExtractor {
 	}
 
 	private Chord[] doChordExtraction(final ProcessProperties p, final double[][] spectrum) {
-		double[][] result = DataUtil.smoothHorizontallyMedian(spectrum, p.medianFilterWindow);
-		result = DataUtil.shrink(result, spectrumData.framesPerBeat);
+//		double[][] result = DataUtil.smoothHorizontallyMedian(spectrum, p.medianFilterWindow);
+//		result = DataUtil.shrink(result, spectrumData.framesPerBeat);
+		double[][] result = DataUtil.smoothHorizontallyMedianAndShrink(spectrum,
+				p.medianFilterWindow, spectrumData.framesPerBeat);
+//		result = DataUtil.filterHorizontal3(result);
+//		result = DataUtil.removeShortLines(result, 9);
 		result = DataUtil.toLogSpectrum(result);
 		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, p.crpFirstNonZero, p.selfSimilarityTheta), spectrumData.scaleInfo.octaves);
 	}
@@ -94,7 +93,7 @@ public class ChordExtractor {
 		
 		double[] noChordness = DataUtil.getNochordness(sp, octaves);
 		for (int i = 0; i < noChordness.length; i++) {
-			if (noChordness[i] < 0.0015) {
+			if (noChordness[i] < 0.0015) { // 0.00125 for 5 octaves
 				temp[i] = Chord.empty();
 			}
 		}
@@ -105,9 +104,7 @@ public class ChordExtractor {
 	}
 
 	public double[] getOriginalBeatTimes() {
-		double beatLength = originalBeatTimes[1] - originalBeatTimes[0];
-		double lastSound = originalBeatTimes[originalBeatTimes.length - 1] + beatLength;
-		return ArrayUtils.add(originalBeatTimes, lastSound);
+		return originalBeatTimes;
 	}
 
 	public Chord[] getChords() {
