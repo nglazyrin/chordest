@@ -68,7 +68,7 @@ public class BeatRootBeatTimesProvider implements IBeatTimesProvider {
 		return result;
 	}
 
-	static double[] generateDefaultBeats(String wavFilePath) {
+	public static double[] generateDefaultBeats(String wavFilePath) {
 		LOG.warn("Error occured during BeatRoot processing, generating a dummy sequence of beats");
 		WavFile wavFile = null;
 		try {
