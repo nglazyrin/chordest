@@ -83,7 +83,7 @@ public class DiscreteCosineTransform {
 					}};
 			} };
 		final PooledTransformer transformer = new PooledTransformer(
-				taskProvider, 8, data.length, transformProvider);
+				taskProvider, 4, data.length, transformProvider);
 		double[][] result;
 		try {
 			result = transformer.run();

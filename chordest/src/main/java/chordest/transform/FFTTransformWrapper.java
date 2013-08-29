@@ -27,22 +27,47 @@ public class FFTTransformWrapper extends AbstractTransform {
 		fft.realForward(data);
 		double timeStamp = buffer.getTimeStamp();
 		double[] spectrum = new double[data.length / 2];
+//		spectrum[0] = data[0];
 		spectrum[spectrum.length - 1] = data[1];
 		for (int i = 1; i < data.length / 2; i++) {
-			spectrum[i - 1] = Math.sqrt(data[2*i] * data[2*i] + data[2*i + 1] * data[2*i + 1]);
+			spectrum[i-1] = Math.sqrt(data[2*i] * data[2*i] + data[2*i + 1] * data[2*i + 1]);
 		}
 		buffer = null;
 		spectrum = toLogSpacedSpectrum(spectrum);
 		return new ReadOnlyBuffer(spectrum, timeStamp);
 	}
 
+	/**
+	 * минимальная частота = частота дискретизации / длина окна в сэмплах.
+	 * Последующие частоты кратны минимальной.
+	 * @param spectrum
+	 * @return
+	 */
 	private double[] toLogSpacedSpectrum(double[] spectrum) {
-		double[] frequencies = cqConstants.getComponentFrequencies();
+		double[] frequencies = cqConstants.componentFrequencies;
 		int size = frequencies.length;
 		double[] result = new double[size];
-		for (int k = 0; k < spectrum.length; k++) {
-			int p = (int) (Math.round(size * Math.log(k / spectrum.length * 44100 / 440) / Math.log(2))) % size;
-			result[p] += spectrum[k];
+		double minFreq = cqConstants.getSamplingRate() * 1.0 / spectrum.length;
+		int[] counts = new int[size];
+		for (int iFFT = 0; iFFT < spectrum.length; iFFT++) {
+			double freq = minFreq * (iFFT + 1);
+			int iCQT = 0;
+			while (iCQT < size && frequencies[iCQT] < freq) {
+				iCQT++;
+			}
+			if (iCQT > 0 && iCQT < size) {
+				if (Math.abs(freq - frequencies[iCQT - 1]) > Math.abs(frequencies[iCQT] - freq)) {
+				} else {
+					iCQT--;
+				}
+				result[iCQT] += spectrum[iFFT];
+				counts[iCQT]++;
+			}
+		}
+		for (int i = 0; i < size; i++) {
+			if (counts[i] > 0) {
+				result[i] /= counts[i];
+			}
 		}
 		return result;
 	}

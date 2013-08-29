@@ -3,9 +3,9 @@ package chordest.transform.window;
 /** http://en.wikipedia.org/wiki/Window_function */
 public class HammingWindowFunction implements IWindowFunction {
 
-	private static final long serialVersionUID = 2L;
-	private int size;
-	private double[] values;
+	private static final long serialVersionUID = 3L;
+	public final int size;
+	public final double[] values;
 
 	public HammingWindowFunction(int size) {
 		this.size = size;
@@ -14,10 +14,12 @@ public class HammingWindowFunction implements IWindowFunction {
 	}
 
 	private void initialize() {
-		int LEN_1 = values.length - 1;
+		final int LEN_1 = values.length - 1;
 		final double alpha = 25.0 / 46.0;
+		final double alpha1 = 1 - alpha;
+		final double PHI = 2 * Math.PI / LEN_1;
 		for (int i = 0; i <= LEN_1; i++) {
-			values[i] = alpha - (1 - alpha) * Math.cos(i * 2 * Math.PI / LEN_1);
+			values[i] = alpha - alpha1 * Math.cos(i * PHI);
 		}
 	}
 

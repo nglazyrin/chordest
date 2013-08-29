@@ -7,8 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import chordest.model.Note;
 import chordest.transform.window.HammingWindowFunction;
-import chordest.transform.window.IWindowFunction;
-import chordest.util.ComplexNumber;
 import chordest.util.QUtil;
 
 
@@ -46,12 +44,11 @@ public class CQConstants implements Serializable {
 	private final Note startNote;
 	private final double Q;
 
-	private ComplexNumber [][] kernels;
-	private double[][] sinuses;
-	private double[][] cosinuses;
-	private double [] componentFrequencies;
-	private int [] componentWindowLengths;
-	private IWindowFunction [] windowFunctions;
+	public double[][] sinuses;
+	public double[][] cosinuses;
+	public final double [] componentFrequencies;
+	public final int [] componentWindowLengths;
+	public final double[][] windowFunctions;
 
 	private CQConstants(int rate, ScaleInfo scaleInfo, double f0, int startNoteOffsetInSemitonesFromF0) {
 		if (scaleInfo == null) {
@@ -66,7 +63,12 @@ public class CQConstants implements Serializable {
 //				(startNoteOffsetInSemitonesFromF0 - 2) / 12 + 5;
 		this.startNote = Note.byNumber(startNoteOffsetInSemitonesFromF0);
 		this.Q = QUtil.calculateQ(scaleInfo.notesInOctave);
-		initialize();
+		
+		LOG.debug("CQConstants initialization");
+		componentFrequencies = initializeComponentFrequencies();
+		componentWindowLengths = initializeComponentWindowLengths();
+		windowFunctions = initializeWindowFunctions();
+		initializeSinusesAndCosinuses();
 	}
 
 	/**
@@ -98,42 +100,37 @@ public class CQConstants implements Serializable {
 		return new CQConstants(rate, scaleInfo, f0, startNoteOffsetInSemitonesFromF0);
 	}
 
-	private void initialize() {
-		LOG.debug("CQConstants initialization");
-		initializeComponentFrequencies();
-		initializeComponentWindowLengths();
-		initializeWindowFunctions();
-		initializeSinusesAndCosinuses();
+	private double[] initializeComponentFrequencies() {
+		double[] result = new double[this.componentsTotal];
+		final double p = 1.0 / this.scaleInfo.notesInOctave;
+		for (int i = 0; i < this.componentsTotal; i++) {
+			result[i] = Math.pow(2.0, i * p) * this.minimalFrequency;
+		}
+		return result;
 	}
 
-	private void initializeComponentFrequencies() {
-		componentFrequencies = new double[this.componentsTotal];
+	private int[] initializeComponentWindowLengths() {
+		int[] result = new int[this.componentsTotal];
+		double qs = this.Q * samplingRate;
 		for (int i = 0; i < this.componentsTotal; i++) {
-			componentFrequencies[i] = Math.pow(2.0, 
-					i * 1.0 / this.scaleInfo.notesInOctave) * this.minimalFrequency;
+			result[i] = (int)(qs / componentFrequencies[i]);
 		}
+		return result;
 	}
 
-	private void initializeComponentWindowLengths() {
-		componentWindowLengths = new int[this.componentsTotal];
+	private double[][] initializeWindowFunctions() {
+		double[][] result = new double[this.componentsTotal][];
 		for (int i = 0; i < this.componentsTotal; i++) {
-			componentWindowLengths[i] = getWindowLengthForFrequencyAndSamplingRate(
-					getFrequencyForComponent(i), this.samplingRate);
+			result[i] = new HammingWindowFunction(componentWindowLengths[i]).values;
 		}
-	}
-
-	private void initializeWindowFunctions() {
-		windowFunctions = new IWindowFunction[this.componentsTotal];
-		for (int i = 0; i < this.componentsTotal; i++) {
-			windowFunctions[i] = new HammingWindowFunction(getWindowLengthForComponent(i));
-		}
+		return result;
 	}
 
 	private void initializeSinusesAndCosinuses() {
 		sinuses = new double[this.componentsTotal][];
 		cosinuses = new double[this.componentsTotal][];
 		for (int i = 0; i < this.componentsTotal; i++) {
-			int Nkcq = getWindowLengthForComponent(i);
+			int Nkcq = componentWindowLengths[i];
 			double commonArgPart = - 2.0 * Math.PI * Q / Nkcq;
 			sinuses[i] = new double[Nkcq];
 			cosinuses[i] = new double[Nkcq];
@@ -145,44 +142,20 @@ public class CQConstants implements Serializable {
 		}
 	}
 
-	public int getWindowLengthForFrequencyAndSamplingRate(double frequency, double rate) {
-		return (int)(this.Q * rate / frequency);
-	}
-
-	public double getFrequencyForComponent(int componentNumber) {
-		return componentFrequencies[componentNumber];
-	}
-
-	public int getWindowLengthForComponent(int componentNumber) {
-		return componentWindowLengths[componentNumber];
-	}
-
-	public IWindowFunction getWindowFunctionForComponent(int kcq) {
-		return windowFunctions[kcq];
-	}
-
-	public ComplexNumber getKernel(int kcq, int k) {
-		return this.kernels[kcq][k];
-	}
-
-	public double getSinus(int componentNumber, int n) {
-		return this.sinuses[componentNumber][n];
-	}
-
-	public double getCosinus(int componentNumber, int n) {
-		return this.cosinuses[componentNumber][n];
-	}
-
-	public double[] getComponentFrequencies() {
-		return this.componentFrequencies;
-	}
-
 	public double getQ() {
 		return Q;
 	}
 
 	public Note getStartNote() {
 		return startNote;
+	}
+
+	public int getSamplingRate() {
+		return samplingRate;
+	}
+
+	public int getLongestWindow() {
+		return componentWindowLengths[0];
 	}
 
 }

@@ -2,7 +2,6 @@ package chordest.transform;
 
 import java.util.concurrent.CountDownLatch;
 
-import chordest.transform.window.IWindowFunction;
 import chordest.wave.Buffer;
 import chordest.wave.ReadOnlyBuffer;
 
@@ -33,22 +32,21 @@ public class DummyConstantQTransform extends AbstractTransform {
 
 	@Override
 	Buffer transform() {
-		int maxWindowLength = cqConstants.getWindowLengthForComponent(0);
+		int maxWindowLength = cqConstants.getLongestWindow();
 		double[] data = buffer.getData();
 		if (data.length >= maxWindowLength) {
 			int spectrumSize = scaleInfo.getTotalComponentsCount();
 			double[] spectrum = new double[spectrumSize];
 			for (int kcq = 0; kcq < spectrumSize; kcq++) {
-				int Nkcq = cqConstants.getWindowLengthForComponent(kcq);
-				IWindowFunction windowFunction = cqConstants.getWindowFunctionForComponent(kcq);
+				int Nkcq = cqConstants.componentWindowLengths[kcq];
+				final double[] windowFunction = cqConstants.windowFunctions[kcq];
 				double result_re = 0;
 				double result_im = 0;
 				int startIndex = (data.length - Nkcq)/2;
-//				int startIndex = 0;
 				for (int n = 0; n < Nkcq; n++) {
-					double m = data[n + startIndex] * windowFunction.getValue(n);
-					double sin = cqConstants.getSinus(kcq, n);
-					double cos = cqConstants.getCosinus(kcq, n);
+					double m = data[n + startIndex] * windowFunction[n];
+					double sin = cqConstants.sinuses[kcq][n];
+					double cos = cqConstants.cosinuses[kcq][n];
 					result_re += (cos*m);
 					result_im += (sin*m);
 				}

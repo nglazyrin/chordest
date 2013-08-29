@@ -41,7 +41,7 @@ public class TuningFrequencyFinder {
 			
 			final ScaleInfo scaleInfo = new ScaleInfo(OCTAVES, NOTES_IN_OCTAVE);
 			final CQConstants cqc = CQConstants.getInstance(samplingRate, scaleInfo, CQConstants.F0_DEFAULT, -12);
-			int windowSize = cqc.getWindowLengthForComponent(0) + 1; // the longest window
+			int windowSize = cqc.getLongestWindow() + 1; // the longest window
 			
 			WaveReader reader = new WaveReader(wavFile, beatTimes, windowSize);
 			ITransformProvider cqProvider = new ITransformProvider() {
