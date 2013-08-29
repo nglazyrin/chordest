@@ -42,9 +42,9 @@ public class BatchSpectrumCalc {
 			String beatFileName = args[1] + trackName + PathConstants.EXT_BEAT;
 			WaveFileSpectrumDataProvider dp;
 			if (new File(beatFileName).exists()) {
-				dp = new WaveFileSpectrumDataProvider(wavFileName, c.spectrum, new FileBeatBarTimesProvider(beatFileName));
+				dp = new WaveFileSpectrumDataProvider(wavFileName, c, new FileBeatBarTimesProvider(beatFileName));
 			} else {
-				dp = new WaveFileSpectrumDataProvider(wavFileName, c.spectrum);
+				dp = new WaveFileSpectrumDataProvider(wavFileName, c);
 				BeatFileWriter.write(beatFileName, dp.getBeatTimes());
 			}
 			

@@ -38,7 +38,7 @@ public class Roundtrip {
 	public static final String CSV_ACTUAL_DIR = PathConstants.CSV_DIR + "actual" + SEP;
 	public static final String CSV_CHROMA_DIR = PathConstants.CSV_DIR + "chroma" + SEP;
 	public static final String CSV_EXPECTED_DIR = PathConstants.CSV_DIR + "expected" + SEP;
-	public static final String FILE_LIST = PathConstants.RESOURCES_DIR + "filelists" + SEP + "bqz_bin.txt";
+	public static final String FILE_LIST = PathConstants.RESOURCES_DIR + "filelists" + SEP + "bqrz_bin.txt";
 
 	public static void main(String[] args) {
 		List<String> tracklist = TracklistCreator.readTrackList(FILE_LIST);
@@ -55,7 +55,7 @@ public class Roundtrip {
 				ce = new ChordExtractor(c.process, new FileSpectrumDataProvider(binFileName));
 			} else {
 				final String wavFileName = PathConstants.WAV_DIR + track + PathConstants.EXT_WAV;
-				ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(wavFileName, c.spectrum));
+				ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(wavFileName, c));
 			}
 
 			write(new LabFileWriter(ce), PathConstants.OUTPUT_DIR + labFileName);

@@ -542,7 +542,7 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[][] toLogSpectrum(final double[][] data) {
+	public static double[][] toLogSpectrum(final double[][] data, int eta) {
 		if (data == null) {
 			throw new NullPointerException("data is null");
 		}
@@ -551,7 +551,7 @@ public class DataUtil {
 		for (int i = 0; i < data.length; i++) {
 			result[i] = new double[data[i].length];
 			for (int j = 0; j < data[i].length; j++) {
-				result[i][j] = Math.log10(1 + data[i][j] * 1000);
+				result[i][j] = Math.log10(1 + data[i][j] * eta);
 			}
 		}
 		return result;

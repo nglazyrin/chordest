@@ -63,17 +63,17 @@ public class ChordExtractor {
 //		result = DataUtil.shrink(result, spectrumData.framesPerBeat);
 		double[][] result = DataUtil.smoothHorizontallyMedianAndShrink(spectrum,
 				p.medianFilterWindow, spectrumData.framesPerBeat);
+		result = DataUtil.toLogSpectrum(result, p.crpLogEta);
 //		result = DataUtil.filterHorizontal3(result);
 //		result = DataUtil.removeShortLines(result, 9);
-		result = DataUtil.toLogSpectrum(result);
 		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, p.crpFirstNonZero, p.selfSimilarityTheta), spectrumData.scaleInfo.octaves);
 	}
 
 	private double[][] doChromaReductionAndSelfSimSmooth(final double[][] spectrum,
-			int simNZ,  double theta) {
-//		double[][] result = DataUtil.reduce(spectrum, 4);
-		double[][] result = DiscreteCosineTransform.doChromaReduction(spectrum, simNZ);
+			int crpNZ,  double theta) {
+		double[][] result = DiscreteCosineTransform.doChromaReduction(spectrum, crpNZ);
 //		double[][] result = spectrum;
+//		result = DataUtil.reduce(spectrum, 4);
 		double[][] selfSim = DataUtil.getSelfSimilarity(result);
 		selfSim = DataUtil.removeDissimilar(selfSim, theta);
 		result = DataUtil.smoothWithSelfSimilarity(result, selfSim);
@@ -93,7 +93,7 @@ public class ChordExtractor {
 		
 		double[] noChordness = DataUtil.getNochordness(sp, octaves);
 		for (int i = 0; i < noChordness.length; i++) {
-			if (noChordness[i] < 0.0015) { // 0.00125 for 5 octaves
+			if (noChordness[i] < 0.0014) { // 0.00125 for 5 octaves
 				temp[i] = Chord.empty();
 			}
 		}

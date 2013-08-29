@@ -12,9 +12,12 @@ import uk.co.labbookpages.WavFileException;
 import chordest.beat.BeatRootBeatTimesProvider;
 import chordest.beat.IBeatTimesProvider;
 import chordest.beat.QmulVampBeatTimesProvider;
+import chordest.configuration.Configuration;
+import chordest.configuration.Configuration.PreProcessProperties;
 import chordest.configuration.Configuration.SpectrumProperties;
 import chordest.transform.CQConstants;
 import chordest.transform.DummyConstantQTransform;
+import chordest.transform.FFTTransformWrapper;
 import chordest.transform.ITransform;
 import chordest.transform.PooledTransformer;
 import chordest.transform.PooledTransformer.ITransformProvider;
@@ -32,18 +35,44 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 
 	private final SpectrumData spectrumData;
 
-	public WaveFileSpectrumDataProvider(String waveFileName, SpectrumProperties s) {
-		this(waveFileName, s, new BeatRootBeatTimesProvider(waveFileName));
+	private final boolean useConstantQTransform = true; // TODO
+
+	public WaveFileSpectrumDataProvider(final String waveFileName, Configuration c) {
+		IBeatTimesProvider provider = null;
+		try {
+//			provider = new BeatRootBeatTimesProvider(waveFileName);
+		} catch (Throwable e) {
+			provider = null;
+		}
+		if (provider == null) {
+			try {
+				provider = new QmulVampBeatTimesProvider(waveFileName, c.pre);
+			} catch (Throwable e) {
+				// last try to provide a sequence of beats
+				provider = new IBeatTimesProvider() {
+					@Override
+					public double[] getBeatTimes() {
+						return BeatRootBeatTimesProvider.generateDefaultBeats(waveFileName);
+					}
+				};
+			}
+		}
+		beatTimes = provider.getBeatTimes();
+		spectrumData = readSpectrum(c.spectrum, waveFileName, beatTimes, c.pre);
 	}
 
-	public WaveFileSpectrumDataProvider(String waveFileName, SpectrumProperties s, IBeatTimesProvider provider) {
+	public WaveFileSpectrumDataProvider(String waveFileName, Configuration c, IBeatTimesProvider provider) {
 		double[] temp = provider.getBeatTimes();
 		if (temp.length == 0) {
-			temp = new QmulVampBeatTimesProvider(waveFileName).getBeatTimes();
+			try {
+				temp = new QmulVampBeatTimesProvider(waveFileName, c.pre).getBeatTimes();
+			} catch (Throwable e) {
+				// last try to provide a sequence of beats
+				temp = BeatRootBeatTimesProvider.generateDefaultBeats(waveFileName);
+			}
 		}
 		beatTimes = temp;
-		double[] expandedBeatTimes = DataUtil.makeMoreFrequent(beatTimes, s.framesPerBeat);
-		spectrumData = readSpectrum(s, waveFileName, beatTimes, expandedBeatTimes);
+		spectrumData = readSpectrum(c.spectrum, waveFileName, beatTimes, c.pre);
 	}
 
 	@Override
@@ -56,14 +85,17 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 	}
 
 	private SpectrumData readSpectrum(SpectrumProperties s, String waveFileName,
-			 double[] beatTimes, double[] expandedBeatTimes) {
+			 double[] beatTimes, PreProcessProperties p) {
 		final SpectrumData result = new SpectrumData();
-		result.beatTimes = expandedBeatTimes;
+		result.beatTimes = DataUtil.makeMoreFrequent(beatTimes, s.framesPerBeat);
 		result.scaleInfo = new ScaleInfo(s.octaves, s.notesPerOctave);
 		result.startNoteOffsetInSemitonesFromF0 = s.offsetFromF0InSemitones;
 		result.framesPerBeat = s.framesPerBeat;
-		result.f0 = TuningFrequencyFinder.getTuningFrequency(waveFileName, beatTimes, s.threadPoolSize);
-//		result.f0 = CQConstants.F0_DEFAULT;
+		if (useConstantQTransform && p.estimateTuningFrequency) {
+			result.f0 = TuningFrequencyFinder.getTuningFrequency(waveFileName, beatTimes, s.threadPoolSize);
+		} else {
+			result.f0 = CQConstants.F0_DEFAULT;
+		}
 		WavFile wavFile = null;
 		try {
 			wavFile = WavFile.openWavFile(new File(waveFileName));
@@ -72,25 +104,30 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 			
 			final CQConstants cqConstants = CQConstants.getInstance(result.samplingRate,
 					result.scaleInfo, result.f0, result.startNoteOffsetInSemitonesFromF0);
-			int windowSize = cqConstants.getWindowLengthForComponent(0) + 1; // the longest window
-//			int windowSize = 8192;
+			int windowSize;
+			ITransformProvider provider;
+			if (useConstantQTransform) {
+				windowSize = cqConstants.getLongestWindow() + 1; // the longest window
+				provider = new ITransformProvider() {
+					@Override
+					public ITransform getTransform(Buffer buffer, CountDownLatch latch) {
+						return new DummyConstantQTransform(buffer, result.scaleInfo, latch, cqConstants);
+					}
+				};
+			} else {
+				windowSize = 32768;
+				provider = new ITransformProvider() {
+					@Override
+					public ITransform getTransform(Buffer buffer, CountDownLatch latch) {
+						return new FFTTransformWrapper(buffer, latch, cqConstants);
+					}
+				};
+			}
 			// need to make windows centered at the beat positions, so shift them to the left
-			double[] windowBeginnings = shiftBeatsLeft(result.beatTimes, getWindowsShift(result));
-			WaveReader reader = new WaveReader(wavFile, windowBeginnings, windowSize);
-			ITransformProvider cqProvider = new ITransformProvider() {
-				@Override
-				public ITransform getTransform(Buffer buffer, CountDownLatch latch) {
-					return new DummyConstantQTransform(buffer, result.scaleInfo, latch, cqConstants);
-				}
-			};
-//			ITransformProvider fftProvider = new ITransformProvider() {
-//				@Override
-//				public ITransform getTransform(Buffer buffer, CountDownLatch latch) {
-//					return new FFTTransformWrapper(buffer, latch, cqConstants);
-//				}
-//			};
-			PooledTransformer transformer = new PooledTransformer(
-					reader, s.threadPoolSize, result.beatTimes.length, cqProvider);
+			final double[] windowBeginnings = shiftBeatsLeft(result.beatTimes, getWindowsShift(result));
+			final WaveReader reader = new WaveReader(wavFile, windowBeginnings, windowSize);
+			final PooledTransformer transformer = new PooledTransformer(
+					reader, s.threadPoolSize, result.beatTimes.length, provider);
 			result.spectrum = transformer.run();
 		} catch (WavFileException e) {
 			LOG.error("Error when reading wave file " + waveFileName, e);
@@ -127,7 +164,7 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 	private static double getWindowsShift(SpectrumData data) {
 		CQConstants cqConstants = CQConstants.getInstance(data.samplingRate,
 				data.scaleInfo, data.f0, data.startNoteOffsetInSemitonesFromF0);
-		int windowSize = cqConstants.getWindowLengthForComponent(0) + 1; // the longest window
+		int windowSize = cqConstants.getLongestWindow() + 1; // the longest window
 		double shift = windowSize / (data.samplingRate * 2.0);
 		return shift;
 	}
