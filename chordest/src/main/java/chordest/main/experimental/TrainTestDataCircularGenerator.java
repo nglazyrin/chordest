@@ -37,8 +37,8 @@ public class TrainTestDataCircularGenerator {
 	private static final Logger LOG = LoggerFactory.getLogger(TrainDataGenerator.class);
 	private static final String PREFIX = PathConstants.RESOURCES_DIR + "filelists" + PathConstants.SEP;
 	
-	private static final String TRAIN_FILE_LIST = PREFIX + "bqz_bin1train.txt";
-	public static final String TEST_FILE_LIST = PREFIX + "bqz_bin.txt";
+	private static final String TRAIN_FILE_LIST = PREFIX + "bqz_bin0train.txt";
+	public static final String TEST_FILE_LIST = PREFIX + "bqz_bin0test.txt";
 
 	private static final boolean EXTRA_OCTAVE = true;
 	private static final boolean SEQUENTIAL = false;
@@ -47,8 +47,9 @@ public class TrainTestDataCircularGenerator {
 	private static final String OUTPUT_FOLDER = PathConstants.CSV_DIR + "test" + PathConstants.SEP;
 	private static final String DELIMITER = ",";
 	private static final String ENCODING = "utf-8";
-	private static final int WINDOW = 19;
-	private static final int INPUTS = 48;
+	private static final int WINDOW = 15;
+	private static final int ETA = 1000;
+	private static final int INPUTS = 60;
 
 	/**
 	 * Minimal remaining distance from the estimated beat position to the right
@@ -253,7 +254,7 @@ public class TrainTestDataCircularGenerator {
 	private static double[][] prepareSpectrum(final SpectrumData sd) {
 		double[][] result = sd.spectrum;
 		result = DataUtil.smoothHorizontallyMedianAndShrink(result, WINDOW, sd.framesPerBeat);
-		result = DataUtil.toLogSpectrum(result);
+//		result = DataUtil.toLogSpectrum(result, ETA); // TODO
 		result = DataUtil.reduce(result, sd.scaleInfo.octaves);
 		DataUtil.scaleEachTo01(result);
 		return result;

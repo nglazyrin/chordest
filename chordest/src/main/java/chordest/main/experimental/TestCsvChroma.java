@@ -49,7 +49,7 @@ public class TestCsvChroma extends AbstractTestRecognizeFromCsv {
 			for (int j = 0; j < t.length; j++) {
 				max = Math.max(Math.abs(t[j]), max);
 			}
-			if (max < 1.5) { // TODO: was 4.5
+			if (max < 0.1) { // TODO: was 4.5 or 1.5
 				noChordness[i] = 0;
 			} else {
 				noChordness[i] = 1;
@@ -67,9 +67,9 @@ public class TestCsvChroma extends AbstractTestRecognizeFromCsv {
 		
 		DataUtil.scaleEachTo01(chroma);
 		
-		double[][] selfSim = DataUtil.getSelfSimilarity(chroma);
-		selfSim = DataUtil.removeDissimilar(selfSim, c.process.selfSimilarityTheta);
-		chroma = DataUtil.smoothWithSelfSimilarity(chroma, selfSim);
+//		double[][] selfSim = DataUtil.getSelfSimilarity(chroma); // TODO
+//		selfSim = DataUtil.removeDissimilar(selfSim, c.process.selfSimilarityTheta);
+//		chroma = DataUtil.smoothWithSelfSimilarity(chroma, selfSim);
 		
 		Note startNote = Note.byNumber(c.spectrum.offsetFromF0InSemitones);
 		ITemplateProducer producer = new TemplateProducer(startNote);

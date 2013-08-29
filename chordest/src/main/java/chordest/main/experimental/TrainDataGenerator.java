@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import chordest.configuration.Configuration;
 import chordest.io.lab.LabFileReader;
 import chordest.io.spectrum.SpectrumFileReader;
 import chordest.model.Chord;
@@ -73,7 +74,7 @@ public class TrainDataGenerator {
 	public static double[][] prepareSpectrum(final SpectrumData sd) {
 		double[][] result = sd.spectrum;
 		result = DataUtil.smoothHorizontallyMedianAndShrink(result, TrainDataGenerator.WINDOW, sd.framesPerBeat);
-		result = DataUtil.toLogSpectrum(result);
+		result = DataUtil.toLogSpectrum(result, new Configuration().process.crpLogEta);
 //		result = DataUtil.reduce(result, sd.scaleInfo.octaves);
 		DataUtil.scaleEachTo01(result);
 		return result;
