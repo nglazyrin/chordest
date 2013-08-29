@@ -71,7 +71,9 @@ public class WaveReader implements ITaskProvider {
 			
 			// create and fill temporary buffer
 			double[][] current = createArray(channels, currentSize);
-			wavFile.readFrames(current, 0, currentSize);
+			if (offsets[i] >= 0) {
+				wavFile.readFrames(current, 0, currentSize);
+			}
 			double[] data = current[0];
 			for (int j = 1; j < channels; j++) {
 				data = DataUtil.add(data, current[j]);
