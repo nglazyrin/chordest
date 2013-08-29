@@ -156,7 +156,8 @@ public class ChordParserTest {
 	public void testMaj6WithBassNoteOn5th() {
 		try {
 			Chord c1 = ChordParser.parseString("G:maj6/5");
-			Chord c2 = new Chord(Note.G, Chord.MAJ6);
+//			Chord c2 = new Chord(Note.G, Chord.MAJ6);
+			Chord c2 = new Chord(Note.E, Chord.MIN7);
 			Assert.assertEquals(c2, c1);
 			Assert.assertEquals(c2.getRoot(), c1.getRoot());
 			Assert.assertEquals(c2.getShortHand(), c1.getShortHand());
