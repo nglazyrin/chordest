@@ -36,8 +36,13 @@ public class Beat2FileReader {
 				String s = scanner.nextLine();
 				String[] timeBar = s.split(": ");
 				time = Double.parseDouble(timeBar[0]);
-				bar = Integer.parseInt(timeBar[1]);
 				timestampsTemp.add(time);
+				bar = 0;
+				if (timeBar.length > 1) {
+					try {
+						bar = Integer.parseInt(timeBar[1]);
+					} catch (NumberFormatException ignore) { }
+				}
 				barsTemp.add(bar);
 			}
 			timestamps = new double[timestampsTemp.size()];
