@@ -1,5 +1,7 @@
 package chordest.chord;
 
+import java.util.Arrays;
+
 import org.apache.commons.lang3.ArrayUtils;
 
 import chordest.chord.recognition.IChordRecognition;
@@ -36,20 +38,31 @@ public class ChordExtractor {
 	public ChordExtractor(ProcessProperties p, ISpectrumDataProvider spectrumProvider) {
 		spectrumData = spectrumProvider.getSpectrumData();
 		getFirstOctaves(spectrumData, 4);
-		originalBeatTimes = DataUtil.toAllBeatTimes(spectrumData.beatTimes, spectrumData.framesPerBeat);
+		double[] tempBeats = DataUtil.toAllBeatTimes(spectrumData.beatTimes, spectrumData.framesPerBeat);
 		
-		chords = doChordExtraction(p, spectrumData.spectrum);
+		Chord[] tempChords = doChordExtraction(p, spectrumData.spectrum);
+		if (tempBeats[tempBeats.length - 1] < spectrumData.totalSeconds) {
+			tempBeats = Arrays.copyOf(tempBeats, tempBeats.length + 1);
+			tempBeats[tempBeats.length - 1] = spectrumData.totalSeconds;
+			tempChords = Arrays.copyOf(tempChords, tempChords.length + 1);
+			tempChords[tempChords.length - 1] = Chord.empty();
+		}
+		originalBeatTimes = tempBeats;
+		chords = tempChords;
 	}
 
 	/**
-	 * Preservs first <code>octaves</code> in SpectrumData and removes others.
+	 * Preserves first <code>octaves</code> in SpectrumData and removes others.
 	 * ScaleInfo is also corrected. No changes are saved to disk.
 	 * @param sd
 	 * @param octaves
 	 */
 	private void getFirstOctaves(SpectrumData sd, int octaves) {
 		if (octaves > sd.scaleInfo.octaves) {
-			throw new IllegalArgumentException("Too many octaves to get");
+			throw new IllegalArgumentException(String.format(
+					"Spectrum contains %s octaves, but %s are required", sd.scaleInfo.octaves, octaves));
+		} else if (octaves == sd.scaleInfo.octaves) {
+			return;
 		}
 		sd.scaleInfo = new ScaleInfo(octaves, sd.scaleInfo.notesInOctave);
 		int newComponents = sd.scaleInfo.getTotalComponentsCount();
@@ -93,7 +106,7 @@ public class ChordExtractor {
 		
 		double[] noChordness = DataUtil.getNochordness(sp, octaves);
 		for (int i = 0; i < noChordness.length; i++) {
-			if (noChordness[i] < 0.0014) { // 0.00125 for 5 octaves
+			if (noChordness[i] < 0.0011) { // TODO was 0.0011
 				temp[i] = Chord.empty();
 			}
 		}
