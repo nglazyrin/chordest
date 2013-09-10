@@ -1,1 +1,1 @@
-java -jar chordest.jar %*
+C:\Java\jdk1.7.0_05\bin\java.exe -jar chordest.jar %*
