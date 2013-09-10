@@ -28,12 +28,6 @@ public abstract class AbstractChordRecognition implements IChordRecognition {
 
 	@Override
 	public Chord[] recognize(final double[][] cqtSpectrum, final ScaleInfo scaleInfo) {
-		if (cqtSpectrum == null) {
-			throw new NullPointerException("spectrum is null");
-		}
-		if (scaleInfo == null) {
-			throw new NullPointerException("scaleInfo is null");
-		}
 		LOG.debug("Performing recognition...");
 		Chord[] result = new Chord[cqtSpectrum.length];
 		for (int i = 0; i < cqtSpectrum.length; i++) {
@@ -50,12 +44,6 @@ public abstract class AbstractChordRecognition implements IChordRecognition {
 	 * @return The same bin compressed to 12-dimensions, 1 per pitch class
 	 */
 	protected double[] to12DimensionalFeatureVector(double[] cqtSpectrumBin, ScaleInfo scaleInfo) {
-		if (cqtSpectrumBin == null) {
-			throw new NullPointerException("vector is null");
-		}
-		if (scaleInfo == null) {
-			throw new NullPointerException("scaleInfo is null");
-		}
 		final int notesInOctave = scaleInfo.notesInOctave;
 		final double[] pcp = DataUtil.toSingleOctave(cqtSpectrumBin, notesInOctave);
 		return DataUtil.reduceTo12Notes(pcp);
