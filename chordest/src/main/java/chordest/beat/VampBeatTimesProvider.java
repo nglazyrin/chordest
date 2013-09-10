@@ -21,15 +21,15 @@ import chordest.util.TracklistCreator;
  * @author Nikolay
  *
  */
-public class QmulVampBeatTimesProvider implements IBeatTimesProvider {
+public class VampBeatTimesProvider implements IBeatTimesProvider {
 
-	private static Logger LOG = LoggerFactory.getLogger(QmulVampBeatTimesProvider.class);
+	private static Logger LOG = LoggerFactory.getLogger(VampBeatTimesProvider.class);
 
 	private static final String TARGET_DIR = PathConstants.BEAT_DIR;
 
-//	private static final String PATH_TO_EXE = "work\\vamp\\vamp-simple-host.exe";
+	private static final String QMBARBEAT_PLUGIN_NAME = "qm-vamp-plugins:qm-barbeattracker:beats";
 
-	private static final String PLUGIN_NAME = "qm-vamp-plugins:qm-barbeattracker:beats";
+	private static final String MVAMPIBT_PLUGIN_NAME = "mvamp-ibt:marsyas_ibt";
 
 	/**
 	 * Quick and dirty way to do beat extraction in batch mode.
@@ -39,7 +39,13 @@ public class QmulVampBeatTimesProvider implements IBeatTimesProvider {
 		List<String> tracklist = TracklistCreator.readTrackList("work\\all_wav.txt");
 		int filesProcessed = 0;
 		for (String wavFilePath : tracklist) {
-			new QmulVampBeatTimesProvider(wavFilePath, new Configuration().pre);
+			try {
+				String track = StringUtils.substringAfterLast(wavFilePath, File.separator);
+				String beatFilePath = TARGET_DIR + track + PathConstants.EXT_BEAT;
+				new VampBeatTimesProvider(wavFilePath, beatFilePath, new Configuration().pre);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 	        if (++filesProcessed % 10 == 0) {
 	        	LOG.info(filesProcessed + " files were processed");
 	        }
@@ -49,21 +55,13 @@ public class QmulVampBeatTimesProvider implements IBeatTimesProvider {
 
 	private double[] beats = new double[0];
 
-	public QmulVampBeatTimesProvider(String wavFilePath, PreProcessProperties path) {
+	public VampBeatTimesProvider(String wavFilePath, String beatFilePath, PreProcessProperties pre) throws IOException, InterruptedException {
 		LOG.info("Performing beat detection for " + wavFilePath + " ...");
-		String track = StringUtils.substringAfterLast(wavFilePath, File.separator);
-		String beatFilePath = TARGET_DIR + track + PathConstants.EXT_BEAT;
-		String[] cmd = { path.vampHostPath, PLUGIN_NAME, wavFilePath, "-o", beatFilePath };
-		try {
-			Process p = Runtime.getRuntime().exec(cmd);
-	        p.waitFor();
-	        LOG.error(IOUtils.toString(p.getErrorStream()));
-	        beats = new FileBeatBarTimesProvider(beatFilePath).getBeatTimes();
-		} catch (IOException e) {
-			LOG.error("Error when reading wave file to detect beats", e);
-		} catch (InterruptedException e) {
-			LOG.error("Interrupted when reading wave file to detect beats", e);
-		}
+		String[] cmd = { pre.vampHostPath, QMBARBEAT_PLUGIN_NAME, wavFilePath, "-o", beatFilePath };
+		Process p = Runtime.getRuntime().exec(cmd);
+        p.waitFor();
+        LOG.error(IOUtils.toString(p.getErrorStream()));
+        beats = new FileBeatBarTimesProvider(beatFilePath).getBeatTimes();
 	}
 
 	@Override
