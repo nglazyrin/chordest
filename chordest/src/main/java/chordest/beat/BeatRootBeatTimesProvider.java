@@ -69,7 +69,7 @@ public class BeatRootBeatTimesProvider implements IBeatTimesProvider {
 	}
 
 	public static double[] generateDefaultBeats(String wavFilePath) {
-		LOG.warn("Error occured during BeatRoot processing, generating a dummy sequence of beats");
+		LOG.warn("Beat detection error, generating a dummy sequence of beats");
 		WavFile wavFile = null;
 		try {
 			wavFile = WavFile.openWavFile(new File(wavFilePath));
