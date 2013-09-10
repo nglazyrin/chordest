@@ -45,10 +45,10 @@ public class BatchChordEst {
 			ChordExtractor ce;
 			if (new File(beatFileName).exists()) {
 				ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(
-						wavFileName, c, new FileBeatBarTimesProvider(beatFileName)));
+						wavFileName, beatFileName, c, new FileBeatBarTimesProvider(beatFileName)));
 			} else {
 				ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(
-						wavFileName, c));
+						wavFileName, beatFileName, c));
 			}
 			
 			LabFileWriter labWriter = new LabFileWriter(ce);

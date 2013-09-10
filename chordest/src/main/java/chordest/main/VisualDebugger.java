@@ -6,6 +6,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import chordest.chord.CircleOfFifths;
 import chordest.chord.Harmony;
 import chordest.chord.recognition.IChordRecognition;
 import chordest.chord.recognition.TemplatesRecognition;
@@ -33,13 +34,13 @@ import chordest.util.Visualizer;
 public class VisualDebugger {
 
 	private static final Logger LOG = LoggerFactory.getLogger(VisualDebugger.class);
-	public static final String TRACK = "N013-M01-T13";
+	public static final String TRACK = "02 Another One Bites The Dust";
 	public static final String FILE = "spectrum8-60-6\\" + TRACK + ".wav.bin";
 
 	private static final Configuration c = new Configuration();
 
-	private static double startTime = 0;
-	private static double endTime   = 3;
+	private static double startTime = 40;
+	private static double endTime   = 44;
 	
 	private static String[] labels;
 	private static String[] labels1;
@@ -62,20 +63,29 @@ public class VisualDebugger {
 //		spectrum = DataUtil.smoothHorizontallyMedianAndShrink(spectrum, 1, sd.framesPerBeat);
 		spectrum = DataUtil.smoothHorizontallyMedianAndShrink(spectrum, c.process.medianFilterWindow, sd.framesPerBeat);
 		spectrum = DataUtil.toLogSpectrum(spectrum, c.process.crpLogEta);
-		visualizeSpectrum(sd, spectrum, "Spectrum");
+//		spectrum = DataUtil.getAWeightedSpectrum(spectrum, cqc.A); // TODO
+//		visualizeSpectrum(sd, spectrum, "Spectrum");
 		
 		spectrum = DiscreteCosineTransform.doChromaReduction(spectrum, c.process.crpFirstNonZero);
 //		visualizeSpectrum(sd, spectrum, "Reduced");
 		double[][] selfSim = DataUtil.getSelfSimilarity(spectrum);
-//		selfSim = DataUtil.removeDissimilar(selfSim, c.process.selfSimilarityTheta);
-		selfSim = DataUtil.removeDissimilar(selfSim, 0.10);
+		
+//		int size = selfSim.length;
+//		double[] selfSimLim = new double[size];
+//		int preserved = (int) (size * c.process.selfSimilarityTheta);
+//		for (int i = 0; i < size; i++) {
+//			selfSimLim[i] = DataUtil.findKthSmallest(selfSim[i], 0, size, preserved);
+//		}
+//		Visualizer.visualizeXByTimeDistribution(selfSimLim, beats);
+		
+		selfSim = DataUtil.removeDissimilar(selfSim, c.process.selfSimilarityTheta);
 //		Visualizer.visualizeSelfSimilarity(selfSim, beats);
 		spectrum = DataUtil.smoothWithSelfSimilarity(spectrum, selfSim);
 		visualizeSpectrum(sd, spectrum, "After self-sim");
 		
 		double[][] chroma = DataUtil.reduce(spectrum, sd.scaleInfo.octaves);
 		chroma = DataUtil.toSingleOctave(chroma, 12);
-		visualizeSpectrum(sd, chroma, "Chroma");
+//		visualizeSpectrum(sd, chroma, "Chroma");
 		
 		Note startNote = Note.byNumber(sd.startNoteOffsetInSemitonesFromF0);
 		ITemplateProducer producer = new TemplateProducer(startNote);
@@ -84,13 +94,13 @@ public class VisualDebugger {
 		
 		double[] noChordness = DataUtil.getNochordness(spectrum, sd.scaleInfo.octaves);
 		for (int i = 0; i < noChordness.length; i++) {
-			if (noChordness[i] < 0.0015) {
+			if (noChordness[i] < 0.0011) {
 				chords[i] = Chord.empty();
 			}
 		}
-//		Visualizer.visualizeXByTimeDistribution(noChordness, beats);
+		Visualizer.visualizeXByTimeDistribution(noChordness, beats);
 		
-//		printChords(chords, beats);
+		printChords(chords, beats);
 		chords = Harmony.smoothUsingHarmony(chroma, chords, new ScaleInfo(1, 12), producer);
 		printChords(chords, beats);
 //		printTemplate(Chord.major(Note.C));

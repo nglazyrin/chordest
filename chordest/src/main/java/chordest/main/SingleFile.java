@@ -40,6 +40,7 @@ public class SingleFile {
 		String RESULT_PATH = args[3];
 		File wavFile = new File(WAV_FILENAME);
 		String RESULT_FILENAME = RESULT_PATH + wavFile.getName() + ".txt";
+		String BEAT_FILENAME = RESULT_PATH + wavFile.getName() + ".beat.txt";
 		
 		Configuration c = new Configuration();
 		File spectrumFile = new File(SPECTRUM_FILENAME);
@@ -47,7 +48,7 @@ public class SingleFile {
 		if (spectrumFile.exists()) {
 			ce = new ChordExtractor(c.process, new FileSpectrumDataProvider(SPECTRUM_FILENAME));
 		} else {
-			ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(WAV_FILENAME, c));
+			ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(WAV_FILENAME, BEAT_FILENAME, c));
 		}
 
 		File labFile = new File(LAB_FILENAME);

@@ -20,14 +20,16 @@ import chordest.util.Visualizer;
 public class SpectrumVisualizer {
 
 //	public static final String FILE = PathConstants.WAV_DIR + "Beatles/04_-_Beatles_for_Sale/04_-_Rock_and_Roll_Music.wav";
-	public static final String FILE = PathConstants.WAV_DIR + "love_me_do.wav";
+	public static final String TRACK = "love_me_do";
+	public static final String FILE = PathConstants.WAV_DIR + TRACK + PathConstants.EXT_WAV;
+	public static final String BEAT_FILE_NAME = PathConstants.BEAT_DIR + TRACK + PathConstants.EXT_BEAT;
 
 	public static void main(String[] args) {
 		Configuration c = new Configuration();
 //		double[] array = new TemplateProducer(Note.C).getTemplateFor(Chord.major(Note.C));
 //		DataUtil.scaleTo01(array);
 //		System.out.println(Arrays.toString(array));
-		WaveFileSpectrumDataProvider p = new WaveFileSpectrumDataProvider(FILE, c);
+		WaveFileSpectrumDataProvider p = new WaveFileSpectrumDataProvider(FILE, BEAT_FILE_NAME, c);
 		SpectrumData sd = p.getSpectrumData();
 		double[][] spectrum = sd.spectrum;
 		String[] labels = NoteLabelProvider.getNoteLabels(sd.startNoteOffsetInSemitonesFromF0, sd.scaleInfo);

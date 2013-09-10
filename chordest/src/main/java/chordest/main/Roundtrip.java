@@ -27,7 +27,6 @@ import chordest.util.TracklistCreator;
  * This class is mostly used to estimate chord recognition quality during
  * development. Works with pre-calculated spectra to make it faster.
  * @author Nikolay
- *
  */
 public class Roundtrip {
 
@@ -55,7 +54,8 @@ public class Roundtrip {
 				ce = new ChordExtractor(c.process, new FileSpectrumDataProvider(binFileName));
 			} else {
 				final String wavFileName = PathConstants.WAV_DIR + track + PathConstants.EXT_WAV;
-				ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(wavFileName, c));
+				final String beatFileName = PathConstants.BEAT_DIR + track + PathConstants.EXT_BEAT;
+				ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(wavFileName, beatFileName, c));
 			}
 
 			write(new LabFileWriter(ce), PathConstants.OUTPUT_DIR + labFileName);
