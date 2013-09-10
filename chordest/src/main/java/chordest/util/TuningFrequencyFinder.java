@@ -24,6 +24,7 @@ public class TuningFrequencyFinder {
 	private static final Logger LOG = LoggerFactory.getLogger(TuningFrequencyFinder.class);
 	
 	public static final int OCTAVES = 4;
+	public static final int OFFSET = -12;
 	public static final int BINS_PER_NOTE = 20;
 	public static final int NOTES_IN_OCTAVE = 12 * BINS_PER_NOTE;
 	public static final double BASIC_FREQUENCY = 440;
@@ -40,7 +41,7 @@ public class TuningFrequencyFinder {
 			int samplingRate = (int) wavFile.getSampleRate();
 			
 			final ScaleInfo scaleInfo = new ScaleInfo(OCTAVES, NOTES_IN_OCTAVE);
-			final CQConstants cqc = CQConstants.getInstance(samplingRate, scaleInfo, CQConstants.F0_DEFAULT, -12);
+			final CQConstants cqc = CQConstants.getInstance(samplingRate, scaleInfo, CQConstants.F0_DEFAULT, OFFSET);
 			int windowSize = cqc.getLongestWindow() + 1; // the longest window
 			
 			WaveReader reader = new WaveReader(wavFile, beatTimes, windowSize);
