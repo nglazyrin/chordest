@@ -11,7 +11,7 @@ import chordest.model.Note;
  */
 public class TemplateProducer implements ITemplateProducer {
 
-	private static final int HARMONICS_COUNT = 4;
+	private static final int HARMONICS_COUNT = 3;
 	private static final double[] HARMONIC_CONTRIBUTIONS = new double[HARMONICS_COUNT];
 	private static final double CONTRIBUTION_REDUCTION = 0.6;
 
@@ -31,16 +31,8 @@ public class TemplateProducer implements ITemplateProducer {
 
 	private final Note startNote;
 
-	/** You don't want to use them now, templates with harmonics perform better */
-	private final boolean useModifiedTemplates;
-
 	public TemplateProducer(Note startNote) {
-		this(startNote, false);
-	}
-
-	public TemplateProducer(Note startNote, boolean useModifiedTemplates) {
 		this.startNote = startNote;
-		this.useModifiedTemplates = useModifiedTemplates;
 	}
 
 	@Override
@@ -48,32 +40,19 @@ public class TemplateProducer implements ITemplateProducer {
 		double[] template = new double[12];
 		Note[] notes = chord.getNotes();
 		if (chord.isMajor() || chord.isMinor()) {
-			if (useModifiedTemplates) {
-				fillHarmonicsForPitchClass(template, notes[0], 1.1);
-				fillHarmonicsForPitchClass(template, notes[1], 1.0);
-				fillHarmonicsForPitchClass(template, notes[2], 1.3);
-			} else {
-				fillHarmonicsForPitchClass(template, notes[0], 1.0);
-				fillHarmonicsForPitchClass(template, notes[1], 1.0);
-				fillHarmonicsForPitchClass(template, notes[2], 1.0);
-			}
+			fillHarmonicsForPitchClass(template, notes[0], 1.0);
+			fillHarmonicsForPitchClass(template, notes[1], 1.0);
+			fillHarmonicsForPitchClass(template, notes[2], 1.0);
 		} else if (chord.isEmpty()) {
 			// fill nothing
 		} else {
 			String shorthand = chord.getShortHand();
 			if (Chord.MAJ7.equals(shorthand) || Chord.DOM.equals(shorthand)
 					|| Chord.MIN7.equals(shorthand)) {
-				if (useModifiedTemplates) {
-					fillHarmonicsForPitchClass(template, notes[0], 1.3);
-					fillHarmonicsForPitchClass(template, notes[1], 1.0);
-					fillHarmonicsForPitchClass(template, notes[2], 1.15);
-					fillHarmonicsForPitchClass(template, notes[3], 1.0);
-				} else {
-					fillHarmonicsForPitchClass(template, notes[0], 1.0);
-					fillHarmonicsForPitchClass(template, notes[1], 1.0);
-					fillHarmonicsForPitchClass(template, notes[2], 1.0);
-					fillHarmonicsForPitchClass(template, notes[3], 1.0);
-				}
+				fillHarmonicsForPitchClass(template, notes[0], 1.0);
+				fillHarmonicsForPitchClass(template, notes[1], 1.0);
+				fillHarmonicsForPitchClass(template, notes[2], 1.0);
+				fillHarmonicsForPitchClass(template, notes[3], 1.0);
 			} else if (Chord.AUG.equals(shorthand) || Chord.DIM.equals(shorthand)
 					|| Chord.SUS2.equals(shorthand) || Chord.SUS4.equals(shorthand)) {
 				fillHarmonicsForPitchClass(template, notes[0], 1.0);
