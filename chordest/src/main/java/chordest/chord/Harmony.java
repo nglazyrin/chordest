@@ -33,8 +33,7 @@ public class Harmony {
 			result[i] = chords[i];
 		}
 		
-		final List<IntervalToCorrect> intervals = gatherIntervals(chords);
-		removeSameRootDifferentType(pcp, result, intervals, producer);
+		removeSameRootDifferentType(pcp, result, producer);
 		removeSingleBeatChords(pcp, result, producer);
 		return result;
 	}
@@ -82,7 +81,8 @@ public class Harmony {
 	}
 
 	private static void removeSameRootDifferentType(final double[][] pcp, final Chord[] result,
-			final List<IntervalToCorrect> intervals, final ITemplateProducer producer) {
+			final ITemplateProducer producer) {
+		final List<IntervalToCorrect> intervals = gatherIntervals(result);
 		for (IntervalToCorrect interval : intervals) {
 			final List<Chord> possibleChords = new ArrayList<Chord>(interval.chordTypes.size());
 			for (String shortHand : interval.chordTypes) {
