@@ -11,7 +11,7 @@ import uk.co.labbookpages.WavFile;
 import uk.co.labbookpages.WavFileException;
 import chordest.beat.BeatRootBeatTimesProvider;
 import chordest.beat.IBeatTimesProvider;
-import chordest.beat.QmulVampBeatTimesProvider;
+import chordest.beat.VampBeatTimesProvider;
 import chordest.configuration.Configuration;
 import chordest.configuration.Configuration.PreProcessProperties;
 import chordest.configuration.Configuration.SpectrumProperties;
@@ -37,17 +37,18 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 
 	private final boolean useConstantQTransform = true; // TODO
 
-	public WaveFileSpectrumDataProvider(final String waveFileName, Configuration c) {
+	public WaveFileSpectrumDataProvider(final String waveFileName, String beatFileName, Configuration c) {
 		IBeatTimesProvider provider = null;
 		try {
-//			provider = new BeatRootBeatTimesProvider(waveFileName);
+			provider = new BeatRootBeatTimesProvider(waveFileName);
 		} catch (Throwable e) {
 			provider = null;
 		}
 		if (provider == null) {
 			try {
-				provider = new QmulVampBeatTimesProvider(waveFileName, c.pre);
+				provider = new VampBeatTimesProvider(waveFileName, beatFileName, c.pre);
 			} catch (Throwable e) {
+				e.printStackTrace();
 				// last try to provide a sequence of beats
 				provider = new IBeatTimesProvider() {
 					@Override
@@ -58,21 +59,21 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 			}
 		}
 		beatTimes = provider.getBeatTimes();
-		spectrumData = readSpectrum(c.spectrum, waveFileName, beatTimes, c.pre);
+		spectrumData = readSpectrum(c.spectrum, waveFileName, beatFileName, beatTimes, c.pre);
 	}
 
-	public WaveFileSpectrumDataProvider(String waveFileName, Configuration c, IBeatTimesProvider provider) {
+	public WaveFileSpectrumDataProvider(String waveFileName, String beatFileName, Configuration c, IBeatTimesProvider provider) {
 		double[] temp = provider.getBeatTimes();
 		if (temp.length == 0) {
 			try {
-				temp = new QmulVampBeatTimesProvider(waveFileName, c.pre).getBeatTimes();
+				temp = new VampBeatTimesProvider(waveFileName, beatFileName, c.pre).getBeatTimes();
 			} catch (Throwable e) {
 				// last try to provide a sequence of beats
 				temp = BeatRootBeatTimesProvider.generateDefaultBeats(waveFileName);
 			}
 		}
 		beatTimes = temp;
-		spectrumData = readSpectrum(c.spectrum, waveFileName, beatTimes, c.pre);
+		spectrumData = readSpectrum(c.spectrum, waveFileName, beatFileName, beatTimes, c.pre);
 	}
 
 	@Override
@@ -85,7 +86,7 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 	}
 
 	private SpectrumData readSpectrum(SpectrumProperties s, String waveFileName,
-			 double[] beatTimes, PreProcessProperties p) {
+			 String beatFileName, double[] beatTimes, PreProcessProperties p) {
 		final SpectrumData result = new SpectrumData();
 		result.beatTimes = DataUtil.makeMoreFrequent(beatTimes, s.framesPerBeat);
 		result.scaleInfo = new ScaleInfo(s.octaves, s.notesPerOctave);
@@ -93,6 +94,7 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 		result.framesPerBeat = s.framesPerBeat;
 		if (useConstantQTransform && p.estimateTuningFrequency) {
 			result.f0 = TuningFrequencyFinder.getTuningFrequency(waveFileName, beatTimes, s.threadPoolSize);
+//			result.f0 = new VampTuningFrequencyFinder(waveFileName, beatFileName, p).getTuningFrequency();
 		} else {
 			result.f0 = CQConstants.F0_DEFAULT;
 		}
