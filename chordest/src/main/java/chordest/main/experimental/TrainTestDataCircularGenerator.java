@@ -42,6 +42,7 @@ public class TrainTestDataCircularGenerator {
 
 	private static final boolean EXTRA_OCTAVE = true;
 	private static final boolean SEQUENTIAL = false;
+	private static final boolean USE_LOG = false;
 
 	private static final String CSV_FILE = PathConstants.OUTPUT_DIR + "train_dA_c.csv";
 	private static final String OUTPUT_FOLDER = PathConstants.CSV_DIR + "test" + PathConstants.SEP;
@@ -49,7 +50,7 @@ public class TrainTestDataCircularGenerator {
 	private static final String ENCODING = "utf-8";
 	private static final int WINDOW = 15;
 	private static final int ETA = 1000;
-	private static final int INPUTS = 60;
+	private static final int INPUTS = 48;
 
 	/**
 	 * Minimal remaining distance from the estimated beat position to the right
@@ -254,7 +255,9 @@ public class TrainTestDataCircularGenerator {
 	private static double[][] prepareSpectrum(final SpectrumData sd) {
 		double[][] result = sd.spectrum;
 		result = DataUtil.smoothHorizontallyMedianAndShrink(result, WINDOW, sd.framesPerBeat);
-//		result = DataUtil.toLogSpectrum(result, ETA); // TODO
+		if (USE_LOG) {
+			result = DataUtil.toLogSpectrum(result, ETA);
+		}
 		result = DataUtil.reduce(result, sd.scaleInfo.octaves);
 		DataUtil.scaleEachTo01(result);
 		return result;
