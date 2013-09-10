@@ -676,17 +676,14 @@ public class DataUtil {
 			double max = 0;
 			double sum = 0;
 			double tonal = 0;
-			double atonal = 0;
 			for (int j = 0; j < col.length; j++) {
 				if (Math.abs(col[j]) > max) { max = Math.abs(col[j]); }
 				sum += Math.abs(col[j]);
 				if (j % subnotes == 0) {
 					tonal += Math.abs(col[j]);
-				} else {
-					atonal += Math.abs(col[j]);
 				}
 			}
-			result[i] = (max / sum) * (tonal / atonal);
+			result[i] = (max / sum) * (tonal / sum);
 		}
 		
 		double[] reResult = Arrays.copyOf(result, result.length);
