@@ -428,7 +428,8 @@ public class DataUtil {
 			// by summing the values of the "subnotes" nearest to each note with weights
 			double [] pcp12 = new double[12];
 			int totalNotes = pcp.length;
-			int delta = subnotesCount / 2 - 1; // TODO
+			//int delta = subnotesCount / 2 - 1; // TODO
+			int delta = subnotesCount > 2 ? 1 : 0;
 			if ((subnotesCount & 1) == 0) { // if subnotesCount is even
 				delta--; // to exclude the subnotes that are in the "middle" between 2 real notes
 			}
