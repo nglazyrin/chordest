@@ -49,10 +49,10 @@ public class TemplateProducer implements ITemplateProducer {
 			String shorthand = chord.getShortHand();
 			if (Chord.MAJ7.equals(shorthand) || Chord.DOM.equals(shorthand)
 					|| Chord.MIN7.equals(shorthand)) {
-				fillHarmonicsForPitchClass(template, notes[0], 1.0);
-				fillHarmonicsForPitchClass(template, notes[1], 1.0);
-				fillHarmonicsForPitchClass(template, notes[2], 1.0);
-				fillHarmonicsForPitchClass(template, notes[3], 1.0);
+				fillOneHarmonicForPitchClass(template, notes[0], 1.0);
+				fillOneHarmonicForPitchClass(template, notes[1], 1.0);
+				fillOneHarmonicForPitchClass(template, notes[2], 1.0);
+				fillOneHarmonicForPitchClass(template, notes[3], 1.0);
 			} else if (Chord.AUG.equals(shorthand) || Chord.DIM.equals(shorthand)
 					|| Chord.SUS2.equals(shorthand) || Chord.SUS4.equals(shorthand)) {
 				fillHarmonicsForPitchClass(template, notes[0], 1.0);
@@ -72,6 +72,13 @@ public class TemplateProducer implements ITemplateProducer {
 			template[getPitchClassForIthHarmonic(fundamentalPitchClass, i)] +=
 				HARMONIC_CONTRIBUTIONS[i] * coefficient;
 		}
+	}
+
+	private void fillOneHarmonicForPitchClass(double[] template, Note pitchClass, double coefficient) {
+		// cannot index java array with negative values, so make offset a positive value
+		int fundamentalPitchClass = (pitchClass.offsetFrom(this.startNote) + 12) % 12;
+		template[getPitchClassForIthHarmonic(fundamentalPitchClass, 0)] +=
+			HARMONIC_CONTRIBUTIONS[0] * coefficient;
 	}
 
 	private int getPitchClassForIthHarmonic(int fundamentalPitchClass, int i) {
