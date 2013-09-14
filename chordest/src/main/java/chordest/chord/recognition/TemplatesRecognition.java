@@ -23,7 +23,7 @@ import chordest.util.MapUtil;
 public class TemplatesRecognition extends AbstractChordRecognition {
 
 	public static final List<Chord> knownChords = Chord.getAllChordsWithShorthands(
-			new String[] { Chord.MAJ, Chord.MIN, Chord.N });
+			new String[] { Chord.MAJ, Chord.MIN, Chord.N }); //, Chord.MAJ7, Chord.MIN7, Chord.DOM });
 
 	public static boolean isKnown(Chord chord) {
 		return knownChords.contains(chord);
