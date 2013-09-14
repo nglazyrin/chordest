@@ -27,6 +27,9 @@ import chordest.model.Chord;
 public class ChordListsComparison {
 
 	public static final IEvaluationMetric metric = new Mirex2010();
+//	public static final IEvaluationMetric metric = new Tetrads();
+//	public static final IEvaluationMetric metric = new Triads();
+	
 	private final Chord[] expected;
 	private final double[] expectedTimestamps;
 	private final Chord[] actual;
