@@ -25,7 +25,7 @@ public class TuningFrequencyFinder {
 	
 	public static final int OCTAVES = 4;
 	public static final int OFFSET = -12;
-	public static final int BINS_PER_NOTE = 20;
+	public static final int BINS_PER_NOTE = 10;
 	public static final int NOTES_IN_OCTAVE = 12 * BINS_PER_NOTE;
 	public static final double BASIC_FREQUENCY = 440;
 
