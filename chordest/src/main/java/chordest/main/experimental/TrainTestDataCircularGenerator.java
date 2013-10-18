@@ -37,20 +37,26 @@ public class TrainTestDataCircularGenerator {
 	private static final Logger LOG = LoggerFactory.getLogger(TrainDataGenerator.class);
 	private static final String PREFIX = PathConstants.RESOURCES_DIR + "filelists" + PathConstants.SEP;
 	
-	private static final String TRAIN_FILE_LIST = PREFIX + "bqz_bin0train.txt";
-	public static final String TEST_FILE_LIST = PREFIX + "bqz_bin0test.txt";
+	public static final int index = 1;
+	
+	private static final String TRAIN_FILE_LIST = PREFIX + "bqrz_bin" + index + "train.txt";
+	public static final String TEST_FILE_LIST = PREFIX + "bqrz_bin" + index + "test.txt";
 
 	private static final boolean EXTRA_OCTAVE = true;
-	private static final boolean SEQUENTIAL = false;
-	private static final boolean USE_LOG = false;
+	private static final boolean SEQUENTIAL = true;
+	private static final boolean USE_LOG = true; 
+	private static final int WINDOW = 15;
+	private static final int ETA = 50000;
+	private static final int INPUTS = 48;
+	private static final double THETA = 0.08;
 
-	private static final String CSV_FILE = PathConstants.OUTPUT_DIR + "train_dA_c.csv";
-	private static final String OUTPUT_FOLDER = PathConstants.CSV_DIR + "test" + PathConstants.SEP;
+	private static final String ROOT_FOLDER = "E:\\personal\\dissertation\\data\\";
+	private static final String NUM = INPUTS == 60 ? "60" : "";
+	private static final String SUFFIX = USE_LOG ? "" : ".nolog";
+	private static final String CSV_FILE = ROOT_FOLDER + "train\\train" + NUM + index + SUFFIX + ".csv";
+	private static final String OUTPUT_FOLDER = ROOT_FOLDER + "test" + NUM + index + SUFFIX + "\\";
 	private static final String DELIMITER = ",";
 	private static final String ENCODING = "utf-8";
-	private static final int WINDOW = 15;
-	private static final int ETA = 1000;
-	private static final int INPUTS = 48;
 
 	/**
 	 * Minimal remaining distance from the estimated beat position to the right
@@ -100,7 +106,7 @@ public class TrainTestDataCircularGenerator {
 			deleteIfExists(csvFileName);
 			SpectrumData sd = SpectrumFileReader.read(binFileName);
 			double[][] result = prepareSpectrum(sd);
-			processTestFile(result, getOutputVectorLength(), csvFileName);
+			processTestFile(result, getOutputVectorLength(true), csvFileName);
 			if (++filesProcessed % 10 == 0) {
 				LOG.info(filesProcessed + " files processed");
 			}
@@ -132,8 +138,12 @@ public class TrainTestDataCircularGenerator {
 		}
 	}
 
-	private static int getOutputVectorLength() {
-		return INPUTS + (EXTRA_OCTAVE ? 12 : 0);
+	private static int getOutputVectorLength(boolean forTest) {
+		if (forTest) {
+			return INPUTS + (EXTRA_OCTAVE ? 12 : 0);
+		} else {
+			return INPUTS;
+		}
 	}
 
 	private static void processTrainFile(double[][] data, Chord[] chords, int notesInOctave, String file) {
@@ -145,7 +155,7 @@ public class TrainTestDataCircularGenerator {
 			for (int offset = 0; offset < 12; offset++) {
 				try (OutputStream chordOut = FileUtils.openOutputStream(new File(file), true)) {
 					for (int i = 0; i < data.length; i++) {
-						int desiredLength = getOutputVectorLength();
+						int desiredLength = getOutputVectorLength(false);
 						if (data[i].length < desiredLength) {
 							throw new IOException("Spectrum bin length < " + desiredLength +  ": " + data[i].length);
 						} else if (data[i].length > desiredLength) {
@@ -184,7 +194,7 @@ public class TrainTestDataCircularGenerator {
 				}
 				try (OutputStream chordOut = FileUtils.openOutputStream(new File(file), true)) {
 					for (int offset = 0; offset < 12; offset++) {
-						int desiredLength = getOutputVectorLength();
+						int desiredLength = getOutputVectorLength(false);
 						if (data[i].length < desiredLength) {
 							throw new IOException("Spectrum bin length < " + desiredLength +  ": " + data[i].length);
 						} else if (data[i].length > desiredLength) {
@@ -260,6 +270,11 @@ public class TrainTestDataCircularGenerator {
 		}
 		result = DataUtil.reduce(result, sd.scaleInfo.octaves);
 		DataUtil.scaleEachTo01(result);
+		
+//		double[][] selfSim = DataUtil.getSelfSimilarity(result);
+//		selfSim = DataUtil.removeDissimilar(selfSim, THETA);
+//		result = DataUtil.smoothWithSelfSimilarity(result, selfSim);
+		
 		return result;
 	}
 
@@ -267,9 +282,10 @@ public class TrainTestDataCircularGenerator {
 		String track = StringUtils.substringAfterLast(binFileName, PathConstants.SEP);
 		String labFileName = PathConstants.LAB_DIR + track.replace(PathConstants.EXT_WAV + PathConstants.EXT_BIN, PathConstants.EXT_LAB);
 		LabFileReader labReader = new LabFileReader(new File(labFileName));
-		Chord[] result = new Chord[sd.beatTimes.length - 1];
+		double[] beatTimes = DataUtil.toAllBeatTimes(sd.beatTimes, sd.framesPerBeat);
+		Chord[] result = new Chord[beatTimes.length - 1];
 		for (int i = 0; i < result.length; i++) {
-			result[i] = labReader.getChord(sd.beatTimes[i], delta);
+			result[i] = labReader.getChord(beatTimes[i], delta);
 		}
 		return result;
 	}
