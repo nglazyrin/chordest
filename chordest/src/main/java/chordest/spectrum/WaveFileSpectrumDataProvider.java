@@ -23,6 +23,7 @@ import chordest.transform.PooledTransformer;
 import chordest.transform.PooledTransformer.ITransformProvider;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
+import chordest.util.QUtil;
 import chordest.util.TuningFrequencyFinder;
 import chordest.wave.Buffer;
 import chordest.wave.WaveReader;
@@ -30,6 +31,8 @@ import chordest.wave.WaveReader;
 public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 
 	private static final Logger LOG = LoggerFactory.getLogger(WaveFileSpectrumDataProvider.class);
+
+	private final static double ATTACK_TIME = 0.1;
 
 	private final double[] beatTimes;
 
@@ -92,41 +95,56 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 		result.scaleInfo = new ScaleInfo(s.octaves, s.notesPerOctave);
 		result.startNoteOffsetInSemitonesFromF0 = s.offsetFromF0InSemitones;
 		result.framesPerBeat = s.framesPerBeat;
-		if (useConstantQTransform && p.estimateTuningFrequency) {
-			result.f0 = TuningFrequencyFinder.getTuningFrequency(waveFileName, beatTimes, s.threadPoolSize);
-//			result.f0 = new VampTuningFrequencyFinder(waveFileName, beatFileName, p).getTuningFrequency();
-		} else {
-			result.f0 = CQConstants.F0_DEFAULT;
-		}
+		
 		WavFile wavFile = null;
 		try {
 			wavFile = WavFile.openWavFile(new File(waveFileName));
 			result.samplingRate = (int) wavFile.getSampleRate();
 			result.totalSeconds = wavFile.getNumFrames() * 1.0 / result.samplingRate;
-			
-			final CQConstants cqConstants = CQConstants.getInstance(result.samplingRate,
-					result.scaleInfo, result.f0, result.startNoteOffsetInSemitonesFromF0);
-			int windowSize;
-			ITransformProvider provider;
-			if (useConstantQTransform) {
-				windowSize = cqConstants.getLongestWindow() + 1; // the longest window
-				provider = new ITransformProvider() {
-					@Override
-					public ITransform getTransform(Buffer buffer, CountDownLatch latch) {
-						return new DummyConstantQTransform(buffer, result.scaleInfo, latch, cqConstants);
-					}
-				};
-			} else {
-				windowSize = 32768;
-				provider = new ITransformProvider() {
-					@Override
-					public ITransform getTransform(Buffer buffer, CountDownLatch latch) {
-						return new FFTTransformWrapper(buffer, latch, cqConstants);
-					}
-				};
-			}
-			// need to make windows centered at the beat positions, so shift them to the left
-			final double[] windowBeginnings = shiftBeatsLeft(result.beatTimes, getWindowsShift(result));
+		} catch (Exception e) {
+			LOG.error("Error when reading wave file " + waveFileName, e);
+		} finally {
+			if (wavFile != null) { try {
+				wavFile.close();
+			} catch (IOException e) {
+				LOG.error("Error when closing file " + waveFileName, e);
+			} }
+		}
+		if (useConstantQTransform && p.estimateTuningFrequency) {
+//			double[] tuningBeatTimes = shiftBeatsLeft(beatTimes,
+//					getWindowsShiftForTuning(s.notesPerOctave, s.offsetFromF0InSemitones, result.samplingRate));
+			result.f0 = TuningFrequencyFinder.getTuningFrequency(waveFileName, beatTimes, s.threadPoolSize); // TODO
+//			result.f0 = new VampTuningFrequencyFinder(waveFileName, beatFileName, p).getTuningFrequency();
+		} else {
+			result.f0 = CQConstants.F0_DEFAULT;
+		}
+		
+		final CQConstants cqConstants = CQConstants.getInstance(result.samplingRate,
+				result.scaleInfo, result.f0, result.startNoteOffsetInSemitonesFromF0);
+		int windowSize;
+		ITransformProvider provider;
+		if (useConstantQTransform) {
+			windowSize = cqConstants.getLongestWindow() + 1; // the longest window
+			provider = new ITransformProvider() {
+				@Override
+				public ITransform getTransform(Buffer buffer, CountDownLatch latch) {
+					return new DummyConstantQTransform(buffer, result.scaleInfo, latch, cqConstants);
+				}
+			};
+		} else {
+			windowSize = 32768;
+			provider = new ITransformProvider() {
+				@Override
+				public ITransform getTransform(Buffer buffer, CountDownLatch latch) {
+					return new FFTTransformWrapper(buffer, latch, cqConstants);
+				}
+			};
+		}
+		
+		// need to make windows centered at the beat positions, so shift them to the left
+		final double[] windowBeginnings = shiftBeatsLeft(result.beatTimes, getWindowsShift(result));
+		try {
+			wavFile = WavFile.openWavFile(new File(waveFileName));
 			final WaveReader reader = new WaveReader(wavFile, windowBeginnings, windowSize);
 			final PooledTransformer transformer = new PooledTransformer(
 					reader, s.threadPoolSize, result.beatTimes.length, provider);
@@ -168,7 +186,15 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 				data.scaleInfo, data.f0, data.startNoteOffsetInSemitonesFromF0);
 		int windowSize = cqConstants.getLongestWindow() + 1; // the longest window
 		double shift = windowSize / (data.samplingRate * 2.0);
-		return shift;
+		return shift - ATTACK_TIME;
+	}
+
+	private static double getWindowsShiftForTuning(int notesInOctave, int offsetInSemitonesFromF0, int samplingRate) {
+		double Q = QUtil.calculateQ(notesInOctave);
+		double minFreq = 440 * Math.pow(2, offsetInSemitonesFromF0 / 12.0);
+		double window = Q * samplingRate / minFreq;
+		double shift = window / (samplingRate * 2.0);
+		return shift - ATTACK_TIME;
 	}
 
 }
