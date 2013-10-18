@@ -8,7 +8,7 @@ import chordest.util.DataUtil;
 
 public class DataUtilTest {
 
-//	@Test
+	@Test
 	public void testShrinkSmoke() {
 		double[][] array = new double[8][];
 		array[0] = new double[] { 1, 2 };
@@ -22,13 +22,13 @@ public class DataUtilTest {
 		double[][] s1 = DataUtil.shrink(array, 4);
 		Assert.assertEquals(2, s1.length);
 		double eps = 0.00001;
-		Assert.assertTrue(Math.abs(4 - s1[0][0]) < eps);
-		Assert.assertTrue(Math.abs(5 - s1[0][1]) < eps);
-		Assert.assertTrue(Math.abs(4 - s1[1][0]) < eps);
-		Assert.assertTrue(Math.abs(5 - s1[1][1]) < eps);
+		Assert.assertTrue(Math.abs(1 - s1[0][0]) < eps);
+		Assert.assertTrue(Math.abs(2 - s1[0][1]) < eps);
+		Assert.assertTrue(Math.abs(1 - s1[1][0]) < eps);
+		Assert.assertTrue(Math.abs(2 - s1[1][1]) < eps);
 	}
 
-//	@Test
+	@Test
 	public void testShrink9by4() {
 		double[][] array = new double[9][];
 		array[0] = new double[] { 1, 2 };
@@ -43,10 +43,10 @@ public class DataUtilTest {
 		double[][] s1 = DataUtil.shrink(array, 4);
 		Assert.assertEquals(3, s1.length);
 		double eps = 0.00001;
-		Assert.assertTrue(Math.abs(4 - s1[0][0]) < eps);
-		Assert.assertTrue(Math.abs(5 - s1[0][1]) < eps);
-		Assert.assertTrue(Math.abs(4 - s1[1][0]) < eps);
-		Assert.assertTrue(Math.abs(5 - s1[1][1]) < eps);
+		Assert.assertTrue(Math.abs(1 - s1[0][0]) < eps);
+		Assert.assertTrue(Math.abs(2 - s1[0][1]) < eps);
+		Assert.assertTrue(Math.abs(1 - s1[1][0]) < eps);
+		Assert.assertTrue(Math.abs(2 - s1[1][1]) < eps);
 		Assert.assertTrue(Math.abs(1 - s1[2][0]) < eps);
 		Assert.assertTrue(Math.abs(2 - s1[2][1]) < eps);
 	}
