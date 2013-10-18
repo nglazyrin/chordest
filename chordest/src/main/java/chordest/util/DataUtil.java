@@ -369,10 +369,12 @@ public class DataUtil {
 			// by summing the values of the "subnotes" nearest to each note with weights
 			double [] result = new double[resultComponents];
 			int totalNotes = data.length;
-			int delta = subnotes / 2 - 1; // TODO
-			if ((subnotes & 1) == 0) { // if subnotesCount is even
-				delta--; // to exclude the subnotes that are in the "middle" between 2 real notes
-			}
+//			int delta = subnotes / 2 - 1; // TODO
+//			if ((subnotes & 1) == 0) { // if subnotesCount is even
+//				delta--; // to exclude the subnotes that are in the "middle" between 2 real notes
+//			}
+			//int delta = subnotes > 2 ? 1 : 0;
+			int delta = 0; //TODO
 			delta = Math.max(delta, 0);
 			for (int i = 0; i < resultComponents; i++) {
 				double temp = 0;
