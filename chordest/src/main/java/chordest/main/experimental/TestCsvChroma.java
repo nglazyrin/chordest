@@ -1,10 +1,6 @@
 package chordest.main.experimental;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
 
 import chordest.chord.Harmony;
 import chordest.chord.recognition.TemplatesRecognition;
@@ -12,19 +8,14 @@ import chordest.chord.templates.ITemplateProducer;
 import chordest.chord.templates.TemplateProducer;
 import chordest.configuration.Configuration;
 import chordest.io.csv.CsvSpectrumFileReader;
-import chordest.io.spectrum.SpectrumFileReader;
-import chordest.main.VisualDebugger;
 import chordest.model.Chord;
 import chordest.model.Note;
-import chordest.spectrum.SpectrumData;
-import chordest.transform.DiscreteCosineTransform;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
-import chordest.util.PathConstants;
 
 public class TestCsvChroma extends AbstractTestRecognizeFromCsv {
 
-	private static String CSV_DIRECTORY = PathConstants.CSV_DIR + "encoded" + PathConstants.SEP;
+	private static String CSV_DIRECTORY = "E:\\personal\\dissertation\\rsda.48-96-48\\encoded" + TrainTestDataCircularGenerator.index + "\\";
 
 	Configuration c = new Configuration();
 
@@ -67,9 +58,9 @@ public class TestCsvChroma extends AbstractTestRecognizeFromCsv {
 		
 		DataUtil.scaleEachTo01(chroma);
 		
-//		double[][] selfSim = DataUtil.getSelfSimilarity(chroma); // TODO
-//		selfSim = DataUtil.removeDissimilar(selfSim, c.process.selfSimilarityTheta);
-//		chroma = DataUtil.smoothWithSelfSimilarity(chroma, selfSim);
+		double[][] selfSim = DataUtil.getSelfSimilarity(chroma); // TODO
+		selfSim = DataUtil.removeDissimilar(selfSim, c.process.selfSimilarityTheta);
+		chroma = DataUtil.smoothWithSelfSimilarity(chroma, selfSim);
 		
 		Note startNote = Note.byNumber(c.spectrum.offsetFromF0InSemitones);
 		ITemplateProducer producer = new TemplateProducer(startNote);
