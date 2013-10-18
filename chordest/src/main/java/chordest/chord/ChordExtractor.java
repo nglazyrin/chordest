@@ -72,8 +72,8 @@ public class ChordExtractor {
 	}
 
 	private Chord[] doChordExtraction(final ProcessProperties p, final double[][] spectrum) {
-//		double[][] result = DataUtil.smoothHorizontallyMedian(spectrum, p.medianFilterWindow);
-//		result = DataUtil.shrink(result, spectrumData.framesPerBeat);
+//		double[][] result = DataUtil.shrink(spectrum, 4); // TODO
+//		result = DataUtil.smoothHorizontallyMedianAndShrink(result, p.medianFilterWindow, 2);
 		double[][] result = DataUtil.smoothHorizontallyMedianAndShrink(spectrum,
 				p.medianFilterWindow, spectrumData.framesPerBeat);
 		result = DataUtil.toLogSpectrum(result, p.crpLogEta);
@@ -87,6 +87,7 @@ public class ChordExtractor {
 		double[][] result = DiscreteCosineTransform.doChromaReduction(spectrum, crpNZ);
 //		double[][] result = spectrum;
 //		result = DataUtil.reduce(spectrum, 4);
+		
 		double[][] selfSim = DataUtil.getSelfSimilarity(result);
 		selfSim = DataUtil.removeDissimilar(selfSim, theta);
 		result = DataUtil.smoothWithSelfSimilarity(result, selfSim);
@@ -106,7 +107,7 @@ public class ChordExtractor {
 		
 		double[] noChordness = DataUtil.getNochordness(sp, octaves);
 		for (int i = 0; i < noChordness.length; i++) {
-			if (noChordness[i] < 0.0011) { // TODO was 0.0011
+			if (noChordness[i] < 0.0011) {
 				temp[i] = Chord.empty();
 			}
 		}
