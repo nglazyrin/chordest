@@ -32,13 +32,11 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 
 	private static final Logger LOG = LoggerFactory.getLogger(WaveFileSpectrumDataProvider.class);
 
-	private final static double ATTACK_TIME = 0.1;
-
 	private final double[] beatTimes;
 
 	private final SpectrumData spectrumData;
 
-	private final boolean useConstantQTransform = true; // TODO
+	private final boolean useConstantQTransform = true;
 
 	public WaveFileSpectrumDataProvider(final String waveFileName, String beatFileName, Configuration c) {
 		IBeatTimesProvider provider = null;
@@ -113,7 +111,7 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 		if (useConstantQTransform && p.estimateTuningFrequency) {
 //			double[] tuningBeatTimes = shiftBeatsLeft(beatTimes,
 //					getWindowsShiftForTuning(s.notesPerOctave, s.offsetFromF0InSemitones, result.samplingRate));
-			result.f0 = TuningFrequencyFinder.getTuningFrequency(waveFileName, beatTimes, s.threadPoolSize); // TODO
+			result.f0 = TuningFrequencyFinder.getTuningFrequency(waveFileName, beatTimes, s.threadPoolSize);
 //			result.f0 = new VampTuningFrequencyFinder(waveFileName, beatFileName, p).getTuningFrequency();
 		} else {
 			result.f0 = CQConstants.F0_DEFAULT;
@@ -142,7 +140,7 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 		}
 		
 		// need to make windows centered at the beat positions, so shift them to the left
-		final double[] windowBeginnings = shiftBeatsLeft(result.beatTimes, getWindowsShift(result));
+		final double[] windowBeginnings = shiftBeatsLeft(result.beatTimes, getWindowsShift(result, s.beatTimesDelay));
 		try {
 			wavFile = WavFile.openWavFile(new File(waveFileName));
 			final WaveReader reader = new WaveReader(wavFile, windowBeginnings, windowSize);
@@ -181,20 +179,21 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 		return windowBeginnings;
 	}
 
-	private static double getWindowsShift(SpectrumData data) {
+	private static double getWindowsShift(SpectrumData data, double beatTimesDelay) {
 		CQConstants cqConstants = CQConstants.getInstance(data.samplingRate,
 				data.scaleInfo, data.f0, data.startNoteOffsetInSemitonesFromF0);
 		int windowSize = cqConstants.getLongestWindow() + 1; // the longest window
 		double shift = windowSize / (data.samplingRate * 2.0);
-		return shift - ATTACK_TIME;
+		return shift - beatTimesDelay;
 	}
 
-	private static double getWindowsShiftForTuning(int notesInOctave, int offsetInSemitonesFromF0, int samplingRate) {
+	private static double getWindowsShiftForTuning(int notesInOctave, int offsetInSemitonesFromF0,
+			int samplingRate, double beatTimesDelay) {
 		double Q = QUtil.calculateQ(notesInOctave);
 		double minFreq = 440 * Math.pow(2, offsetInSemitonesFromF0 / 12.0);
 		double window = Q * samplingRate / minFreq;
 		double shift = window / (samplingRate * 2.0);
-		return shift - ATTACK_TIME;
+		return shift - beatTimesDelay;
 	}
 
 }

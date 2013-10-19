@@ -24,6 +24,7 @@ public class Configuration {
 	private static final String SPECTRUM_OFFSET_FROM_F0_IN_SEMITONES_KEY = "spectrum.offsetFromF0InSemitones";
 	private static final String SPECTRUM_FRAMES_PER_BEAT_KEY = "spectrum.framesPerBeat";
 	private static final String SPECTRUM_THREAD_POOL_SIZE_KEY = "spectrum.threadPoolSize";
+	private static final String SPECTRUM_BEAT_TIMES_DELAY_IN_MS = "spectrum.beatTimesDelayInMs";
 	
 	private static final String PROCESS_MEDIAN_FILTER_WINDOW_KEY = "process.medianFilterWindow";
 	private static final String PROCESS_SELF_SIMILARITY_THETA_KEY = "process.selfSimilarityTheta";
@@ -64,17 +65,18 @@ public class Configuration {
 			} catch (IOException ignore) { }
         }
         
-        int octaves = Integer.parseInt(prop.getProperty(SPECTRUM_OCTAVES_KEY));
-        int notesPerOctave = Integer.parseInt(prop.getProperty(SPECTRUM_NOTES_PER_OCTAVE_KEY));
-        int offsetFromF0 = Integer.parseInt(prop.getProperty(SPECTRUM_OFFSET_FROM_F0_IN_SEMITONES_KEY));
-        int framesPerBeat = Integer.parseInt(prop.getProperty(SPECTRUM_FRAMES_PER_BEAT_KEY));
-        int threadPoolSize = Integer.parseInt(prop.getProperty(SPECTRUM_THREAD_POOL_SIZE_KEY));
-        this.spectrum = new SpectrumProperties(octaves, notesPerOctave, offsetFromF0, framesPerBeat, threadPoolSize);
+        int octaves = getIntValue(prop.getProperty(SPECTRUM_OCTAVES_KEY));
+        int notesPerOctave = getIntValue(prop.getProperty(SPECTRUM_NOTES_PER_OCTAVE_KEY));
+        int offsetFromF0 = getIntValue(prop.getProperty(SPECTRUM_OFFSET_FROM_F0_IN_SEMITONES_KEY));
+        int framesPerBeat = getIntValue(prop.getProperty(SPECTRUM_FRAMES_PER_BEAT_KEY));
+        int threadPoolSize = getIntValue(prop.getProperty(SPECTRUM_THREAD_POOL_SIZE_KEY));
+        double beatTimesDelay = getDoubleValue(prop.getProperty(SPECTRUM_BEAT_TIMES_DELAY_IN_MS));
+        this.spectrum = new SpectrumProperties(octaves, notesPerOctave, offsetFromF0, framesPerBeat, threadPoolSize, beatTimesDelay);
 
-        int window = Integer.parseInt(prop.getProperty(PROCESS_MEDIAN_FILTER_WINDOW_KEY));
-        double theta = Double.parseDouble(prop.getProperty(PROCESS_SELF_SIMILARITY_THETA_KEY));
-        int logEta = Integer.parseInt(prop.getProperty(PROCESS_CRP_LOGARITHM_ETA_KEY));
-        int crpFirstNonZero = Integer.parseInt(prop.getProperty(PROCESS_CRP_FIRST_NON_ZERO_KEY));
+        int window = getIntValue(prop.getProperty(PROCESS_MEDIAN_FILTER_WINDOW_KEY));
+        double theta = getDoubleValue(prop.getProperty(PROCESS_SELF_SIMILARITY_THETA_KEY));
+        int logEta = getIntValue(prop.getProperty(PROCESS_CRP_LOGARITHM_ETA_KEY));
+        int crpFirstNonZero = getIntValue(prop.getProperty(PROCESS_CRP_FIRST_NON_ZERO_KEY));
         this.process = new ProcessProperties(window, theta, logEta, crpFirstNonZero);
         
         String vampHost = prop.getProperty(PRE_VAMP_HOST_PATH_KEY);
@@ -84,6 +86,22 @@ public class Configuration {
         printConfiguration();
 	};
 
+	private double getDoubleValue(String value) {
+		try {
+			return Double.parseDouble(value);
+		} catch (NumberFormatException e) {
+			return -1;
+		}
+	}
+
+	private int getIntValue(String value) {
+		try {
+			return Integer.parseInt(value);
+		} catch (NumberFormatException e) {
+			return -10000;
+		}
+	}
+
 	private void printConfiguration() {
 		LOG.info("Following configuration will be used:");
 		LOG.info("\t" + SPECTRUM_OCTAVES_KEY + " = " + spectrum.octaves);
@@ -91,6 +109,7 @@ public class Configuration {
 		LOG.info("\t" + SPECTRUM_OFFSET_FROM_F0_IN_SEMITONES_KEY + " = " + spectrum.offsetFromF0InSemitones);
 		LOG.info("\t" + SPECTRUM_FRAMES_PER_BEAT_KEY + " = " + spectrum.framesPerBeat);
 		LOG.info("\t" + SPECTRUM_THREAD_POOL_SIZE_KEY + " = " + spectrum.threadPoolSize);
+		LOG.info("\t" + SPECTRUM_BEAT_TIMES_DELAY_IN_MS + " = " + spectrum.beatTimesDelay);
 		LOG.info("\t" + PROCESS_MEDIAN_FILTER_WINDOW_KEY + " = " + process.medianFilterWindow);
 		LOG.info("\t" + PROCESS_SELF_SIMILARITY_THETA_KEY + " = " + process.selfSimilarityTheta);
 		LOG.info("\t" + PROCESS_CRP_FIRST_NON_ZERO_KEY + " = " + process.crpFirstNonZero);
@@ -104,21 +123,24 @@ public class Configuration {
 		private static final int OFFSET_FROM_F0_IN_SEMITONES_DEFAULT = -33;
 		private static final int FRAMES_PER_BEAT_DEFAULT = 8;
 		private static final int THREAD_POOL_SIZE_DEFAULT = 4;
+		private static final double BEAT_TIMES_DELAY_DEFAULT = 100;
 
 		public final int octaves;
 		public final int notesPerOctave;
 		public final int offsetFromF0InSemitones;
 		public final int framesPerBeat;
 		public final int threadPoolSize;
+		public final double beatTimesDelay;
 		
 		public SpectrumProperties(int octaves, int notesPerOctave,
-				int offsetFromF0InSemitones, int framesPerBeat, int threadPoolSize) {
+				int offsetFromF0InSemitones, int framesPerBeat, int threadPoolSize, double beatTimesDelay) {
 			this.octaves = octaves > 0 ? octaves : OCTAVES_DEFAULT;
 			this.notesPerOctave = notesPerOctave > 0 ? notesPerOctave : NOTES_PER_OCTAVE_DEFAULT;
 			this.offsetFromF0InSemitones = offsetFromF0InSemitones > -100 ?
 					offsetFromF0InSemitones : OFFSET_FROM_F0_IN_SEMITONES_DEFAULT;
 			this.framesPerBeat = framesPerBeat > 0 ? framesPerBeat : FRAMES_PER_BEAT_DEFAULT;
 			this.threadPoolSize = threadPoolSize > 0 ? threadPoolSize : THREAD_POOL_SIZE_DEFAULT;
+			this.beatTimesDelay = beatTimesDelay > 0 ? beatTimesDelay : BEAT_TIMES_DELAY_DEFAULT;
 		}
 	}
 
