@@ -140,7 +140,7 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 		}
 		
 		// need to make windows centered at the beat positions, so shift them to the left
-		final double[] windowBeginnings = shiftBeatsLeft(result.beatTimes, getWindowsShift(result, s.beatTimesDelay));
+		final double[] windowBeginnings = shiftBeatsLeft(result.beatTimes, getWindowsShift(result, s.beatTimesDelay * 0.001));
 		try {
 			wavFile = WavFile.openWavFile(new File(waveFileName));
 			final WaveReader reader = new WaveReader(wavFile, windowBeginnings, windowSize);
