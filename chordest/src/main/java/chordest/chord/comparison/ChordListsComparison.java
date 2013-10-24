@@ -4,9 +4,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.ArrayUtils;
-
-import chordest.chord.recognition.TemplatesRecognition;
 import chordest.model.Chord;
 
 /**
@@ -49,8 +46,6 @@ public class ChordListsComparison {
 	 */
 	public static boolean isKnown(Chord chord) {
 		return metric.map(chord) != null;
-//		return ArrayUtils.contains(Chord.START_WITH_MAJ_OR_MIN_OR_N, chord.getShortHand());
-//		return TemplatesRecognition.isKnown(chord);
 	}
 
 	public ChordListsComparison(final Chord[] expected, final double[] expectedTimestamps,
@@ -157,8 +152,6 @@ public class ChordListsComparison {
 			}
 			if (isKnown(expectedChord)) {
 				double segmentLength = currentTime - previousTime;
-//				if (expectedChord.equals(actualChord)) {
-//				if (expectedChord.equals(actualChord) || (Chord.empty().equals(expectedChord) && Chord.empty().equals(actualChord))) {
 				double score = metric.score(metric.map(expectedChord), metric.map(actualChord));
 				result += (score * segmentLength);
 				if (score == 0) {
@@ -169,16 +162,6 @@ public class ChordListsComparison {
 					}
 					errors.put(key, value);
 				}
-//				if (expectedChord.equalsToTriad(actualChord) || (Chord.empty().equals(expectedChord) && Chord.empty().equals(actualChord))) {
-//					result += segmentLength;
-//				} else {
-//					String key = expectedChord.toString() + "-" + actualChord.toString();
-//					double value = segmentLength;
-//					if (errors.containsKey(key)) {
-//						value += errors.get(key);
-//					}
-//					errors.put(key, value);
-//				}
 				effectiveSeconds += segmentLength;
 			}
 			int expectedPos = Arrays.binarySearch(expectedTimestamps, currentTime);
