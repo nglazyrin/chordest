@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import chordest.chord.ChordExtractor;
 import chordest.chord.comparison.ChordListsComparison;
 import chordest.chord.comparison.ComparisonAccumulator;
-import chordest.chord.comparison.ComparisonAccumulator.Errors;
 import chordest.configuration.Configuration;
 import chordest.io.AbstractWriter;
 import chordest.io.csv.CsvFileWriter;
@@ -86,21 +85,11 @@ public class Roundtrip {
 	}
 
 	private static void logErrors(ComparisonAccumulator acc, Logger logger) {
-		int top = 20;
 		logger.info("");
-		logger.info("Average chord overlap ratio: " + acc.getAOR());
-		logger.info("Weighted average chord overlap ratio: " + acc.getWAOR());
-		logger.info("Average segmentation: " + acc.getAverageSegm());
+		acc.printStatistics(logger);
 		logger.info("");
-		Errors err = acc.getAllErrors();
-		logger.info("Total erroneous segments length: " + err.totalLengthInSeconds + " s");
-		logger.info("Minor instead of major: " + err.majMin + " s");
-		logger.info("Major instead of minor: " + err.minMaj + " s");
-		logger.info("2 common notes: " + err.common2 + " s");
-		logger.info("Root / fifth: " + err.rootFifth + " s");
-		logger.info("N instead of chord: " + err.chordN + " s");
-		logger.info("Chord instead of N: " + err.nChord + " s");
-		logger.info("Others: " + err.others + " s");
+		acc.printErrorStatistics(logger);
+//		int top = 20;
 //		logger.info(String.format("Errors TOP-%d:", top));
 //		List<Entry<String, Double>> errors = acc.getErrors();
 //		for (int i = 0; i < top && i < errors.size(); i++) {
