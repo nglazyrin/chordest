@@ -36,10 +36,10 @@ public abstract class AbstractTestRecognizeFromCsv {
 	public abstract Chord[] recognize(File csvFile);
 
 	public void recognizeFromCsv() {
+		SIM_LOG.info("name,overlap,segmentation,effective_length,full_length");
 		for (int index = 0; index < TrainTestDataCircularGenerator.PARTS; index++) {
 			List<String> tracklist = TracklistCreator.readTrackList(
 					TrainTestDataCircularGenerator.getTestFileListName(index));
-			SIM_LOG.info("name,overlap,segmentation,effective_length,full_length");
 			for (String item : tracklist) {
 				String track = StringUtils.substringAfterLast(item, PathConstants.SEP);
 				String binFile = item;
