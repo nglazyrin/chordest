@@ -117,8 +117,12 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 			result.f0 = CQConstants.F0_DEFAULT;
 		}
 		
+		boolean REDUCE_FIRST = true; // TODO
 		final CQConstants cqConstants = CQConstants.getInstance(result.samplingRate,
-				result.scaleInfo, result.f0, result.startNoteOffsetInSemitonesFromF0);
+				result.scaleInfo, result.f0, result.startNoteOffsetInSemitonesFromF0, REDUCE_FIRST);
+		if (REDUCE_FIRST) {
+			result.scaleInfo = new ScaleInfo(result.scaleInfo.octaves, 12);
+		}
 		int windowSize;
 		ITransformProvider provider;
 		if (useConstantQTransform) {
@@ -140,7 +144,8 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 		}
 		
 		// need to make windows centered at the beat positions, so shift them to the left
-		final double[] windowBeginnings = shiftBeatsLeft(result.beatTimes, getWindowsShift(result, s.beatTimesDelay * 0.001));
+		final double[] windowBeginnings = shiftBeatsLeft(result.beatTimes,
+				getWindowsShift(cqConstants, s.beatTimesDelay * 0.001, result.samplingRate));
 		try {
 			wavFile = WavFile.openWavFile(new File(waveFileName));
 			final WaveReader reader = new WaveReader(wavFile, windowBeginnings, windowSize);
@@ -179,11 +184,9 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 		return windowBeginnings;
 	}
 
-	private static double getWindowsShift(SpectrumData data, double beatTimesDelay) {
-		CQConstants cqConstants = CQConstants.getInstance(data.samplingRate,
-				data.scaleInfo, data.f0, data.startNoteOffsetInSemitonesFromF0);
+	private double getWindowsShift(CQConstants cqConstants, double beatTimesDelay, int samplingRate) {
 		int windowSize = cqConstants.getLongestWindow() + 1; // the longest window
-		double shift = windowSize / (data.samplingRate * 2.0);
+		double shift = windowSize / (samplingRate * 2.0);
 		return shift - beatTimesDelay;
 	}
 

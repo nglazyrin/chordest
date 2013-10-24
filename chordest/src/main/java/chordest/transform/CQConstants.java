@@ -37,26 +37,25 @@ public class CQConstants implements Serializable {
 	
 	private static CQConstants lastInstance = null;
 	
-	private final int samplingRate;
 	private final int componentsTotal;
-	private final ScaleInfo scaleInfo;
 	private final double minimalFrequency;
 	private final Note startNote;
 	private final double Q;
 
+	public final int samplingRate;
 	public double[][] sinuses;
 	public double[][] cosinuses;
 	public final double [] componentFrequencies;
 	public final int [] componentWindowLengths;
 	public final double[][] windowFunctions;
 
-	private CQConstants(int rate, ScaleInfo scaleInfo, double f0, int startNoteOffsetInSemitonesFromF0) {
+	private CQConstants(int rate, ScaleInfo scaleInfo, double f0,
+			int startNoteOffsetInSemitonesFromF0, boolean reduce) {
 		if (scaleInfo == null) {
 			throw new NullPointerException("scaleInfo is null");
 		}
 		this.samplingRate = rate;
-		this.componentsTotal = scaleInfo.getTotalComponentsCount();
-		this.scaleInfo = scaleInfo;
+		this.componentsTotal = reduce ? scaleInfo.octaves * 12 : scaleInfo.getTotalComponentsCount();
 		this.minimalFrequency = f0 * Math.pow(2, startNoteOffsetInSemitonesFromF0 / 12.0);
 //		this.startOctave = startNoteOffsetInSemitonesFromF0 > 0 ? 
 //				(startNoteOffsetInSemitonesFromF0 + 9) / 12 + 5 : 
@@ -65,7 +64,7 @@ public class CQConstants implements Serializable {
 		this.Q = QUtil.calculateQ(scaleInfo.notesInOctave);
 		
 		LOG.debug("CQConstants initialization");
-		componentFrequencies = initializeComponentFrequencies();
+		componentFrequencies = initializeComponentFrequencies(reduce ? 12 : scaleInfo.notesInOctave);
 		componentWindowLengths = initializeComponentWindowLengths();
 		windowFunctions = initializeWindowFunctions();
 		initializeSinusesAndCosinuses();
@@ -80,29 +79,38 @@ public class CQConstants implements Serializable {
 		return CQConstants.getInstance(44100, new ScaleInfo(8, 12), F0_DEFAULT, -57);
 	}
 
-	public static CQConstants getInstance(int rate, ScaleInfo scaleInfo, double f0, int startNoteOffsetInSemitonesFromF0) {
-		int hash = calculateHash(rate, scaleInfo, f0, startNoteOffsetInSemitonesFromF0);
+	public static CQConstants getInstance(int rate, ScaleInfo scaleInfo, double f0,
+			int startNoteOffsetInSemitonesFromF0) {
+		return getInstance(rate, scaleInfo, f0, startNoteOffsetInSemitonesFromF0, false);
+	}
+	
+	public static CQConstants getInstance(int rate, ScaleInfo scaleInfo, double f0,
+			int startNoteOffsetInSemitonesFromF0, boolean reduce) {
+		int hash = calculateHash(rate, scaleInfo, f0, startNoteOffsetInSemitonesFromF0, reduce);
 		if (lastInstanceHash != hash) {
-			lastInstance = newInstance(rate, scaleInfo, f0, startNoteOffsetInSemitonesFromF0);
+			lastInstance = newInstance(rate, scaleInfo, f0, startNoteOffsetInSemitonesFromF0, reduce);
 			lastInstanceHash = hash;
 		}
 		return lastInstance;
 	}
 
-	private static int calculateHash(int rate, ScaleInfo scaleInfo, double f0, int startNoteOffsetInSemitonesFromF0) {
+	private static int calculateHash(int rate, ScaleInfo scaleInfo, double f0,
+			int startNoteOffsetInSemitonesFromF0, boolean reduce) {
 		return 3 * rate + 5 * scaleInfo.octaves + 
 				7 * scaleInfo.notesInOctave + 
 				11 * (int)(f0 * 1000) + 
-				11 * startNoteOffsetInSemitonesFromF0;
+				13 * startNoteOffsetInSemitonesFromF0 +
+				(reduce ? 1 : 0);
 	}
 
-	private static CQConstants newInstance(int rate, ScaleInfo scaleInfo, double f0, int startNoteOffsetInSemitonesFromF0) {
-		return new CQConstants(rate, scaleInfo, f0, startNoteOffsetInSemitonesFromF0);
+	private static CQConstants newInstance(int rate, ScaleInfo scaleInfo, double f0,
+			int startNoteOffsetInSemitonesFromF0, boolean reduce) {
+		return new CQConstants(rate, scaleInfo, f0, startNoteOffsetInSemitonesFromF0, reduce);
 	}
 
-	private double[] initializeComponentFrequencies() {
+	private double[] initializeComponentFrequencies(int notesInOctave) {
 		double[] result = new double[this.componentsTotal];
-		final double p = 1.0 / this.scaleInfo.notesInOctave;
+		final double p = 1.0 / notesInOctave;
 		for (int i = 0; i < this.componentsTotal; i++) {
 			result[i] = Math.pow(2.0, i * p) * this.minimalFrequency;
 		}
