@@ -107,12 +107,19 @@ public class ComparisonAccumulator {
 									majMin += time;
 								} else if (expected.isMinor() && actual.isMajor()) {
 									minMaj += time;
+								} else {
+									others += time;
 								}
-							} else if (expected.getNumberOfCommonNotes(actual) == 2) {
-								common2 += time;
-							} else if (expected.getRoot().equals(actual.getNotes()[2]) ||
+							} else if ((expected.isMajor() || expected.isMinor()) && 
+									(actual.isMajor() || actual.isMinor())) {
+								if (expected.getNumberOfCommonNotes(actual) == 2) {
+									common2 += time;
+								} else if (expected.getRoot().equals(actual.getNotes()[2]) ||
 									actual.getRoot().equals(expected.getNotes()[2])) {
-								rootFifth += time;
+									rootFifth += time;
+								} else {
+									others += time;
+								}
 							} else {
 								others += time;
 							}
