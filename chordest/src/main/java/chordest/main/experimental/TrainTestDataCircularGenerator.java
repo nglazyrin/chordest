@@ -36,12 +36,8 @@ import chordest.util.TracklistCreator;
 public class TrainTestDataCircularGenerator {
 	private static final Logger LOG = LoggerFactory.getLogger(TrainDataGenerator.class);
 	private static final String PREFIX = PathConstants.RESOURCES_DIR + "filelists" + PathConstants.SEP;
-	
-	public static final int index = 1;
-	
-	private static final String TRAIN_FILE_LIST = PREFIX + "bqrz_bin" + index + "train.txt";
-	public static final String TEST_FILE_LIST = PREFIX + "bqrz_bin" + index + "test.txt";
 
+	public static final int PARTS = 2;
 	private static final boolean EXTRA_OCTAVE = true;
 	private static final boolean SEQUENTIAL = true;
 	private static final boolean USE_LOG = true; 
@@ -53,8 +49,6 @@ public class TrainTestDataCircularGenerator {
 	private static final String ROOT_FOLDER = "E:\\personal\\dissertation\\data\\";
 	private static final String NUM = INPUTS == 60 ? "60" : "";
 	private static final String SUFFIX = USE_LOG ? "" : ".nolog";
-	private static final String CSV_FILE = ROOT_FOLDER + "train\\train" + NUM + index + SUFFIX + ".csv";
-	private static final String OUTPUT_FOLDER = ROOT_FOLDER + "test" + NUM + index + SUFFIX + "\\";
 	private static final String DELIMITER = ",";
 	private static final String ENCODING = "utf-8";
 
@@ -73,36 +67,56 @@ public class TrainTestDataCircularGenerator {
 	private static final int L = 100;
 
 	public static void main(String[] args) {
-		generateTrainFile();
-		generateTestFiles();
+		for (int index = 0; index < PARTS; index++) {
+			generateTrainFile(index);
+			generateTestFiles(index);
+		}
 	}
 
-	private static void generateTrainFile() {
+	public static String getTrainFileListName(int index) {
+		return PREFIX + "bqrz_bin" + index + "train.txt";
+	}
+
+	public static String getTestFileListName(int index) {
+		return PREFIX + "bqrz_bin" + index + "test.txt";
+	}
+
+	private static String getCsvFileName(int index) {
+		return ROOT_FOLDER + "train\\train" + NUM + index + SUFFIX + ".csv";
+	}
+
+	private static String getOutputFolderName(int index) {
+		return ROOT_FOLDER + "test" + NUM + index + SUFFIX + "\\";
+	}
+
+	private static void generateTrainFile(int index) {
 		LOG.info("Generating train file");
-		List<String> tracklist = TracklistCreator.readTrackList(TRAIN_FILE_LIST);
-		deleteIfExists(CSV_FILE);
+		String csvFileName = getCsvFileName(index);
+		List<String> tracklist = TracklistCreator.readTrackList(getTrainFileListName(index));
+		deleteIfExists(csvFileName);
 		int filesProcessed = 0;
 
 		for (final String binFileName : tracklist) {
 			SpectrumData sd = SpectrumFileReader.read(binFileName);
 			double[][] result = prepareSpectrum(sd);
 			Chord[] chords = prepareChords(binFileName, sd, DELTA);
-			processTrainFile(result, chords, 12, CSV_FILE);
+			processTrainFile(result, chords, 12, csvFileName);
 			if (++filesProcessed % 10 == 0) {
 				LOG.info(filesProcessed + " files processed");
 			}
 		}
-		LOG.info(tracklist.size() + " files were processed. Result was saved to " + CSV_FILE);
+		LOG.info(tracklist.size() + " files were processed. Result was saved to " + csvFileName);
 	}
 
-	private static void generateTestFiles() {
+	private static void generateTestFiles(int index) {
 		LOG.info("Geneating test files");
-		List<String> tracklist = TracklistCreator.readTrackList(TEST_FILE_LIST);
-		deleteIfExists(OUTPUT_FOLDER);
+		String outputFolder = getOutputFolderName(index);
+		List<String> tracklist = TracklistCreator.readTrackList(getTestFileListName(index));
+		deleteIfExists(outputFolder);
 		int filesProcessed = 0;
 		
 		for (final String binFileName : tracklist) {
-			String csvFileName = OUTPUT_FOLDER + new File(binFileName).getName() + PathConstants.EXT_CSV;
+			String csvFileName = outputFolder + new File(binFileName).getName() + PathConstants.EXT_CSV;
 			deleteIfExists(csvFileName);
 			SpectrumData sd = SpectrumFileReader.read(binFileName);
 			double[][] result = prepareSpectrum(sd);
@@ -111,7 +125,7 @@ public class TrainTestDataCircularGenerator {
 				LOG.info(filesProcessed + " files processed");
 			}
 		}
-		LOG.info("Done. " + tracklist.size() + " files were processed. Resulting files were saved to " + OUTPUT_FOLDER);
+		LOG.info("Done. " + tracklist.size() + " files were processed. Resulting files were saved to " + outputFolder);
 
 	}
 
