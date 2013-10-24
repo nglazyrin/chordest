@@ -5,6 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import chordest.io.lab.chordparser.ChordParser;
+import chordest.io.lab.chordparser.ParseException;
+import chordest.io.lab.chordparser.TokenMgrError;
+import chordest.model.Chord;
 import chordest.util.MapUtil;
 
 /**
@@ -57,5 +61,69 @@ public class ComparisonAccumulator {
 
 	public List<Entry<String, Double>> getErrors() {
 		return MapUtil.sortMapByValue(errors, false);
+	}
+	
+	public Errors getAllErrors() {
+		return new Errors(errors);
+	}
+	
+	public static class Errors {
+		public double totalLengthInSeconds;
+		
+		public double majMin;
+		
+		public double minMaj;
+		
+		public double nChord;
+		
+		public double chordN;
+		
+		public double common2;
+		
+		public double rootFifth;
+		
+		public double others;
+		
+		public Errors(Map<String, Double> log) {
+			for (Entry<String, Double> entry : log.entrySet()) {
+				double time = entry.getValue();
+				totalLengthInSeconds += time;
+				String[] str = entry.getKey().split("-");
+				if (str.length == 2) {
+					String exp = str[0];
+					String act = str[1];
+					if (exp.contains(",") || act.contains(",")) {
+						others += time;
+					} else if ("N".equals(exp)) {
+						nChord += time;
+					} else if ("N".equals(act)) {
+						chordN += time;
+					} else {
+						try {
+							Chord expected = ChordParser.parseString(exp);
+							Chord actual = ChordParser.parseString(act);
+							if (expected.hasSameRootDifferentType(actual)) {
+								if (expected.isMajor() && actual.isMinor()) {
+									majMin += time;
+								} else if (expected.isMinor() && actual.isMajor()) {
+									minMaj += time;
+								}
+							} else if (expected.getNumberOfCommonNotes(actual) == 2) {
+								common2 += time;
+							} else if (expected.getRoot().equals(actual.getNotes()[2]) ||
+									actual.getRoot().equals(expected.getNotes()[2])) {
+								rootFifth += time;
+							} else {
+								others += time;
+							}
+						} catch (NumberFormatException | ParseException | TokenMgrError e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
+					}
+				}
+			}
+		}
 	}
 }
