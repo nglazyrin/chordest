@@ -41,4 +41,9 @@ public class ScaleInfo implements Serializable {
 		return octaves * 31 + notesInOctave;
 	}
 
+	@Override
+	public String toString() {
+		return "octaves: " + octaves + ", notes in octave: " + notesInOctave;
+	}
+
 }
