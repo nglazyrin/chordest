@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+
 import chordest.io.lab.chordparser.ChordParser;
 import chordest.io.lab.chordparser.ParseException;
 import chordest.io.lab.chordparser.TokenMgrError;
@@ -65,6 +67,24 @@ public class ComparisonAccumulator {
 	
 	public Errors getAllErrors() {
 		return new Errors(errors);
+	}
+	
+	public void printStatistics(Logger logger) {
+		logger.info("Average chord overlap ratio: " + getAOR());
+		logger.info("Weighted average chord overlap ratio: " + getWAOR());
+		logger.info("Average segmentation: " + getAverageSegm());
+	}
+	
+	public void printErrorStatistics(Logger logger) {
+		Errors err = getAllErrors();
+		logger.info("Total erroneous segments length: " + err.totalLengthInSeconds + " s");
+		logger.info("Minor instead of major: " + err.majMin + " s");
+		logger.info("Major instead of minor: " + err.minMaj + " s");
+		logger.info("2 common notes: " + err.common2 + " s");
+		logger.info("Root / fifth: " + err.rootFifth + " s");
+		logger.info("N instead of chord: " + err.chordN + " s");
+		logger.info("Chord instead of N: " + err.nChord + " s");
+		logger.info("Others: " + err.others + " s");
 	}
 	
 	public static class Errors {
