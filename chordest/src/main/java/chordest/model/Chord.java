@@ -273,7 +273,7 @@ public class Chord {
 		return result;
 	}
 
-	public boolean hasCommon3Notes(Chord other) {
+	public int getNumberOfCommonNotes(Chord other) {
 		List<Note> thisNotes = this.getNotesAsList();
 		int common = 0;
 		for (Note note : other.getNotes()) {
@@ -281,7 +281,7 @@ public class Chord {
 				common++;
 			}
 		}
-		return common >= 3;
+		return common;
 	}
 
 	public boolean containsTriad(Chord triad) {
