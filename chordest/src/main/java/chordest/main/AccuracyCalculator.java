@@ -6,11 +6,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import chordest.chord.comparison.ChordListsComparison;
 import chordest.io.lab.LabFileReader;
+import chordest.model.Chord;
 import chordest.util.MapUtil;
 import chordest.util.TracklistCreator;
 
@@ -40,7 +42,7 @@ public class AccuracyCalculator {
 		double totalWeightedOverlap = 0;
 		int totalTracks = 0;
 		double totalLength = 0;
-		final Map<String, Double> errors = new HashMap<String, Double>();
+		final Map<Pair<Chord, Chord>, Double> errors = new HashMap<Pair<Chord, Chord>, Double>();
 		
 		for (int i = 0; i < expectedTracklist.size(); i++) {
 			File expected = new File(expectedTracklist.get(i));
@@ -57,9 +59,9 @@ public class AccuracyCalculator {
 			totalLength += effectiveSeconds;
 			totalTracks++;
 			
-			Map<String, Double> errorsCurrent = sim.getErrors();
-			for (Entry<String, Double> entry : errorsCurrent.entrySet()) {
-				String key = entry.getKey();
+			Map<Pair<Chord, Chord>, Double> errorsCurrent = sim.getErrors();
+			for (Entry<Pair<Chord, Chord>, Double> entry : errorsCurrent.entrySet()) {
+				Pair<Chord, Chord> key = entry.getKey();
 				Double value = entry.getValue();
 				if (errors.containsKey(key)) {
 					value += errors.get(key);
@@ -75,13 +77,13 @@ public class AccuracyCalculator {
 
 		double averageChordOverlapRatio = totalOverlap / totalTracks;
 		double weightedAverageChordOverlapRatio = totalWeightedOverlap / totalLength;
-		List<Entry<String, Double>> sorted = MapUtil.sortMapByValue(errors, false);
+		List<Entry<Pair<Chord, Chord>, Double>> sorted = MapUtil.sortMapByValue(errors, false);
 		logErrors(averageChordOverlapRatio, weightedAverageChordOverlapRatio, sorted, LOG);
 	}
 
 	private static void logErrors(double averageChordOverlapRatio,
 			double weightedAverageChordOverlapRatio,
-			List<Entry<String, Double>> sorted, Logger logger) {
+			List<Entry<Pair<Chord, Chord>, Double>> sorted, Logger logger) {
 		int top = 20;
 		logger.info("");
 		logger.info("Average chord overlap ratio: " + averageChordOverlapRatio);

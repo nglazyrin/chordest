@@ -4,6 +4,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+
 import chordest.model.Chord;
 
 /**
@@ -31,7 +34,7 @@ public class ChordListsComparison {
 	private final double[] expectedTimestamps;
 	private final Chord[] actual;
 	private final double[] actualTimestamps;
-	private final Map<String, Double> errors = new HashMap<String, Double>();
+	private final Map<Pair<Chord, Chord>, Double> errors = new HashMap<Pair<Chord, Chord>, Double>();
 	private double overlapMeasure;
 	private double segmentation;
 	private double effectiveSeconds = 0;
@@ -155,7 +158,7 @@ public class ChordListsComparison {
 				double score = metric.score(metric.map(expectedChord), metric.map(actualChord));
 				result += (score * segmentLength);
 				if (score == 0) {
-					String key = expectedChord.toString() + "-" + actualChord.toString();
+					Pair<Chord, Chord> key = new ImmutablePair<Chord, Chord>(expectedChord, actualChord);
 					double value = segmentLength;
 					if (errors.containsKey(key)) {
 						value += errors.get(key);
@@ -189,7 +192,7 @@ public class ChordListsComparison {
 		return overlapMeasure;
 	}
 
-	public Map<String, Double> getErrors() {
+	public Map<Pair<Chord, Chord>, Double> getErrors() {
 		return errors;
 	}
 
