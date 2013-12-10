@@ -46,4 +46,9 @@ public class Mirex2010 implements IEvaluationMetric {
 		return common;
 	}
 
+	@Override
+	public String toString() {
+		return "Mirex2010";
+	}
+
 }
