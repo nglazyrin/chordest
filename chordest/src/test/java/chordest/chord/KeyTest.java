@@ -10,6 +10,8 @@ import org.junit.Test;
 import chordest.model.Chord;
 import chordest.model.Key;
 import chordest.model.Note;
+import chordest.model.Scale.NaturalMajor;
+import chordest.model.Scale.NaturalMinor;
 
 
 public class KeyTest {
@@ -90,7 +92,7 @@ public class KeyTest {
 
 	@Test
 	public void testMajorMinor() {
-		Key modeAMaj = new Key(Note.A, Chord.MAJ);
+		Key modeAMaj = new Key(Note.A, new NaturalMajor());
 		List<Note> notesAMaj = modeAMaj.getNotes();
 		Assert.assertEquals(7, notesAMaj.size());
 		Assert.assertTrue(notesAMaj.contains(Note.A));
@@ -101,7 +103,7 @@ public class KeyTest {
 		Assert.assertTrue(notesAMaj.contains(Note.FD));
 		Assert.assertTrue(notesAMaj.contains(Note.GD));
 		
-		Key modeAMin = new Key(Note.A, Chord.MIN);
+		Key modeAMin = new Key(Note.A, new NaturalMinor());
 		List<Note> notesAMin = modeAMin.getNotes();
 		Assert.assertEquals(7, notesAMin.size());
 		Assert.assertTrue(notesAMin.contains(Note.A));

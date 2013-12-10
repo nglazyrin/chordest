@@ -6,9 +6,9 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.model.Chord;
 import chordest.model.Key;
 import chordest.model.Note;
+import chordest.model.Scale.NaturalMajor;
 
 
 public class KeyIntersectionTest {
@@ -22,8 +22,8 @@ public class KeyIntersectionTest {
 		Key[] keys = new Key[12];
 		int index = 0;
 		for (Note note : Note.values()) {
-			keys[index++] = new Key(note, Chord.MAJ);
-//			modes[index++] = new Key(note, Chord.MIN);
+			keys[index++] = new Key(note, new NaturalMajor());
+//			modes[index++] = new Key(note, new NaturalMinor());
 		}
 		int maxCommon = 0;
 		Key max1 = null;
