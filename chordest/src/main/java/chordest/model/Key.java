@@ -1,8 +1,10 @@
 package chordest.model;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
+
+import chordest.model.Scale.NaturalMajor;
+import chordest.model.Scale.NaturalMinor;
 
 /**
  * Major and minor keys + a method to detect key using Krumhansl's profiles.
@@ -11,30 +13,14 @@ import java.util.List;
  */
 public class Key {
 
-	private static final int[] majorOffsets = { 2, 2, 1, 2, 2, 2, 1 };
-	private static final int[] minorOffsets = { 2, 1, 2, 2, 1, 2, 2 };
+//	private static final int[] majorOffsets = { 2, 2, 1, 2, 2, 2, 1 };
+//	private static final int[] minorOffsets = { 2, 1, 2, 2, 1, 2, 2 };
 
-	public static final Key A_MAJ = new Key(Note.A, Chord.MAJ);
-	public static final Key AD_MAJ = new Key(Note.AD, Chord.MAJ);
-	public static final Key B_MAJ = new Key(Note.B, Chord.MAJ);
-	public static final Key C_MAJ = new Key(Note.C, Chord.MAJ);
-	public static final Key CD_MAJ = new Key(Note.CD, Chord.MAJ);
-	public static final Key D_MAJ = new Key(Note.D, Chord.MAJ);
-	public static final Key DD_MAJ = new Key(Note.DD, Chord.MAJ);
-	public static final Key E_MAJ = new Key(Note.E, Chord.MAJ);
-	public static final Key F_MAJ = new Key(Note.F, Chord.MAJ);
-	public static final Key FD_MAJ = new Key(Note.FD, Chord.MAJ);
-	public static final Key G_MAJ = new Key(Note.G, Chord.MAJ);
-	public static final Key GD_MAJ = new Key(Note.GD, Chord.MAJ);
+	private final Note root;
 
-	public static final Key[] MAJORS = new Key[] { A_MAJ, AD_MAJ, B_MAJ,
-		C_MAJ, CD_MAJ, D_MAJ, DD_MAJ, E_MAJ, F_MAJ, FD_MAJ, G_MAJ, GD_MAJ};
+	private final Scale type;
 
-	private Note root;
-
-	private String type;
-
-	public Key(Note root, String type) {
+	public Key(Note root, Scale type) {
 		this.root = root;
 		this.type = type;
 	}
@@ -43,45 +29,30 @@ public class Key {
 		return root;
 	}
 
-	public String getType() {
+	public Scale getType() {
 		return type;
 	}
 
 	public List<Note> getNotes() {
-		List<Note> result = new ArrayList<Note>(7);
-		Note current = getRoot();
-		if (Chord.MIN.equals(type)) {
-			for (int i = 0; i < 6; i++) {
-				result.add(current);
-				current = current.withOffset(minorOffsets[i]);
-			}
-		} else {
-			for (int i = 0; i < 6; i++) {
-				result.add(current);
-				current = current.withOffset(majorOffsets[i]);
-			}
+		Note[] result = new Note[type.intervals.length + 1];
+		result[0] = root;
+		for (int i = 0; i < type.intervals.length; i++) {
+			result[i + 1] = root.withOffset(type.intervals[i]);
 		}
-		result.add(current); // add latest, 7th, note
-		return Collections.unmodifiableList(result);
+		return Arrays.asList(result);
 	}
 
 	public List<Chord> getChords() {
-		List<Note> notes = getNotes();
-		List<Chord> result = new ArrayList<Chord>(6);
-		result.add(Chord.major(notes.get(0)));
-		result.add(Chord.minor(notes.get(1)));
-		result.add(Chord.minor(notes.get(2)));
-		result.add(Chord.major(notes.get(3)));
-		result.add(Chord.major(notes.get(4)));
-		result.add(Chord.minor(notes.get(5)));
-		
-//		result.add(new Chord(notes.get(0), Chord.MAJ7));
-//		result.add(new Chord(notes.get(1), Chord.MIN7));
-//		result.add(new Chord(notes.get(2), Chord.MIN7));
-//		result.add(new Chord(notes.get(3), Chord.MAJ7));
-//		result.add(new Chord(notes.get(4), Chord.DOM));
-//		result.add(new Chord(notes.get(5), Chord.MIN7));
-		return Collections.unmodifiableList(result);
+		Chord[] result = type.getChords(root);
+		return Arrays.asList(result);
+	}
+
+	public Key getSubdominant() {
+		return new Key(root.withOffset(Interval.PERFECT_FOURTH), type);
+	}
+
+	public Key getDominant() {
+		return new Key(root.withOffset(Interval.PERFECT_FIFTH), type);
 	}
 
 	/**
@@ -96,25 +67,34 @@ public class Key {
 		if (intensities.length != 12) {
 			throw new IllegalArgumentException("durations.length != 12");
 		}
-		double[] template = new double[] { 6.35, 2.23, 3.48, 2.33, 4.38, 4.09,
-				2.52, 5.19, 2.39, 3.66, 2.29, 2.88};
-		double[] correlations = new double[12];
+//		double[] template = new double[] { 6.35, 2.23, 3.48, 2.33, 4.38, 4.09,
+//				2.52, 5.19, 2.39, 3.66, 2.29, 2.88};
+		double[] majorTemperley = new double[] { 5, 2, 3.5, 2, 4.5, 4, 2, 4.5, 2, 3.5, 1.5, 4 };
+		double[] minorTemperley = new double[] { 5, 2, 3.5, 4.5, 2, 4, 2, 4.5, 3.5, 2, 1.5, 4 };
+		double[] correlations = new double[24];
 		for (int i = 0; i < 12; i++) {
 			for (int j = 0; j < 12; j++) {
-				correlations[i] += intensities[j] * template[j];
+				correlations[i] += intensities[j] * majorTemperley[j];
+				correlations[i + 12] += intensities[j] * minorTemperley[j];
 			}
-			double temp = template[11];
-			for (int k = 11; k > 0; k--) { template[k] = template[k - 1]; }
-			template[0] = temp;
+			majorTemperley = rotateLeft(majorTemperley);
+			minorTemperley = rotateLeft(minorTemperley);
 		}
 		
 		int maxPos = 0; double max = correlations[0];
-		for (int i = 1; i < 12; i++) {
+		for (int i = 1; i < correlations.length; i++) {
 			if (correlations[i] > max) {
 				maxPos = i; max = correlations[i];
 			}
 		}
-		return new Key(startNote.withOffset(maxPos), Chord.MAJ);
+		return new Key(startNote.withOffset(maxPos % 12), maxPos < 12 ? new NaturalMajor() : new NaturalMinor());
+	}
+
+	private static double[] rotateLeft(double[] array) {
+		double[] result = new double[array.length];
+		for (int k = array.length - 1; k > 0; k--) { result[k] = array[k - 1]; }
+		result[0] = array[array.length - 1];
+		return result;
 	}
 
 	@Override
