@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import chordest.chord.ChordExtractor;
 import chordest.chord.comparison.ChordListsComparison;
+import chordest.chord.comparison.Triads;
 import chordest.configuration.Configuration;
 import chordest.io.lab.LabFileReader;
 import chordest.io.lab.LabFileWriter;
@@ -55,8 +56,9 @@ public class SingleFile {
 		if (labFile.exists()) {
 			LabFileReader labReader = new LabFileReader(labFile);
 			ChordListsComparison sim = new ChordListsComparison(labReader.getChords(),
-					labReader.getTimestamps(), ce.getChords(), ce.getOriginalBeatTimes());
+					labReader.getTimestamps(), ce.getChords(), ce.getOriginalBeatTimes(), new Triads());
 			LOG.info("Overlap measure: " + sim.getOverlapMeasure());
+			LOG.info("Key: " + ce.getKey());
 		}
 		
 		int startOffset = ce.getSpectrum().startNoteOffsetInSemitonesFromF0;

@@ -19,7 +19,7 @@ public class ChordListComparisonTest {
 		Chord[] actualChords = new Chord[] { Chord.major(Note.C), Chord.major(Note.F), Chord.major(Note.A) };
 		
 		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
-				actualChords, actualTimestamps);
+				actualChords, actualTimestamps, new Mirex2010());
 		Assert.assertTrue(Math.abs(sim.getOverlapMeasure() - 0.7) < 0.00001);
 		// ea = (1 - 0.6) + (1 - 0.8) = 0.6;  ae = (0.6 - 0.6) + (0.6 - 0.4) + (0.8 - 0.8) = 0.2
 		// segm = 1 - max{0.6, 0.2}/2 = 1 - 0.3 = 0.7
@@ -34,7 +34,7 @@ public class ChordListComparisonTest {
 		Chord[] actualChords = new Chord[] { Chord.minor(Note.C), Chord.major(Note.A) };
 		
 		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
-				actualChords, actualTimestamps);
+				actualChords, actualTimestamps, new Mirex2010());
 		Assert.assertTrue(sim.getOverlapMeasure() < 0.00001);
 		// ea = (1 - 1) + (1 - 0.9) = 0.1;  ae = (1.1 - 1) + (0.9 - 0.9) = 0.1
 		// segm = 1 - max{0.1, 0.1}/2 = 1 - 0.05 = 0.95
@@ -49,7 +49,7 @@ public class ChordListComparisonTest {
 		Chord[] actualChords = new Chord[] { Chord.major(Note.C), Chord.minor(Note.A) };
 		
 		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
-				actualChords, actualTimestamps);
+				actualChords, actualTimestamps, new Mirex2010());
 		Assert.assertTrue(Math.abs(sim.getOverlapMeasure() - 1.0) < 0.00001);
 		// ea = (1 - 1) + (0.9 - 0.9) = 0;  ae = (1 - 1) + (0.9 - 0.9) = 0
 		// segm = 1 - max{0, 0}/2 = 1
@@ -64,7 +64,7 @@ public class ChordListComparisonTest {
 		Chord[] actualChords = new Chord[] { Chord.minor(Note.C), Chord.minor(Note.A) };
 		
 		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
-				actualChords, actualTimestamps);
+				actualChords, actualTimestamps, new Mirex2010());
 		Assert.assertTrue(Math.abs(sim.getOverlapMeasure() - 0.5) < 0.00001);
 		// ea = (0.9 - 0.7) + (0.8 - 0.7) = 0.3;  ae = (0.7 - 0.7) + (0.8 - 0.7) = 0.1
 		// segm = 1 - max{0.3, 0.1}/2 = 1 - 0.15 = 0.85
@@ -79,7 +79,7 @@ public class ChordListComparisonTest {
 		Chord[] actualChords = new Chord[] { Chord.major(Note.C), Chord.minor(Note.A) };
 		
 		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
-				actualChords, actualTimestamps);
+				actualChords, actualTimestamps, new Mirex2010());
 		Assert.assertTrue(Math.abs(sim.getOverlapMeasure() - 0.5) < 0.00001);
 		// ea = (1 - 0.5) + (1 - 0.5) = 1;  ae = (1 - 0.5) + (0 - 0) = 0.5
 		// segm = 1 - max{1, 0.5}/2 = 1 - 0.5 = 0.5
@@ -94,7 +94,7 @@ public class ChordListComparisonTest {
 		Chord[] actualChords = new Chord[] { Chord.major(Note.C), Chord.minor(Note.A) };
 		
 		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
-				actualChords, actualTimestamps);
+				actualChords, actualTimestamps, new Mirex2010());
 		Assert.assertTrue(Math.abs(sim.getOverlapMeasure() - 1.0) < 0.00001);
 		// ea = (1 - 1) + (1 - 1) = 0;  ae = (1 - 1) + (1 - 1) = 0
 		// segm = 1 - max{0, 0}/2 = 1
@@ -109,7 +109,7 @@ public class ChordListComparisonTest {
 		Chord[] actualChords = new Chord[] { new Chord(Note.C, Chord.MAJ), Chord.minor(Note.A) };
 		
 		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
-				actualChords, actualTimestamps);
+				actualChords, actualTimestamps, new Mirex2010());
 		Assert.assertTrue(Math.abs(sim.getOverlapMeasure() - 0.5) < 0.00001);
 		// ea = (1 - 1) + (1 - 1) = 0;  ae = (1 - 1) + (1 - 1) = 0
 		// segm = 1 - max{0, 0}/2 = 1
@@ -124,7 +124,7 @@ public class ChordListComparisonTest {
 		Chord[] actualChords = new Chord[] { Chord.minor(Note.C), Chord.minor(Note.A) };
 		
 		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
-				actualChords, actualTimestamps);
+				actualChords, actualTimestamps, new Mirex2010());
 		Assert.assertTrue(Math.abs(sim.getOverlapMeasure() - 0.05) < 0.00001);
 		// ea = (0.9 - 0.8) + (1 - 1) = 0.1;  ae = (0.8 - 0.8) + (1 - 1) = 0
 		// segm = 1 - max{0.1, 0}/2 = 1 - 0.05 = 0.95
@@ -139,7 +139,7 @@ public class ChordListComparisonTest {
 		Chord[] actualChords = new Chord[] { Chord.major(Note.C), Chord.minor(Note.A) };
 		
 		ChordListsComparison sim = new ChordListsComparison(expectedChords, expectedTimestamps, 
-				actualChords, actualTimestamps);
+				actualChords, actualTimestamps, new Mirex2010());
 		Assert.assertTrue(Math.abs(sim.getOverlapMeasure() - 0.75) < 0.00001);
 		// ea = (1 - 1) + (0.5 - 0.5) = 0;  ae = (1 - 1) + (1 - 0.5) = 0.5
 		// segm = 1 - max{0, 0.5}/2 = 1 - 0.25 = 0.75

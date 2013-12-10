@@ -26,15 +26,12 @@ import chordest.model.Chord;
  */
 public class ChordListsComparison {
 
-	public static final IEvaluationMetric metric = new Mirex2010();
-//	public static final IEvaluationMetric metric = new Tetrads();
-//	public static final IEvaluationMetric metric = new Triads();
-	
 	private final Chord[] expected;
 	private final double[] expectedTimestamps;
 	private final Chord[] actual;
 	private final double[] actualTimestamps;
 	private final Map<Pair<Chord, Chord>, Double> errors = new HashMap<Pair<Chord, Chord>, Double>();
+	private final IEvaluationMetric metric;
 	private double overlapMeasure;
 	private double segmentation;
 	private double effectiveSeconds = 0;
@@ -47,12 +44,12 @@ public class ChordListsComparison {
 	 * @param chord
 	 * @return
 	 */
-	public static boolean isKnown(Chord chord) {
+	public static boolean isKnown(Chord chord, IEvaluationMetric metric) {
 		return metric.map(chord) != null;
 	}
 
 	public ChordListsComparison(final Chord[] expected, final double[] expectedTimestamps,
-			final Chord[] actual, final double[] actualTimestamps) {
+			final Chord[] actual, final double[] actualTimestamps, IEvaluationMetric metric) {
 		if (expected == null) {
 			throw new NullPointerException("expected is null");
 		}
@@ -79,6 +76,7 @@ public class ChordListsComparison {
 		this.expectedTimestamps = expectedTimestamps;
 		this.actual = actual;
 		this.actualTimestamps = actualTimestamps;
+		this.metric = metric;
 		
 		process();
 		calculateSegmentation();
@@ -92,6 +90,10 @@ public class ChordListsComparison {
 		double ae = getSegmentation(actualTimestamps, expectedTimestamps);
 		totalSeconds = Math.max(expectedTimestamps[expectedTimestamps.length - 1], actualTimestamps[actualTimestamps.length - 1]);
 		segmentation = 1 - Math.max(ea, ae) / totalSeconds;
+	}
+
+	public IEvaluationMetric getMetric() {
+		return metric;
 	}
 
 	private double getSegmentation(double[] from, double[] to) {
@@ -153,7 +155,7 @@ public class ChordListsComparison {
 			if (previousTime == currentTime) {
 				continue;
 			}
-			if (isKnown(expectedChord)) {
+			if (isKnown(expectedChord, metric)) {
 				double segmentLength = currentTime - previousTime;
 				double score = metric.score(metric.map(expectedChord), metric.map(actualChord));
 				result += (score * segmentLength);

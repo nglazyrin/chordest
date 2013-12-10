@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import chordest.chord.comparison.ChordListsComparison;
 import chordest.chord.comparison.ComparisonAccumulator;
+import chordest.chord.comparison.Triads;
 import chordest.io.csv.CsvFileWriter;
 import chordest.io.lab.LabFileReader;
 import chordest.io.lab.LabFileWriter;
@@ -29,7 +30,7 @@ public abstract class AbstractTestRecognizeFromCsv {
 
 	private static String OUTPUT_DIRECTORY = "work" + PathConstants.SEP + "lab" + PathConstants.SEP;
 
-	private static ComparisonAccumulator acc = new ComparisonAccumulator();
+	private static ComparisonAccumulator acc = new ComparisonAccumulator(new Triads());
 
 	public abstract String getCsvDirectory();
 
@@ -87,7 +88,8 @@ public abstract class AbstractTestRecognizeFromCsv {
 		Roundtrip.write(new CsvFileWriter(labReaderExpected.getChords(), labReaderExpected.getTimestamps()), Roundtrip.CSV_EXPECTED_DIR + csvFileName);
 		
 		ChordListsComparison cmp = new ChordListsComparison(labReaderExpected.getChords(),
-				labReaderExpected.getTimestamps(), labReaderActual.getChords(), labReaderActual.getTimestamps());
+				labReaderExpected.getTimestamps(), labReaderActual.getChords(),
+				labReaderActual.getTimestamps(), acc.getMetric());
 		acc.append(cmp);
 		
 		SIM_LOG.info(expectedLab.substring(4).replace(',', '_').replace('\\', '/') + "," + 

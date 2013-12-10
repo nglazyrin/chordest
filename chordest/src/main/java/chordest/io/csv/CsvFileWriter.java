@@ -5,6 +5,7 @@ import java.io.Writer;
 import java.util.Locale;
 
 import chordest.chord.comparison.ChordListsComparison;
+import chordest.chord.comparison.Tetrads;
 import chordest.io.AbstractWriter;
 import chordest.model.Chord;
 
@@ -63,7 +64,7 @@ public class CsvFileWriter extends AbstractWriter {
 	private String getResultLine(double startTime, double endTime, Chord chord) {
 		String chordName = chord != null ? chord.toString() : "N";
 		chordName = chordName.replace(',', '-');
-		boolean isKnown = ChordListsComparison.isKnown(chord);
+		boolean isKnown = ChordListsComparison.isKnown(chord, new Tetrads());
 		return String.format(Locale.ENGLISH, "%f,%f,%s,%s\n", startTime, endTime, chordName, isKnown);
 	}
 

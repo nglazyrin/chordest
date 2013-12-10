@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import chordest.chord.comparison.ChordListsComparison;
+import chordest.chord.comparison.Triads;
 import chordest.io.lab.LabFileReader;
 import chordest.model.Chord;
 import chordest.util.MapUtil;
@@ -51,7 +52,7 @@ public class AccuracyCalculator {
 			
 			ChordListsComparison sim = new ChordListsComparison(
 					expectedReader.getChords(), expectedReader.getTimestamps(),
-					actualReader.getChords(), actualReader.getTimestamps());
+					actualReader.getChords(), actualReader.getTimestamps(), new Triads());
 			double overlap = sim.getOverlapMeasure();
 			double effectiveSeconds = sim.getEffectiveSeconds();
 			totalOverlap += overlap;

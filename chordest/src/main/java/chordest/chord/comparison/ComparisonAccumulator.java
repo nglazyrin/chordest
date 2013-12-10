@@ -14,7 +14,7 @@ import chordest.model.Chord;
 /**
  * To be used together with ChordListsComparison to accumulate statistics over
  * a number of tracks. Returns aggregated metrics and all errors sorted by
- * total time in descending orger.
+ * total time in descending order.
  * @author Nikolay
  *
  */
@@ -31,8 +31,19 @@ public class ComparisonAccumulator {
 	private double totalLength = 0;
 	private double totalErrorLength = 0;
 	private final Map<Pair<Chord, Chord>, Double> errors = new HashMap<Pair<Chord, Chord>, Double>();
+	private final IEvaluationMetric metric;
+
+	public ComparisonAccumulator(IEvaluationMetric metric) {
+		this.metric = metric;
+	}
 
 	public void append(ChordListsComparison cmp) {
+		if (! cmp.getMetric().equals(metric)) {
+			throw new IllegalArgumentException(String.format(
+					"Comparison evaluation metric %s differs from the accumulator's one: %s", 
+					cmp.getMetric(),
+					metric));
+		}
 		final double overlap = cmp.getOverlapMeasure();
 		final double effectiveSeconds = cmp.getEffectiveSeconds();
 		totalOverlap += overlap;
@@ -54,6 +65,10 @@ public class ComparisonAccumulator {
 		}
 	}
 
+	public IEvaluationMetric getMetric() {
+		return metric;
+	}
+
 	private double getAOR() {
 		return totalOverlap / totalTracks;
 	}
@@ -67,10 +82,11 @@ public class ComparisonAccumulator {
 	}
 
 	private Errors getAllErrors() {
-		return new Errors(errors);
+		return new Errors(errors, metric);
 	}
 	
 	public void printStatistics(Logger logger) {
+		logger.info("Metric: " + metric.toString());
 		logger.info("Average chord overlap ratio: " + getAOR());
 		logger.info("Weighted average chord overlap ratio: " + getWAOR());
 		logger.info("Average segmentation: " + getAverageSegm());
@@ -84,6 +100,7 @@ public class ComparisonAccumulator {
 		for (int i = 0; i < types.length; i++) {
 			for (int j = 0; j < types.length; j++) {
 				printTypes(logger, types[i], types[j], err.times[i][j], ArrayUtils.subarray(err.all[i], j*12, (j+1)*12));
+				printTypes(logger, types[i] + "_red", types[j], err.times_red[i][j], ArrayUtils.subarray(err.all_red[i], j*12, (j+1)*12));
 			}
 		}
 		logger.info("N instead of chord: " + err.chordN + " s");
@@ -103,8 +120,11 @@ public class ComparisonAccumulator {
 	
 	public static class Errors {
 		private static final int TOTAL_CHORDS = 60;
+		// last row for the chords that can be mapped to known
 		public double[][] all = new double[types.length][TOTAL_CHORDS];
 		public double[][] times = new double[types.length][types.length];
+		public double[][] all_red = new double[types.length][TOTAL_CHORDS];
+		public double[][] times_red = new double[types.length][types.length];
 
 		public double nChord;
 		
@@ -112,7 +132,7 @@ public class ComparisonAccumulator {
 
 		public double others;
 		
-		public Errors(Map<Pair<Chord, Chord>, Double> log) {
+		public Errors(Map<Pair<Chord, Chord>, Double> log, IEvaluationMetric metric) {
 			for (Entry<Pair<Chord, Chord>, Double> entry : log.entrySet()) {
 				double time = entry.getValue();
 				Chord expected = entry.getKey().getLeft();
@@ -134,6 +154,9 @@ public class ComparisonAccumulator {
 							all[i][index] += time;
 							times[i][index / 12] += time;
 							processed = true;
+						} else if (metric.map(expected).isOfType(types[i])) {
+							all_red[i][index] += time;
+							times_red[i][index / 12] += time;
 						}
 					}
 				}

@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory;
 import chordest.chord.ChordExtractor;
 import chordest.chord.comparison.ChordListsComparison;
 import chordest.chord.comparison.ComparisonAccumulator;
+import chordest.chord.comparison.Mirex2010;
+import chordest.chord.comparison.Tetrads;
+import chordest.chord.comparison.Triads;
 import chordest.configuration.Configuration;
 import chordest.io.AbstractWriter;
 import chordest.io.csv.CsvFileWriter;
@@ -40,9 +43,11 @@ public class Roundtrip {
 
 	public static void main(String[] args) {
 		List<String> tracklist = TracklistCreator.readTrackList(FILE_LIST);
-		ComparisonAccumulator acc = new ComparisonAccumulator();
+		ComparisonAccumulator accMirex = new ComparisonAccumulator(new Mirex2010());
+		ComparisonAccumulator accTriads = new ComparisonAccumulator(new Triads());
+		ComparisonAccumulator accTetrads = new ComparisonAccumulator(new Tetrads());
 		Configuration c = new Configuration();
-		SIM_LOG.info("name,key,overlap,segmentation,effective_length,full_length");
+		SIM_LOG.info("name,key,overlapM,overlap3,overlap4,segmentation,effective_length,full_length");
 		for (final String binFileName : tracklist) {
 			String temp = StringUtils.substringAfterLast(binFileName, PathConstants.SEP);
 			String track = StringUtils.substringBeforeLast(temp, PathConstants.EXT_WAV + PathConstants.EXT_BIN);
@@ -66,21 +71,38 @@ public class Roundtrip {
 			LabFileReader labReaderExpected = new LabFileReader(new File(PathConstants.LAB_DIR + labFileName));
 			write(new CsvFileWriter(labReaderExpected.getChords(), labReaderExpected.getTimestamps()), CSV_EXPECTED_DIR + csvFileName);
 
-			ChordListsComparison sim = new ChordListsComparison(labReaderExpected.getChords(),
-					labReaderExpected.getTimestamps(), labReaderActual.getChords(), labReaderActual.getTimestamps());
-			acc.append(sim);
+			ChordListsComparison cmpMirex = new ChordListsComparison(
+					labReaderExpected.getChords(), labReaderExpected.getTimestamps(),
+					labReaderActual.getChords(), labReaderActual.getTimestamps(), accMirex.getMetric());
+			accMirex.append(cmpMirex);
+			ChordListsComparison cmpTriads = new ChordListsComparison(
+					labReaderExpected.getChords(), labReaderExpected.getTimestamps(),
+					labReaderActual.getChords(), labReaderActual.getTimestamps(), accTriads.getMetric());
+			accTriads.append(cmpTriads);
+			ChordListsComparison cmpTetrads = new ChordListsComparison(
+					labReaderExpected.getChords(), labReaderExpected.getTimestamps(),
+					labReaderActual.getChords(), labReaderActual.getTimestamps(), accTetrads.getMetric());
+			accTetrads.append(cmpTetrads);
 			
-			LOG.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-			LOG.info(labFileName + ": " + sim.getOverlapMeasure());
-			LOG.info(labFileName + ": " + sim.getSegmentation());
-			LOG.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-			SIM_LOG.info(labFileName.replace(',', '_').replace('\\', '/') + "," + ce.getKey() + "," +
-					sim.getOverlapMeasure() + "," + sim.getSegmentation() + "," +
-					sim.getEffectiveSeconds() + "," + ce.getSpectrum().totalSeconds);
+			LOG.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+			LOG.info(String.format("%s: Mirex %.4f; Triads %.4f; Tetrads %.4f; Segm %.4f", 
+					labFileName, cmpMirex.getOverlapMeasure(), cmpTriads.getOverlapMeasure(),
+					cmpTetrads.getOverlapMeasure(), cmpMirex.getSegmentation()));
+			LOG.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+			SIM_LOG.info(String.format("%s,%s,%f,%f,%f,%f,%f,%f", 
+					labFileName.replace(',', '_').replace('\\', '/'), ce.getKey(),
+					cmpMirex.getOverlapMeasure(),
+					cmpTriads.getOverlapMeasure(),
+					cmpTetrads.getOverlapMeasure(),
+					cmpMirex.getSegmentation(),
+					cmpTetrads.getEffectiveSeconds(),
+					ce.getSpectrum().totalSeconds));
 		}
 		
 		LOG.info("Test finished");
-		logErrors(acc, LOG);
+		logErrors(accMirex, LOG);
+		logErrors(accTriads, LOG);
+		logErrors(accTetrads, LOG);
 //		logErrors(acc, SIM_LOG);
 	}
 
