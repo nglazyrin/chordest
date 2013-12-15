@@ -1,6 +1,5 @@
 package chordest.chord.comparison;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -86,26 +85,26 @@ public class ComparisonAccumulator {
 	}
 	
 	public void printStatistics(Logger logger) {
-		logger.info("Metric: " + metric.toString());
-		logger.info("Average chord overlap ratio: " + getAOR());
-		logger.info("Weighted average chord overlap ratio: " + getWAOR());
-		logger.info("Average segmentation: " + getAverageSegm());
+		logger.info( metric.toString());
+		logger.info(String.format("AOR: %.4f", getAOR()));
+		logger.info(String.format("WAOR: %.4f", getWAOR()));
+		logger.info(String.format("Average segmentation: %.4f", getAverageSegm()));
+		logger.info(String.format("Total length of tracks: %.2f s", totalLength));
+		logger.info(String.format("Effective length: %.2f s", totalEffectiveLength));
+		logger.info(String.format("Total erroneous segments length: %.2f s", totalErrorLength));
 	}
 	
 	public void printErrorStatistics(Logger logger) {
 		Errors err = getAllErrors();
-		logger.info("Total length of tracks: " + totalLength + " s");
-		logger.info("Effective length: " + totalEffectiveLength + " s");
-		logger.info("Total erroneous segments length: " + totalErrorLength + " s");
 		for (int i = 0; i < types.length; i++) {
 			for (int j = 0; j < types.length; j++) {
 				printTypes(logger, types[i], types[j], err.times[i][j], ArrayUtils.subarray(err.all[i], j*12, (j+1)*12));
 				printTypes(logger, types[i] + "_red", types[j], err.times_red[i][j], ArrayUtils.subarray(err.all_red[i], j*12, (j+1)*12));
 			}
 		}
-		logger.info("N instead of chord: " + err.chordN + " s");
-		logger.info("Chord instead of N: " + err.nChord + " s");
-		logger.info("Others: " + err.others + " s");
+		printTypes(logger, "chord", "N", err.chordN, new double[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
+		printTypes(logger, "N", "chord", err.nChord, new double[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
+		printTypes(logger, "oth", "ers", err.others, new double[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
 	}
 	
 	private void printTypes(Logger logger, String expectedType, String actualType, double time, double[] values) {
@@ -114,7 +113,21 @@ public class ComparisonAccumulator {
 			sum += values[i];
 		}
 		if (sum > 0) {
-			logger.info(String.format("%s - %s: %f.2 s %s", expectedType, actualType, time, Arrays.toString(values)));
+			StringBuilder sb = new StringBuilder();
+			sb.append(getMetric());
+			sb.append(";");
+			sb.append(expectedType);
+			sb.append(" - ");
+			sb.append(actualType);
+			sb.append(";");
+			sb.append(time);
+			sb.append(";");
+			for (int i = 0; i < values.length - 1; i++) {
+				sb.append(values[i] > 0 ? values[i] : 0.1);
+				sb.append(";");
+			}
+			sb.append(values[values.length - 1]);
+			logger.info(sb.toString());
 		}
 	}
 	

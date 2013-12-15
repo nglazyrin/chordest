@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 
 import chordest.chord.comparison.ChordListsComparison;
 import chordest.chord.comparison.ComparisonAccumulator;
+import chordest.chord.comparison.Mirex2010;
+import chordest.chord.comparison.Tetrads;
 import chordest.chord.comparison.Triads;
 import chordest.io.csv.CsvFileWriter;
 import chordest.io.lab.LabFileReader;
@@ -26,18 +28,24 @@ import chordest.util.TracklistCreator;
 public abstract class AbstractTestRecognizeFromCsv {
 
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractTestRecognizeFromCsv.class);
+	private static final Logger ERR_LOG = LoggerFactory.getLogger("Errors");
 	private static final Logger SIM_LOG = LoggerFactory.getLogger("Similarity");
 
 	private static String OUTPUT_DIRECTORY = "work" + PathConstants.SEP + "lab" + PathConstants.SEP;
 
-	private static ComparisonAccumulator acc = new ComparisonAccumulator(new Triads());
+	private static ComparisonAccumulator[] acc = new ComparisonAccumulator[] {
+		new ComparisonAccumulator(new Mirex2010()),
+		new ComparisonAccumulator(new Triads()),
+		new ComparisonAccumulator(new Tetrads())
+	};
 
 	public abstract String getCsvDirectory();
 
 	public abstract Chord[] recognize(File csvFile);
 
 	public void recognizeFromCsv() {
-		SIM_LOG.info("name,overlap,segmentation,effective_length,full_length");
+		ERR_LOG.info("metric;type;total;0;1;2;3;4;5;6;7;8;9;10;11");
+		SIM_LOG.info("name;key;overlapM;overlap3;overlap4;segmentation;effective_length;full_length");
 		for (int index = 0; index < TrainTestDataCircularGenerator.PARTS; index++) {
 			List<String> tracklist = TracklistCreator.readTrackList(
 					TrainTestDataCircularGenerator.getTestFileListName(index));
@@ -46,24 +54,18 @@ public abstract class AbstractTestRecognizeFromCsv {
 				String binFile = item;
 				String csvFile = getCsvDirectory() + index + "\\" + track + PathConstants.EXT_CSV;
 				String labFile = PathConstants.LAB_DIR + StringUtils.replace(track, PathConstants.EXT_WAV + PathConstants.EXT_BIN, PathConstants.EXT_LAB);
-				double rco = doChordRecognition(binFile, csvFile, labFile);
-				LOG.info(binFile + " RCO: " + rco);
+				doChordRecognition(binFile, csvFile, labFile);
 			}
 		}
 
-		LOG.info("");
-		acc.printStatistics(LOG);
-		LOG.info("");
-		acc.printErrorStatistics(LOG);
-//		int top = 40;
-//		LOG.info(String.format("Errors TOP-%d:", top));
-//		List<Entry<String, Double>> errors = acc.getErrors();
-//		for (int i = 0; i < top && i < errors.size(); i++) {
-//			LOG.info(String.format("%s: %f", errors.get(i).getKey(), errors.get(i).getValue()));
-//		}
+		for (int i = 0; i < acc.length; i++) {
+			LOG.info("");
+			acc[i].printStatistics(LOG);
+			acc[i].printErrorStatistics(ERR_LOG);
+		}
 	}
 
-	private double doChordRecognition(String binFile, String csvFile, String expectedLab) {
+	private void doChordRecognition(String binFile, String csvFile, String expectedLab) {
 		SpectrumData sd = SpectrumFileReader.read(binFile);
 		Chord[] chords = recognize(new File(csvFile));
 		double[] beatTimes = DataUtil.toAllBeatTimes(sd.beatTimes, sd.framesPerBeat);
@@ -87,16 +89,26 @@ public abstract class AbstractTestRecognizeFromCsv {
 		Roundtrip.write(new CsvFileWriter(labReaderActual.getChords(), labReaderActual.getTimestamps()), Roundtrip.CSV_ACTUAL_DIR + csvFileName);
 		Roundtrip.write(new CsvFileWriter(labReaderExpected.getChords(), labReaderExpected.getTimestamps()), Roundtrip.CSV_EXPECTED_DIR + csvFileName);
 		
-		ChordListsComparison cmp = new ChordListsComparison(labReaderExpected.getChords(),
-				labReaderExpected.getTimestamps(), labReaderActual.getChords(),
-				labReaderActual.getTimestamps(), acc.getMetric());
-		acc.append(cmp);
+		ChordListsComparison[] cmp = new ChordListsComparison[3];
+		for (int i = 0; i < acc.length; i++) {
+			cmp[i] = new ChordListsComparison(labReaderExpected.getChords(),
+					labReaderExpected.getTimestamps(), labReaderActual.getChords(),
+					labReaderActual.getTimestamps(), acc[i].getMetric());
+			acc[i].append(cmp[i]);
+		}
 		
-		SIM_LOG.info(expectedLab.substring(4).replace(',', '_').replace('\\', '/') + "," + 
-				cmp.getOverlapMeasure() + "," + cmp.getSegmentation() + "," +
-				cmp.getEffectiveSeconds() + "," + sd.totalSeconds);
+		SIM_LOG.info(String.format("%s;%s;%f;%f;%f;%f;%f;%f", 
+				track.replace(',', '_').replace('\\', '/'), null,
+				cmp[0].getOverlapMeasure(),
+				cmp[1].getOverlapMeasure(),
+				cmp[2].getOverlapMeasure(),
+				cmp[0].getSegmentation(),
+				cmp[2].getEffectiveSeconds(),
+				cmp[0].getTotalSeconds()));
 		
-		return cmp.getOverlapMeasure();
+		LOG.info(String.format("%s: Mirex %.4f; Triads %.4f; Tetrads %.4f; Segm %.4f", 
+				track, cmp[0].getOverlapMeasure(), cmp[1].getOverlapMeasure(),
+				cmp[2].getOverlapMeasure(), cmp[0].getSegmentation()));
 	}
 
 }

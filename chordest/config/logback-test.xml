@@ -10,6 +10,14 @@
 		</encoder>
 	</appender>
 
+	<appender name="ERR_FILE" class="ch.qos.logback.core.FileAppender">
+		<file>logs\errors.csv</file>
+		<append>false</append>
+		<encoder>
+			<pattern>%msg%n</pattern>
+		</encoder>
+	</appender>
+
 	<appender name="SIM_FILE" class="ch.qos.logback.core.FileAppender">
 		<file>logs\similarity.csv</file>
 		<append>false</append>
@@ -25,6 +33,10 @@
 			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
 		</encoder>
 	</appender>
+
+	<logger name="Errors" level="INFO" additivity="false">
+		<appender-ref ref="ERR_FILE" />
+	</logger>
 
 	<logger name="Similarity" level="INFO" additivity="false">
 		<appender-ref ref="SIM_FILE" />

@@ -15,7 +15,7 @@ import chordest.util.DataUtil;
 
 public class TestCsvChroma extends AbstractTestRecognizeFromCsv {
 
-	private static String CSV_DIRECTORY = "E:\\personal\\dissertation\\rsda.48-40-32\\encoded";
+	private static String CSV_DIRECTORY = "E:\\personal\\dissertation\\sda.48-200-200\\encoded";
 
 	Configuration c = new Configuration();
 
