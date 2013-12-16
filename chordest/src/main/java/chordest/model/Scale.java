@@ -1,5 +1,8 @@
 package chordest.model;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 public abstract class Scale {
 
 	protected final int[] intervals;
@@ -12,6 +15,16 @@ public abstract class Scale {
 		int[] result = new int[intervals.length];
 		System.arraycopy(intervals, 0, result, 0, intervals.length);
 		return result;
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		return EqualsBuilder.reflectionEquals(this, other, false);
+	}
+	
+	@Override
+	public int hashCode() {
+		return HashCodeBuilder.reflectionHashCode(this, false);
 	}
 	
 	public abstract Chord[] getChords(Note root);

@@ -22,7 +22,7 @@ public class KeyTest {
 		Key mode = Key.recognizeKey(intensities, Note.A);
 		Assert.assertNotNull(mode);
 		Assert.assertEquals(Note.C, mode.getRoot());
-		Assert.assertEquals(Chord.MAJ, mode.getType());
+		Assert.assertEquals(new NaturalMajor(), mode.getType());
 	}
 
 //	@Test
@@ -72,7 +72,7 @@ public class KeyTest {
 		
 		Assert.assertNotNull(mode);
 		Assert.assertEquals(Note.FD, mode.getRoot());
-		Assert.assertEquals(Chord.MAJ, mode.getType());
+		Assert.assertEquals(new NaturalMajor(), mode.getType());
 		
 		Assert.assertTrue(mode.getNotes().contains(Note.GD));
 		Assert.assertTrue(mode.getNotes().contains(Note.FD));
