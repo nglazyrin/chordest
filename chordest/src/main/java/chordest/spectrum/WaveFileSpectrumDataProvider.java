@@ -54,7 +54,7 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 				provider = new IBeatTimesProvider() {
 					@Override
 					public double[] getBeatTimes() {
-						return BeatRootBeatTimesProvider.generateDefaultBeats(waveFileName);
+						return BeatRootBeatTimesProvider.generateTimeScale(waveFileName, 0.5);
 					}
 				};
 			}
@@ -70,7 +70,7 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 				temp = new VampBeatTimesProvider(waveFileName, beatFileName, c.pre).getBeatTimes();
 			} catch (Throwable e) {
 				// last try to provide a sequence of beats
-				temp = BeatRootBeatTimesProvider.generateDefaultBeats(waveFileName);
+				temp = BeatRootBeatTimesProvider.generateTimeScale(waveFileName, 0.5);
 			}
 		}
 		beatTimes = temp;
@@ -126,7 +126,7 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 		int windowSize;
 		ITransformProvider provider;
 		if (useConstantQTransform) {
-			windowSize = cqConstants.getLongestWindow() + 1; // the longest window
+			windowSize = cqConstants.getLongestWindow() + 1;
 			provider = new ITransformProvider() {
 				@Override
 				public ITransform getTransform(Buffer buffer, CountDownLatch latch) {

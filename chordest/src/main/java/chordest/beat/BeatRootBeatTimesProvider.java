@@ -68,7 +68,7 @@ public class BeatRootBeatTimesProvider implements IBeatTimesProvider {
 		return result;
 	}
 
-	public static double[] generateDefaultBeats(String wavFilePath) {
+	public static double[] generateTimeScale(String wavFilePath, double step) {
 		LOG.warn("Beat detection error, generating a dummy sequence of beats");
 		WavFile wavFile = null;
 		try {
@@ -76,10 +76,10 @@ public class BeatRootBeatTimesProvider implements IBeatTimesProvider {
 			int samplingRate = (int) wavFile.getSampleRate();
 			int frames = (int) wavFile.getNumFrames();
 			double totalSeconds = frames * 1.0 / samplingRate;
-			int length = (int) (Math.floor(totalSeconds))* 2;
+			int length = (int) (Math.floor(totalSeconds / step));
 			double[] result = new double[length];
 			for (int i = 0; i < length; i++) {
-				result[i] = 0.5 * i;
+				result[i] = step * i;
 			}
 			return result;
 		} catch (WavFileException e) {

@@ -12,11 +12,15 @@ public class FFTTransformWrapper extends AbstractTransform {
 	
 	private Buffer buffer;
 
-	private final CQConstants cqConstants;
+	private CQConstants cqConstants;
 
-	public FFTTransformWrapper(Buffer buffer, CountDownLatch latch, CQConstants cqc) {
+	public FFTTransformWrapper(Buffer buffer, CountDownLatch latch) {
 		super(latch);
 		this.buffer = buffer;
+	}
+
+	public FFTTransformWrapper(Buffer buffer, CountDownLatch latch, CQConstants cqc) {
+		this(buffer, latch);
 		this.cqConstants = cqc;
 	}
 
@@ -33,7 +37,9 @@ public class FFTTransformWrapper extends AbstractTransform {
 			spectrum[i-1] = Math.sqrt(data[2*i] * data[2*i] + data[2*i + 1] * data[2*i + 1]);
 		}
 		buffer = null;
-		spectrum = toLogSpacedSpectrum(spectrum);
+		if (cqConstants != null) {
+			spectrum = toLogSpacedSpectrum(spectrum);
+		}
 		return new ReadOnlyBuffer(spectrum, timeStamp);
 	}
 
