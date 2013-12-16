@@ -37,9 +37,10 @@ public class Visualizer {
 	public static final void visualizeSpectrum(double[][] spectrum, double[] beatTimes, String[] labels, String title) {
 		try {
 			double[][] data = copy2dArray(spectrum);
-			DataUtil.scaleTo01(data);
+			DataUtil.scaleEachTo01(data);
 			XYZDataset d3 = DatasetUtil.toXYZDataset(beatTimes, labels, data);
-			JFreeChartUtils.visualizeStringY(title, "Time", "Frequency", d3, 1000, 400, labels);
+			JFreeChartUtils.visualizeStringY(title, "Time", "Frequency", d3, 1000,
+					Math.min(30*spectrum[0].length, 800), labels);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
