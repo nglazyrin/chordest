@@ -98,8 +98,8 @@ public class ComparisonAccumulator {
 		Errors err = getAllErrors();
 		for (int i = 0; i < types.length; i++) {
 			for (int j = 0; j < types.length; j++) {
-				printTypes(logger, types[i], types[j], err.times[i][j], ArrayUtils.subarray(err.all[i], j*12, (j+1)*12));
-				printTypes(logger, types[i] + "_red", types[j], err.times_red[i][j], ArrayUtils.subarray(err.all_red[i], j*12, (j+1)*12));
+				printTypes(logger, types[i], types[j], err.aggregateTimes[i][j], ArrayUtils.subarray(err.times[i], j*12, (j+1)*12));
+				printTypes(logger, types[i] + "_red", types[j], err.aggregateTimesReduced[i][j], ArrayUtils.subarray(err.timesReduced[i], j*12, (j+1)*12));
 			}
 		}
 		printTypes(logger, "chord", "N", err.chordN, new double[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
@@ -132,12 +132,15 @@ public class ComparisonAccumulator {
 	}
 	
 	public static class Errors {
-		private static final int TOTAL_CHORDS = 60;
-		// last row for the chords that can be mapped to known
-		public double[][] all = new double[types.length][TOTAL_CHORDS];
-		public double[][] times = new double[types.length][types.length];
-		public double[][] all_red = new double[types.length][TOTAL_CHORDS];
-		public double[][] times_red = new double[types.length][types.length];
+		private static final int TOTAL_CHORDS = types.length * 12;
+		
+		// when the expected chord is a known chord
+		public double[][] times = new double[types.length][TOTAL_CHORDS]; // 12 entries per each type
+		public double[][] aggregateTimes = new double[types.length][types.length];
+		
+		// when the expected chord can be mapped to some known chord
+		public double[][] timesReduced = new double[types.length][TOTAL_CHORDS];
+		public double[][] aggregateTimesReduced = new double[types.length][types.length];
 
 		public double nChord;
 		
@@ -164,12 +167,12 @@ public class ComparisonAccumulator {
 				} else {
 					for (int i = 0; i < types.length && ! processed; i++) {
 						if (expected.isOfType(types[i])) {
-							all[i][index] += time;
-							times[i][index / 12] += time;
+							times[i][index] += time;
+							aggregateTimes[i][index / 12] += time;
 							processed = true;
 						} else if (metric.map(expected).isOfType(types[i])) {
-							all_red[i][index] += time;
-							times_red[i][index / 12] += time;
+							timesReduced[i][index] += time;
+							aggregateTimesReduced[i][index / 12] += time;
 						}
 					}
 				}

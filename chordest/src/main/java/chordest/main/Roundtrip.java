@@ -33,6 +33,7 @@ import chordest.util.TracklistCreator;
 public class Roundtrip {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Roundtrip.class);
+	private static final Logger ERR_LOG = LoggerFactory.getLogger("Errors");
 	private static final Logger SIM_LOG = LoggerFactory.getLogger("Similarity");
 
 	private static final String SEP = PathConstants.SEP;
@@ -43,10 +44,13 @@ public class Roundtrip {
 
 	public static void main(String[] args) {
 		List<String> tracklist = TracklistCreator.readTrackList(FILE_LIST);
-		ComparisonAccumulator accMirex = new ComparisonAccumulator(new Mirex2010());
-		ComparisonAccumulator accTriads = new ComparisonAccumulator(new Triads());
-		ComparisonAccumulator accTetrads = new ComparisonAccumulator(new Tetrads());
+		ComparisonAccumulator[] acc = new ComparisonAccumulator[] {
+			new ComparisonAccumulator(new Mirex2010()),
+			new ComparisonAccumulator(new Triads()),
+			new ComparisonAccumulator(new Tetrads())
+		};
 		Configuration c = new Configuration();
+		ERR_LOG.info("metric;type;total;0;1;2;3;4;5;6;7;8;9;10;11");
 		SIM_LOG.info("name,key,overlapM,overlap3,overlap4,segmentation,effective_length,full_length");
 		for (final String binFileName : tracklist) {
 			String temp = StringUtils.substringAfterLast(binFileName, PathConstants.SEP);
@@ -71,52 +75,34 @@ public class Roundtrip {
 			LabFileReader labReaderExpected = new LabFileReader(new File(PathConstants.LAB_DIR + labFileName));
 			write(new CsvFileWriter(labReaderExpected.getChords(), labReaderExpected.getTimestamps()), CSV_EXPECTED_DIR + csvFileName);
 
-			ChordListsComparison cmpMirex = new ChordListsComparison(
-					labReaderExpected.getChords(), labReaderExpected.getTimestamps(),
-					labReaderActual.getChords(), labReaderActual.getTimestamps(), accMirex.getMetric());
-			accMirex.append(cmpMirex);
-			ChordListsComparison cmpTriads = new ChordListsComparison(
-					labReaderExpected.getChords(), labReaderExpected.getTimestamps(),
-					labReaderActual.getChords(), labReaderActual.getTimestamps(), accTriads.getMetric());
-			accTriads.append(cmpTriads);
-			ChordListsComparison cmpTetrads = new ChordListsComparison(
-					labReaderExpected.getChords(), labReaderExpected.getTimestamps(),
-					labReaderActual.getChords(), labReaderActual.getTimestamps(), accTetrads.getMetric());
-			accTetrads.append(cmpTetrads);
+			ChordListsComparison[] cmp = new ChordListsComparison[3];
+			for (int i = 0; i < acc.length; i++) {
+				cmp[i] = new ChordListsComparison(labReaderExpected.getChords(),
+						labReaderExpected.getTimestamps(), labReaderActual.getChords(),
+						labReaderActual.getTimestamps(), acc[i].getMetric());
+				acc[i].append(cmp[i]);
+			}
 			
 			LOG.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 			LOG.info(String.format("%s: Mirex %.4f; Triads %.4f; Tetrads %.4f; Segm %.4f", 
-					labFileName, cmpMirex.getOverlapMeasure(), cmpTriads.getOverlapMeasure(),
-					cmpTetrads.getOverlapMeasure(), cmpMirex.getSegmentation()));
+					track, cmp[0].getOverlapMeasure(), cmp[1].getOverlapMeasure(),
+					cmp[2].getOverlapMeasure(), cmp[0].getSegmentation()));
 			LOG.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-			SIM_LOG.info(String.format("%s,%s,%f,%f,%f,%f,%f,%f", 
-					labFileName.replace(',', '_').replace('\\', '/'), ce.getKey(),
-					cmpMirex.getOverlapMeasure(),
-					cmpTriads.getOverlapMeasure(),
-					cmpTetrads.getOverlapMeasure(),
-					cmpMirex.getSegmentation(),
-					cmpTetrads.getEffectiveSeconds(),
-					ce.getSpectrum().totalSeconds));
+			SIM_LOG.info(String.format("%s;%s;%f;%f;%f;%f;%f;%f", 
+					track.replace(',', '_').replace('\\', '/'), null,
+					cmp[0].getOverlapMeasure(),
+					cmp[1].getOverlapMeasure(),
+					cmp[2].getOverlapMeasure(),
+					cmp[0].getSegmentation(),
+					cmp[2].getEffectiveSeconds(),
+					cmp[0].getTotalSeconds()));
 		}
 		
-		LOG.info("Test finished");
-		logErrors(accMirex, LOG);
-		logErrors(accTriads, LOG);
-		logErrors(accTetrads, LOG);
-//		logErrors(acc, SIM_LOG);
-	}
-
-	private static void logErrors(ComparisonAccumulator acc, Logger logger) {
-		logger.info("");
-		acc.printStatistics(logger);
-		logger.info("");
-		acc.printErrorStatistics(logger);
-//		int top = 20;
-//		logger.info(String.format("Errors TOP-%d:", top));
-//		List<Entry<String, Double>> errors = acc.getErrors();
-//		for (int i = 0; i < top && i < errors.size(); i++) {
-//			logger.info(String.format("%s: %f", errors.get(i).getKey(), errors.get(i).getValue()));
-//		}
+		for (int i = 0; i < acc.length; i++) {
+			LOG.info("");
+			acc[i].printStatistics(LOG);
+			acc[i].printErrorStatistics(ERR_LOG);
+		}
 	}
 
 	public static void write(AbstractWriter writer, String fileName) {
