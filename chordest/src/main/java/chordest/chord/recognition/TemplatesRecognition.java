@@ -10,7 +10,6 @@ import java.util.Map.Entry;
 import chordest.chord.templates.ITemplateProducer;
 import chordest.model.Chord;
 import chordest.model.Key;
-import chordest.util.MapUtil;
 
 /**
  * This class implements the simplest chord recognition algorithm: a chroma
@@ -64,20 +63,19 @@ public class TemplatesRecognition extends AbstractChordRecognition {
 
 	@Override
 	public Chord recognize(final double[] chormaFeaturesBin) {
-//		if (isSmall(chormaFeaturesBin)) {
-//			return Chord.empty();
-//		}
 		final double[] vector = metric.normalize(chormaFeaturesBin);
 		
-		final Map<Chord, Double> distances = new HashMap<Chord, Double>();
+		double minDistance = Double.MAX_VALUE;
+		Chord result = null;
 		final Map<Chord, double[]> chords = possibleChords;
 		for (Entry<Chord, double[]> entry : chords.entrySet()) {
-			distances.put(entry.getKey(), metric.distance(entry.getValue(), vector));
+			double d = metric.distance(entry.getValue(), vector);
+			if (d < minDistance) {
+				minDistance = d;
+				result = entry.getKey();
+			}
 		}
-		
-		// find element with minimal distance
-		List<Entry<Chord, Double>> sorted = MapUtil.sortMapByValue(distances, true);
-		return sorted.get(0).getKey();
+		return result;
 	}
 
 }
