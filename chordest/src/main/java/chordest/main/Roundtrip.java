@@ -17,7 +17,6 @@ import chordest.chord.comparison.Triads;
 import chordest.configuration.Configuration;
 import chordest.io.AbstractWriter;
 import chordest.io.csv.CsvFileWriter;
-import chordest.io.csv.CsvSpectrumFileWriter;
 import chordest.io.lab.LabFileReader;
 import chordest.io.lab.LabFileWriter;
 import chordest.spectrum.FileSpectrumDataProvider;
@@ -38,18 +37,27 @@ public class Roundtrip {
 
 	private static final String SEP = PathConstants.SEP;
 	public static final String CSV_ACTUAL_DIR = PathConstants.CSV_DIR + "actual" + SEP;
-	public static final String CSV_CHROMA_DIR = PathConstants.CSV_DIR + "chroma" + SEP;
 	public static final String CSV_EXPECTED_DIR = PathConstants.CSV_DIR + "expected" + SEP;
 	public static final String FILE_LIST = PathConstants.RESOURCES_DIR + "filelists" + SEP + "bqrz_bin.txt";
 
 	public static void main(String[] args) {
-		List<String> tracklist = TracklistCreator.readTrackList(FILE_LIST);
 		ComparisonAccumulator[] acc = new ComparisonAccumulator[] {
 			new ComparisonAccumulator(new Mirex2010()),
 			new ComparisonAccumulator(new Triads()),
 			new ComparisonAccumulator(new Tetrads())
 		};
-		Configuration c = new Configuration();
+		Configuration c;
+		List<String> tracklist;
+		String labDir;
+		if (args.length > 2) {
+			c = new Configuration(args[0]);
+			tracklist = TracklistCreator.readTrackList(args[1]);
+			labDir = args[2];
+		} else {
+			c = new Configuration();
+			tracklist = TracklistCreator.readTrackList(FILE_LIST);
+			labDir = PathConstants.LAB_DIR;
+		}
 		ERR_LOG.info("metric;type;total;0;1;2;3;4;5;6;7;8;9;10;11");
 		SIM_LOG.info("name,key,overlapM,overlap3,overlap4,segmentation,effective_length,full_length");
 		for (final String binFileName : tracklist) {
@@ -67,12 +75,11 @@ public class Roundtrip {
 			}
 
 			write(new LabFileWriter(ce), PathConstants.OUTPUT_DIR + labFileName);
-			write(new CsvSpectrumFileWriter(ce.getChroma()), CSV_CHROMA_DIR + csvFileName);
 
 			LabFileReader labReaderActual = new LabFileReader(new File(PathConstants.OUTPUT_DIR + labFileName));
 			write(new CsvFileWriter(ce.getChords(), ce.getOriginalBeatTimes()), CSV_ACTUAL_DIR + csvFileName);
 
-			LabFileReader labReaderExpected = new LabFileReader(new File(PathConstants.LAB_DIR + labFileName));
+			LabFileReader labReaderExpected = new LabFileReader(new File(labDir + labFileName));
 			write(new CsvFileWriter(labReaderExpected.getChords(), labReaderExpected.getTimestamps()), CSV_EXPECTED_DIR + csvFileName);
 
 			ChordListsComparison[] cmp = new ChordListsComparison[3];
