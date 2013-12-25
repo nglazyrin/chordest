@@ -67,11 +67,11 @@ public class Roundtrip {
 			final String csvFileName = track + PathConstants.EXT_CSV;
 			ChordExtractor ce;
 			if (new File(binFileName).exists()) {
-				ce = new ChordExtractor(c.process, new FileSpectrumDataProvider(binFileName));
+				ce = new ChordExtractor(c.process, c.template, new FileSpectrumDataProvider(binFileName));
 			} else {
 				final String wavFileName = PathConstants.WAV_DIR + track + PathConstants.EXT_WAV;
 				final String beatFileName = PathConstants.BEAT_DIR + track + PathConstants.EXT_BEAT;
-				ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(wavFileName, beatFileName, c));
+				ce = new ChordExtractor(c.process, c.template, new WaveFileSpectrumDataProvider(wavFileName, beatFileName, c));
 			}
 
 			write(new LabFileWriter(ce), PathConstants.OUTPUT_DIR + labFileName);

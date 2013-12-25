@@ -9,6 +9,7 @@ import chordest.chord.recognition.TemplatesRecognition;
 import chordest.chord.templates.ITemplateProducer;
 import chordest.chord.templates.TemplateProducer;
 import chordest.configuration.Configuration.ProcessProperties;
+import chordest.configuration.Configuration.TemplateProperties;
 import chordest.model.Chord;
 import chordest.model.Key;
 import chordest.model.Note;
@@ -35,12 +36,12 @@ public class ChordExtractor {
 	private double[][] chroma;
 	private Key key;
 
-	public ChordExtractor(ProcessProperties p, ISpectrumDataProvider spectrumProvider) {
+	public ChordExtractor(ProcessProperties p, TemplateProperties t, ISpectrumDataProvider spectrumProvider) {
 		spectrumData = spectrumProvider.getSpectrumData();
 		getFirstOctaves(spectrumData, 4);
 		double[] tempBeats = DataUtil.toAllBeatTimes(spectrumData.beatTimes, spectrumData.framesPerBeat);
 		
-		Chord[] tempChords = doChordExtraction(p, spectrumData.spectrum);
+		Chord[] tempChords = doChordExtraction(p, t, spectrumData.spectrum);
 		if (tempBeats[tempBeats.length - 1] < spectrumData.totalSeconds) {
 			tempBeats = Arrays.copyOf(tempBeats, tempBeats.length + 1);
 			tempBeats[tempBeats.length - 1] = spectrumData.totalSeconds;
@@ -71,7 +72,7 @@ public class ChordExtractor {
 		}
 	}
 
-	private Chord[] doChordExtraction(final ProcessProperties p, final double[][] spectrum) {
+	private Chord[] doChordExtraction(final ProcessProperties p, TemplateProperties t, final double[][] spectrum) {
 //		double[][] result = DataUtil.shrink(spectrum, 4); // TODO
 //		result = DataUtil.smoothHorizontallyMedianAndShrink(result, p.medianFilterWindow, 2);
 		double[][] result = DataUtil.smoothHorizontallyMedianAndShrink(spectrum,
@@ -79,7 +80,7 @@ public class ChordExtractor {
 		result = DataUtil.toLogSpectrum(result, p.crpLogEta);
 //		result = DataUtil.filterHorizontal3(result);
 //		result = DataUtil.removeShortLines(result, 9);
-		return doTemplateMatching(doChromaReductionAndSelfSimSmooth(result, p.crpFirstNonZero, p.selfSimilarityTheta), spectrumData.scaleInfo.octaves);
+		return doTemplateMatching(t, doChromaReductionAndSelfSimSmooth(result, p.crpFirstNonZero, p.selfSimilarityTheta), spectrumData.scaleInfo.octaves);
 	}
 
 	private double[][] doChromaReductionAndSelfSimSmooth(final double[][] spectrum,
@@ -94,16 +95,17 @@ public class ChordExtractor {
 		return result;
 	}
 
-	private Chord[] doTemplateMatching(final double[][] sp, int octaves) {
+	private Chord[] doTemplateMatching(TemplateProperties t, final double[][] sp, int octaves) {
 		double[][] sp12 = DataUtil.reduce(sp, octaves);
 		chroma = DataUtil.toSingleOctave(sp12, 12);
 
-//		key = Key.recognizeKey(getTonalProfile(pcp, 0, pcp.length), startNote);
-		key = null;
 		Note startNote = Note.byNumber(spectrumData.startNoteOffsetInSemitonesFromF0);
-		ITemplateProducer producer = new TemplateProducer(startNote);
-		IChordRecognition first = new TemplatesRecognition(producer, key);
+		key = KeyExtractor.getKey(sp12, startNote);
+		ITemplateProducer producer = new TemplateProducer(startNote, t.harmonicCount, t.contributionReduction);
+		IChordRecognition first = new TemplatesRecognition(producer, null);
 		Chord[] temp = first.recognize(chroma, new ScaleInfo(1, 12));
+//		IChordRecognition rec = new ExtraTemplatesRecognition(startNote, sp12[0].length); // TODO
+//		Chord[] temp = rec.recognize(sp12, null);
 		
 		double[] noChordness = DataUtil.getNochordness(sp, octaves);
 		for (int i = 0; i < noChordness.length; i++) {

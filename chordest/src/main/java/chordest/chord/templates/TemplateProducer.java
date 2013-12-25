@@ -1,5 +1,6 @@
 package chordest.chord.templates;
 
+import chordest.configuration.Configuration;
 import chordest.model.Chord;
 import chordest.model.Note;
 
@@ -11,28 +12,24 @@ import chordest.model.Note;
  */
 public class TemplateProducer implements ITemplateProducer {
 
-	private static final int HARMONICS_COUNT = 3;
-	private static final double[] HARMONIC_CONTRIBUTIONS = new double[HARMONICS_COUNT];
-	private static final double CONTRIBUTION_REDUCTION = 0.6;
-
-	static {
-		initializeHarmonicContributions();
-	}
-
-	private static void initializeHarmonicContributions() {
-		for (int i = 0; i < HARMONICS_COUNT; i++) {
-			HARMONIC_CONTRIBUTIONS[i] = getIthHarmonicContribution(i);
-		}
-	}
-
-	private static double getIthHarmonicContribution(int i) {
-		return Math.pow(CONTRIBUTION_REDUCTION, i);
-	}
+	private final double[] harmonicContributions;
 
 	private final Note startNote;
 
+	private double getIthHarmonicContribution(int i, double contributionReduction) {
+		return Math.pow(contributionReduction, i);
+	}
+
 	public TemplateProducer(Note startNote) {
+		this(startNote, new Configuration().template.harmonicCount, new Configuration().template.contributionReduction);
+	}
+
+	public TemplateProducer(Note startNote, int harmonicsCount, double contributionReduction) {
 		this.startNote = startNote;
+		harmonicContributions = new double[harmonicsCount];
+		for (int i = 0; i < harmonicsCount; i++) {
+			harmonicContributions[i] = getIthHarmonicContribution(i, contributionReduction);
+		}
 	}
 
 	@Override
@@ -68,9 +65,9 @@ public class TemplateProducer implements ITemplateProducer {
 	private void fillHarmonicsForPitchClass(double[] template, Note pitchClass, double coefficient) {
 		// cannot index java array with negative values, so make offset a positive value
 		int fundamentalPitchClass = (pitchClass.offsetFrom(this.startNote) + 12) % 12;
-		for (int i = 0; i < HARMONICS_COUNT; i++) {
+		for (int i = 0; i < harmonicContributions.length; i++) {
 			template[getPitchClassForIthHarmonic(fundamentalPitchClass, i)] +=
-				HARMONIC_CONTRIBUTIONS[i] * coefficient;
+					harmonicContributions[i] * coefficient;
 		}
 	}
 
@@ -78,9 +75,9 @@ public class TemplateProducer implements ITemplateProducer {
 		// cannot index java array with negative values, so make offset a positive value
 		int fundamentalPitchClass = (pitchClass.offsetFrom(this.startNote) + 12) % 12;
 		template[getPitchClassForIthHarmonic(fundamentalPitchClass, 0)] +=
-			HARMONIC_CONTRIBUTIONS[0] * coefficient;
+				harmonicContributions[0] * coefficient;
 		template[getPitchClassForIthHarmonic(fundamentalPitchClass, 1)] += // TODO
-				HARMONIC_CONTRIBUTIONS[1] * coefficient;
+				harmonicContributions[1] * coefficient;
 	}
 
 	private int getPitchClassForIthHarmonic(int fundamentalPitchClass, int i) {

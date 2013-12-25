@@ -44,10 +44,10 @@ public class BatchChordEst {
 			String beatFileName = args[1] + trackName + PathConstants.EXT_BEAT;
 			ChordExtractor ce;
 			if (new File(beatFileName).exists()) {
-				ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(
+				ce = new ChordExtractor(c.process, c.template, new WaveFileSpectrumDataProvider(
 						wavFileName, beatFileName, c, new FileBeatBarTimesProvider(beatFileName)));
 			} else {
-				ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(
+				ce = new ChordExtractor(c.process, c.template, new WaveFileSpectrumDataProvider(
 						wavFileName, beatFileName, c));
 			}
 			

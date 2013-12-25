@@ -34,11 +34,15 @@ public class Configuration {
 	private static final String PRE_VAMP_HOST_PATH_KEY = "pre.vampHostPath";
 	private static final String PRE_ESTIMATE_TUNING_FREQUENCY_KEY = "pre.estimateTuningFrequency";
 
+	private static final String TEMPLATE_HARMONIC_COUNT = "template.harmonicCount";
+	private static final String TEMPLATE_CONTRIBUTION_REDUCTION = "template.contributionReduction";
+
 	public static final String DEFAULT_CONFIG_FILE_LOCATION = "config" + File.separator + "chordest.properties";
 
 	public final SpectrumProperties spectrum;
 	public final ProcessProperties process;
 	public final PreProcessProperties pre;
+	public final TemplateProperties template;
 
 	public Configuration() {
 		this(DEFAULT_CONFIG_FILE_LOCATION);
@@ -83,6 +87,10 @@ public class Configuration {
         boolean estimateTuningFrequency = Boolean.parseBoolean(prop.getProperty(PRE_ESTIMATE_TUNING_FREQUENCY_KEY));
         this.pre = new PreProcessProperties(vampHost, estimateTuningFrequency);
         
+        int harmonicCount = getIntValue(prop.getProperty(TEMPLATE_HARMONIC_COUNT));
+        double contributionReduction = getDoubleValue(prop.getProperty(TEMPLATE_CONTRIBUTION_REDUCTION));
+        this.template = new TemplateProperties(harmonicCount, contributionReduction);
+        
         printConfiguration();
 	};
 
@@ -104,17 +112,19 @@ public class Configuration {
 
 	private void printConfiguration() {
 		LOG.info("Following configuration will be used:");
-		LOG.info("\t" + SPECTRUM_OCTAVES_KEY + " = " + spectrum.octaves);
-		LOG.info("\t" + SPECTRUM_NOTES_PER_OCTAVE_KEY + " = " + spectrum.notesPerOctave);
-		LOG.info("\t" + SPECTRUM_OFFSET_FROM_F0_IN_SEMITONES_KEY + " = " + spectrum.offsetFromF0InSemitones);
-		LOG.info("\t" + SPECTRUM_FRAMES_PER_BEAT_KEY + " = " + spectrum.framesPerBeat);
-		LOG.info("\t" + SPECTRUM_THREAD_POOL_SIZE_KEY + " = " + spectrum.threadPoolSize);
-		LOG.info("\t" + SPECTRUM_BEAT_TIMES_DELAY_IN_MS + " = " + spectrum.beatTimesDelay);
-		LOG.info("\t" + PROCESS_MEDIAN_FILTER_WINDOW_KEY + " = " + process.medianFilterWindow);
-		LOG.info("\t" + PROCESS_SELF_SIMILARITY_THETA_KEY + " = " + process.selfSimilarityTheta);
-		LOG.info("\t" + PROCESS_CRP_FIRST_NON_ZERO_KEY + " = " + process.crpFirstNonZero);
-		LOG.info("\t" + PRE_VAMP_HOST_PATH_KEY + " = " + pre.vampHostPath);
-		LOG.info("\t" + PRE_ESTIMATE_TUNING_FREQUENCY_KEY + " = " + pre.estimateTuningFrequency);
+		LOG.info(String.format("\t%s = %s", SPECTRUM_OCTAVES_KEY, spectrum.octaves));
+		LOG.info(String.format("\t%s = %s", SPECTRUM_NOTES_PER_OCTAVE_KEY, spectrum.notesPerOctave));
+		LOG.info(String.format("\t%s = %s", SPECTRUM_OFFSET_FROM_F0_IN_SEMITONES_KEY, spectrum.offsetFromF0InSemitones));
+		LOG.info(String.format("\t%s = %s", SPECTRUM_FRAMES_PER_BEAT_KEY, spectrum.framesPerBeat));
+		LOG.info(String.format("\t%s = %s", SPECTRUM_THREAD_POOL_SIZE_KEY, spectrum.threadPoolSize));
+		LOG.info(String.format("\t%s = %s", SPECTRUM_BEAT_TIMES_DELAY_IN_MS, spectrum.beatTimesDelay));
+		LOG.info(String.format("\t%s = %s", PROCESS_MEDIAN_FILTER_WINDOW_KEY, process.medianFilterWindow));
+		LOG.info(String.format("\t%s = %s", PROCESS_SELF_SIMILARITY_THETA_KEY, process.selfSimilarityTheta));
+		LOG.info(String.format("\t%s = %s", PROCESS_CRP_FIRST_NON_ZERO_KEY, process.crpFirstNonZero));
+		LOG.info(String.format("\t%s = %s", PRE_VAMP_HOST_PATH_KEY, pre.vampHostPath));
+		LOG.info(String.format("\t%s = %s", PRE_ESTIMATE_TUNING_FREQUENCY_KEY, pre.estimateTuningFrequency));
+		LOG.info(String.format("\t%s = %s", TEMPLATE_HARMONIC_COUNT, template.harmonicCount));
+		LOG.info(String.format("\t%s = %s", TEMPLATE_CONTRIBUTION_REDUCTION, template.contributionReduction));
 	}
 
 	public static class SpectrumProperties {
@@ -172,6 +182,19 @@ public class Configuration {
 		private PreProcessProperties(String vampHost, boolean estimateTuningFrequency) {
 			this.vampHostPath = StringUtils.isNotEmpty(vampHost) ? vampHost : VAMP_HOST_PATH_DEFAULT;
 			this.estimateTuningFrequency = estimateTuningFrequency;
+		}
+	}
+
+	public static class TemplateProperties {
+		private static final int HARMONIC_COUNT_DEFAULT = 3;
+		private static final double CONTRIBUTION_REDUCTION_DEFAULT = 0.6;
+		
+		public final int harmonicCount;
+		public final double contributionReduction;
+		
+		public TemplateProperties(int harmonicCount, double contributionReduction) {
+			this.harmonicCount = harmonicCount > 0 ? harmonicCount : HARMONIC_COUNT_DEFAULT;
+			this.contributionReduction = contributionReduction > 0 ? contributionReduction : CONTRIBUTION_REDUCTION_DEFAULT;
 		}
 	}
 

@@ -47,9 +47,9 @@ public class SingleFile {
 		File spectrumFile = new File(SPECTRUM_FILENAME);
 		ChordExtractor ce;
 		if (spectrumFile.exists()) {
-			ce = new ChordExtractor(c.process, new FileSpectrumDataProvider(SPECTRUM_FILENAME));
+			ce = new ChordExtractor(c.process, c.template, new FileSpectrumDataProvider(SPECTRUM_FILENAME));
 		} else {
-			ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(WAV_FILENAME, BEAT_FILENAME, c));
+			ce = new ChordExtractor(c.process, c.template, new WaveFileSpectrumDataProvider(WAV_FILENAME, BEAT_FILENAME, c));
 		}
 
 		File labFile = new File(LAB_FILENAME);

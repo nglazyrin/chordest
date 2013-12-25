@@ -69,7 +69,7 @@ public class DropHereWindow extends Component implements Runnable {
 						Configuration c = new Configuration();
 						progressBar.setValue(10);
 						String beatFileName = wavFileName.substring(0, wavFileName.lastIndexOf(".")) + PathConstants.EXT_BEAT;
-						ChordExtractor ce = new ChordExtractor(c.process, new WaveFileSpectrumDataProvider(wavFileName, beatFileName, c));
+						ChordExtractor ce = new ChordExtractor(c.process, c.template, new WaveFileSpectrumDataProvider(wavFileName, beatFileName, c));
 						
 						String labFileName = wavFileName.substring(0, wavFileName.lastIndexOf(".")) + PathConstants.EXT_LAB;
 						LabFileWriter labWriter = new LabFileWriter(ce);
