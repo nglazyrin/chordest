@@ -12,18 +12,22 @@ def runCommand(command, cwd):
                      cwd=cwd)
     return iter(p.stdout.readline, b'')
 
-def doRoundtrip(dir):
-    java_path = 'C:/Java/jdk1.7.0_05/bin/java.exe'
+def doRoundtrip(current_dir):
+    java_path = 'C:/Java/jdk1.7.0_21/bin/java.exe'
     classpath = '../../../target/chordest.jar;../../../config'
-    file_list_path = '../../../src/main/resources/filelists/q_bin.txt'
+    file_list_file_name = 'filelist.txt'
+    file_list_path = file_list_file_name
     lab_path = '../../../lab/' # must end with /
-    c = os.path.join(dir, 'chordest.properties')
-    if (os.path.isfile(c)):
+    if (not os.path.isfile(os.path.join(current_dir, file_list_file_name))):
+        file_list_path = '../' + file_list_path
+    c = os.path.join(current_dir, 'chordest.properties')
+    log_dir = os.path.join(current_dir, 'logs')
+    if (os.path.isfile(c) and not os.path.isdir(log_dir)):
         command = '%(java_path)s -cp %(classpath)s chordest.main.Roundtrip chordest.properties %(file_list_path)s %(lab_path)s' % \
             {"java_path": java_path, "classpath": classpath, "file_list_path": file_list_path, "lab_path": lab_path}
         print '> ' + command
-        result = runCommand(command, dir)
-        drawErrors(os.path.join(dir, 'logs', 'errors.csv'), os.path.join(dir, 'logs', 'errors.png'))
+        result = runCommand(command, current_dir)
+        #drawErrors(os.path.join(dir, 'logs', 'errors.csv'), os.path.join(dir, 'logs', 'errors.png'))
         return result
     return []
 
@@ -43,3 +47,7 @@ for root, dirs, _ in os.walk('.'):
     for d in dirs:
         for outputLine in doRoundtrip(d):
             print outputLine
+        csv_file = os.path.join(d, 'logs', 'errors.csv')
+        png_file = os.path.join(d, 'logs', 'errors.png')
+        if (os.path.isfile(csv_file)):
+            drawErrors(csv_file, png_file)
