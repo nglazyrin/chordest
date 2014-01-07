@@ -51,4 +51,9 @@ public class Mirex2010 implements IEvaluationMetric {
 		return "Mirex2010";
 	}
 
+	@Override
+	public String[] getOutputTypes() {
+		return null; // all types are supported
+	}
+
 }

@@ -18,9 +18,6 @@ import chordest.model.Chord;
  *
  */
 public class ComparisonAccumulator {
-	
-	private static String[] types = new String[] {
-			Chord.MAJ, Chord.MIN, Chord.DOM, Chord.MAJ7, Chord.MIN7 };
 
 	private double totalOverlap = 0;
 	private double totalWeightedOverlap = 0;
@@ -29,11 +26,13 @@ public class ComparisonAccumulator {
 	private double totalEffectiveLength = 0;
 	private double totalLength = 0;
 	private double totalErrorLength = 0;
-	private final Map<Pair<Chord, Chord>, Double> errors = new HashMap<Pair<Chord, Chord>, Double>();
+	
+	private final Map<Pair<Chord, Chord>, Double> errors;
 	private final IEvaluationMetric metric;
 
 	public ComparisonAccumulator(IEvaluationMetric metric) {
 		this.metric = metric;
+		this.errors = new HashMap<Pair<Chord, Chord>, Double>();
 	}
 
 	public void append(ChordListsComparison cmp) {
@@ -96,6 +95,7 @@ public class ComparisonAccumulator {
 	
 	public void printErrorStatistics(Logger logger) {
 		Errors err = getAllErrors();
+		String[] types = err.types;
 		for (int i = 0; i < types.length; i++) {
 			for (int j = 0; j < types.length; j++) {
 				printTypes(logger, types[i], types[j], err.aggregateTimes[i][j], ArrayUtils.subarray(err.times[i], j*12, (j+1)*12));
@@ -104,10 +104,26 @@ public class ComparisonAccumulator {
 		}
 		printTypes(logger, "chord", "N", err.chordN, new double[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
 		printTypes(logger, "N", "chord", err.nChord, new double[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
-		printTypes(logger, "oth", "ers", err.others, new double[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
+		printTypes(logger, "others", err.others, new double[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
+		
+		double[] values = new double[12];
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < types.length; i++) {
+			values[i] = err.timesPerType[i];
+			sb.append(types[i]);
+			sb.append(',');
+		}
+		sb.append("N,others");
+		values[types.length] = err.timesPerType[types.length];
+		values[types.length + 1] = err.timesPerType[types.length + 1];
+		printTypes(logger, sb.toString(), totalErrorLength, values);
 	}
 	
 	private void printTypes(Logger logger, String expectedType, String actualType, double time, double[] values) {
+		printTypes(logger, expectedType + " - " + actualType, time, values);
+	}
+	
+	private void printTypes(Logger logger, String message, double time, double[] values) {
 		double sum = 0;
 		for (int i = 0; i < values.length; i++) {
 			sum += values[i];
@@ -116,9 +132,7 @@ public class ComparisonAccumulator {
 			StringBuilder sb = new StringBuilder();
 			sb.append(getMetric());
 			sb.append(";");
-			sb.append(expectedType);
-			sb.append(" - ");
-			sb.append(actualType);
+			sb.append(message);
 			sb.append(";");
 			sb.append(time);
 			sb.append(";");
@@ -132,15 +146,17 @@ public class ComparisonAccumulator {
 	}
 	
 	public static class Errors {
-		private static final int TOTAL_CHORDS = types.length * 12;
+		private final String[] types;
 		
 		// when the expected chord is a known chord
-		public double[][] times = new double[types.length][TOTAL_CHORDS]; // 12 entries per each type
-		public double[][] aggregateTimes = new double[types.length][types.length];
+		public final double[][] times;
+		public final double[][] aggregateTimes;
 		
 		// when the expected chord can be mapped to some known chord
-		public double[][] timesReduced = new double[types.length][TOTAL_CHORDS];
-		public double[][] aggregateTimesReduced = new double[types.length][types.length];
+		public final double[][] timesReduced;
+		public final double[][] aggregateTimesReduced;
+
+		public final double[] timesPerType;
 
 		public double nChord;
 		
@@ -149,6 +165,18 @@ public class ComparisonAccumulator {
 		public double others;
 		
 		public Errors(Map<Pair<Chord, Chord>, Double> log, IEvaluationMetric metric) {
+			if (metric.getOutputTypes() != null && metric.getOutputTypes().length > 0) {
+				types = metric.getOutputTypes();
+			} else {
+				types = new String[] { Chord.MAJ, Chord.MIN };
+			}
+			int totalChords = types.length * 12; // 12 entries per each type
+			times = new double[types.length][totalChords];
+			aggregateTimes = new double[types.length][types.length];
+			timesReduced = new double[types.length][totalChords];
+			aggregateTimesReduced = new double[types.length][types.length];
+			timesPerType = new double[types.length + 2]; // plus N and others
+			
 			for (Entry<Pair<Chord, Chord>, Double> entry : log.entrySet()) {
 				double time = entry.getValue();
 				Chord expected = entry.getKey().getLeft();
@@ -157,27 +185,30 @@ public class ComparisonAccumulator {
 				boolean processed = false;
 				if (expected.isEmpty()) {
 					nChord += time;
+					timesPerType[timesPerType.length - 2] += time;
 					processed = true;
 				} else if (actual.isEmpty()) {
 					chordN += time;
-					processed = true;
-				} else if (! isMirexChord(expected)) {
-					others += time;
+					timesPerType[timesPerType.length - 2] += time;
 					processed = true;
 				} else {
 					for (int i = 0; i < types.length && ! processed; i++) {
 						if (expected.isOfType(types[i])) {
 							times[i][index] += time;
 							aggregateTimes[i][index / 12] += time;
+							timesPerType[i] += time;
 							processed = true;
 						} else if (metric.map(expected).isOfType(types[i])) {
 							timesReduced[i][index] += time;
 							aggregateTimesReduced[i][index / 12] += time;
+							timesPerType[i] += time;
+							processed = true;
 						}
 					}
 				}
 				if (! processed) {
 					others += time;
+					timesPerType[timesPerType.length - 1] += time;
 				}
 			}
 		}

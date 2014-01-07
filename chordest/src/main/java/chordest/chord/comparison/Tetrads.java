@@ -13,7 +13,7 @@ public class Tetrads implements IEvaluationMetric {
 			return chord;
 		}
 		Note root = chord.getRoot();
-		String[] shorthands = new String[] { Chord.DOM, Chord.MAJ7, Chord.MIN7, Chord.MAJ, Chord.MIN };
+		String[] shorthands = getOutputTypes();
 		for (String shorthand : shorthands) {
 			Chord pattern = new Chord(root, shorthand);
 			Note[] chordNotes = chord.getNotes();
@@ -66,6 +66,11 @@ public class Tetrads implements IEvaluationMetric {
 	@Override
 	public String toString() {
 		return "Tetrads";
+	}
+
+	@Override
+	public String[] getOutputTypes() {
+		return new String[] { Chord.DOM, Chord.MAJ7, Chord.MIN7, Chord.MAJ, Chord.MIN };
 	}
 
 }

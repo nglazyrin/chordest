@@ -13,7 +13,7 @@ public class Triads implements IEvaluationMetric {
 			return chord;
 		}
 		Note root = chord.getRoot();
-		String[] shorthands = new String[] { Chord.MAJ, Chord.MIN };
+		String[] shorthands = getOutputTypes();
 		for (String shorthand : shorthands) {
 			Chord pattern = new Chord(root, shorthand);
 			Note[] chordNotes = chord.getNotes();
@@ -63,6 +63,11 @@ public class Triads implements IEvaluationMetric {
 	@Override
 	public String toString() {
 		return "Triads";
+	}
+
+	@Override
+	public String[] getOutputTypes() {
+		return new String[] { Chord.MAJ, Chord.MIN };
 	}
 
 }
