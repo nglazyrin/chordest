@@ -6,14 +6,8 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import chordest.chord.comparison.ChordListsComparison;
-import chordest.chord.comparison.ComparisonAccumulator;
-import chordest.chord.comparison.Mirex2010;
-import chordest.chord.comparison.Tetrads;
-import chordest.chord.comparison.Triads;
 import chordest.io.csv.CsvFileWriter;
 import chordest.io.lab.LabFileReader;
 import chordest.io.lab.LabFileWriter;
@@ -46,12 +40,7 @@ public abstract class AbstractTestRecognizeFromCsv extends Roundtrip {
 				doChordRecognition(binFile, csvFile, labFile);
 			}
 		}
-
-		for (int i = 0; i < acc.length; i++) {
-			LOG.info("");
-			acc[i].printStatistics(LOG);
-			acc[i].printErrorStatistics(ERR_LOG);
-		}
+		writeStatistics();
 	}
 
 	private void doChordRecognition(String binFile, String csvFile, String expectedLab) {
