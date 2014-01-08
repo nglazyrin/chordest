@@ -5,12 +5,17 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.chord.ChordExtractor;
+import chordest.chord.ChordRecognizer;
+import chordest.chord.ChromaExtractor;
 import chordest.chord.comparison.ChordListsComparison;
+import chordest.chord.comparison.IEvaluationMetric;
 import chordest.chord.comparison.Triads;
+import chordest.chord.templates.ITemplateProducer;
+import chordest.chord.templates.TemplateProducer;
 import chordest.configuration.Configuration;
 import chordest.io.lab.LabFileReader;
 import chordest.io.lab.LabFileWriter;
+import chordest.model.Chord;
 import chordest.spectrum.FileSpectrumDataProvider;
 import chordest.spectrum.WaveFileSpectrumDataProvider;
 import chordest.util.Visualizer;
@@ -44,27 +49,32 @@ public class SingleFile {
 		String BEAT_FILENAME = RESULT_PATH + wavFile.getName() + ".beat.txt";
 		
 		Configuration c = new Configuration();
+		IEvaluationMetric metric = new Triads();
 		File spectrumFile = new File(SPECTRUM_FILENAME);
-		ChordExtractor ce;
+		ChromaExtractor ce;
 		if (spectrumFile.exists()) {
-			ce = new ChordExtractor(c.process, c.template, new FileSpectrumDataProvider(SPECTRUM_FILENAME));
+			ce = new ChromaExtractor(c.process, c.template, new FileSpectrumDataProvider(SPECTRUM_FILENAME));
 		} else {
-			ce = new ChordExtractor(c.process, c.template, new WaveFileSpectrumDataProvider(WAV_FILENAME, BEAT_FILENAME, c));
+			ce = new ChromaExtractor(c.process, c.template,
+					new WaveFileSpectrumDataProvider(WAV_FILENAME, BEAT_FILENAME, c));
 		}
+		ITemplateProducer producer = new TemplateProducer(ce.getStartNote(), c.template);
+		ChordRecognizer cr = new ChordRecognizer(ce.getChroma(), ce.getNoChordness(), producer);
+		Chord[] chords = cr.recognize(metric.getOutputTypes());
 
 		File labFile = new File(LAB_FILENAME);
 		if (labFile.exists()) {
 			LabFileReader labReader = new LabFileReader(labFile);
-			ChordListsComparison sim = new ChordListsComparison(labReader.getChords(),
-					labReader.getTimestamps(), ce.getChords(), ce.getOriginalBeatTimes(), new Triads());
-			LOG.info("Overlap measure: " + sim.getOverlapMeasure());
+			ChordListsComparison cmp = new ChordListsComparison(labReader.getChords(),
+					labReader.getTimestamps(), chords, ce.getOriginalBeatTimes(), metric);
+			LOG.info("Overlap measure: " + cmp.getOverlapMeasure());
 			LOG.info("Key: " + ce.getKey());
 		}
 		
-		int startOffset = ce.getSpectrum().startNoteOffsetInSemitonesFromF0;
-		Visualizer.visualizeChords(ce.getChords(), ce.getOriginalBeatTimes(), WAV_FILENAME, startOffset);
+		int startOffset = c.spectrum.offsetFromF0InSemitones;
+		Visualizer.visualizeChords(chords, ce.getOriginalBeatTimes(), WAV_FILENAME, startOffset);
 		
-		LabFileWriter labWriter = new LabFileWriter(ce);
+		LabFileWriter labWriter = new LabFileWriter(chords, ce.getOriginalBeatTimes());
 		try {
 			labWriter.writeTo(new File(RESULT_FILENAME));
 		} catch (IOException e) {

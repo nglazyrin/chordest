@@ -93,8 +93,8 @@ public class Harmony {
 				double[] col = pcp[i];
 				sum = DataUtil.add(sum, col);
 			}
-			final Chord[] top = new TemplatesRecognition(possibleChords,
-					producer).recognize(new double[][] { sum }, new ScaleInfo(1,12));
+			final Chord[] top = new TemplatesRecognition(producer,
+					possibleChords).recognize(new double[][] { sum }, new ScaleInfo(1,12));
 			Chord best = top[0];
 			for (int i = interval.start; i < interval.end; i++) {
 				result[i] = best;

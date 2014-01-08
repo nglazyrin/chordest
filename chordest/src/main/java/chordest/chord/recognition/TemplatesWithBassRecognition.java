@@ -23,8 +23,9 @@ public class TemplatesWithBassRecognition extends TemplatesRecognition {
 
 	private final double[][] bass;
 
-	public TemplatesWithBassRecognition(ITemplateProducer producer, double[][] bassChroma) {
-		super(producer);
+	public TemplatesWithBassRecognition(ITemplateProducer producer, String[] knownChords,
+			double[][] bassChroma) {
+		super(producer, knownChords);
 		bass = bassChroma;
 	}
 

@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import chordest.chord.templates.ITemplateProducer;
 import chordest.chord.templates.TemplateProducer;
+import chordest.configuration.Configuration;
 import chordest.model.Chord;
 import chordest.model.Note;
 import chordest.util.MapUtil;
@@ -33,7 +34,7 @@ public class PureTonnetzRecognition {
 	private final Map<Chord, double[]> possibleChords;
 
 	public static void main(String[] args) {
-		PureTonnetzRecognition p = new PureTonnetzRecognition(new TemplateProducer(Note.C));
+		PureTonnetzRecognition p = new PureTonnetzRecognition(new TemplateProducer(Note.C, new Configuration().template));
 		for (Entry<Chord, double[]> e : p.possibleChords.entrySet()) {
 			LOG.info(e.getKey() + " " + Arrays.toString(e.getValue()));
 		}

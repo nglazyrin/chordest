@@ -1,38 +1,50 @@
 package chordest.main.experimental;
 
 import java.io.File;
+import java.util.List;
 
-import chordest.chord.Harmony;
-import chordest.chord.recognition.TemplatesRecognition;
+import org.apache.commons.lang3.StringUtils;
+
 import chordest.chord.templates.ITemplateProducer;
 import chordest.chord.templates.TemplateProducer;
 import chordest.configuration.Configuration;
 import chordest.io.csv.CsvSpectrumFileReader;
-import chordest.model.Chord;
+import chordest.io.spectrum.SpectrumFileReader;
+import chordest.main.Roundtrip;
 import chordest.model.Note;
-import chordest.transform.ScaleInfo;
+import chordest.spectrum.SpectrumData;
 import chordest.util.DataUtil;
+import chordest.util.PathConstants;
+import chordest.util.TracklistCreator;
 
-public class TestCsvChroma extends AbstractTestRecognizeFromCsv {
+public class TestCsvChroma extends Roundtrip {
 
-	private static String CSV_DIRECTORY = "E:\\personal\\dissertation\\sda.48-200-200\\encoded";
+	private static String CSV_DIRECTORY = "work\\dissertation\\sda\\rsda.48-40-32\\encoded";
 
-	Configuration c = new Configuration();
+	private static final Configuration c = new Configuration();
 
 	public static void main(String[] args) {
-		TestCsvChroma tcc = new TestCsvChroma();
-		tcc.recognizeFromCsv();
+		writeCsvHeaders();
+		for (int index = 0; index < TrainTestDataCircularGenerator.PARTS; index++) {
+			List<String> tracklist = TracklistCreator.readTrackList(
+					TrainTestDataCircularGenerator.getTestFileListName(index));
+			for (String item : tracklist) {
+				String temp = StringUtils.substringAfterLast(item, PathConstants.SEP);
+				String track = StringUtils.substringBeforeLast(temp, PathConstants.EXT_WAV + PathConstants.EXT_BIN);
+				String binFile = item;
+				String csvFile = CSV_DIRECTORY + index + "\\" + track + PathConstants.EXT_CSV;
+				SpectrumData sd = SpectrumFileReader.read(binFile);
+				double[][] chroma = recognize(new File(csvFile));
+				double[] noChordness = getNoChordness(chroma);
+				double[] beatTimes = DataUtil.toAllBeatTimes(sd.beatTimes, sd.framesPerBeat);
+				ITemplateProducer producer = new TemplateProducer(Note.byNumber(c.spectrum.offsetFromF0InSemitones), c.template);
+				processFile(chroma, noChordness, beatTimes, PathConstants.LAB_DIR, track, acc, producer);
+			}
+		}
+		writeStatistics();
 	}
 
-	@Override
-	public String getCsvDirectory() {
-		return CSV_DIRECTORY;
-	}
-
-	@Override
-	public Chord[] recognize(File csvFile) {
-		double[][] chroma = new CsvSpectrumFileReader(csvFile).getSpectrum();
-		
+	private static double[] getNoChordness(double[][] chroma) {
 		double[] noChordness = new double[chroma.length];
 		for (int i = 0; i < chroma.length; i++) {
 			double[] t = chroma[i];
@@ -46,25 +58,17 @@ public class TestCsvChroma extends AbstractTestRecognizeFromCsv {
 				noChordness[i] = 1;
 			}
 		}
+		return noChordness;
+	}
 
+	private static double[][] recognize(File csvFile) {
+		double[][] chroma = new CsvSpectrumFileReader(csvFile).getSpectrum();
 		DataUtil.scaleEachTo01(chroma);
 		
 		double[][] selfSim = DataUtil.getSelfSimilarity(chroma); // TODO
 		selfSim = DataUtil.removeDissimilar(selfSim, c.process.selfSimilarityTheta);
 		chroma = DataUtil.smoothWithSelfSimilarity(chroma, selfSim);
-		
-		Note startNote = Note.byNumber(c.spectrum.offsetFromF0InSemitones);
-		ITemplateProducer producer = new TemplateProducer(startNote);
-		TemplatesRecognition rec = new TemplatesRecognition(producer);
-		Chord[] temp = rec.recognize(chroma, new ScaleInfo(1, 12));
-		for (int i = 0; i < noChordness.length; i++) {
-			if (noChordness[i] < 0.0015) {
-				temp[i] = Chord.empty();
-			}
-		}
-		return Harmony.smoothUsingHarmony(chroma, temp, new ScaleInfo(1, 12), producer);
-//		return new Viterbi(producer).decode(chroma);
-//		return temp;
+		return chroma;
 	}
 
 }

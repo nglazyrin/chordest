@@ -1,6 +1,6 @@
 package chordest.chord.templates;
 
-import chordest.configuration.Configuration;
+import chordest.configuration.Configuration.TemplateProperties;
 import chordest.model.Chord;
 import chordest.model.Note;
 
@@ -20,8 +20,8 @@ public class TemplateProducer implements ITemplateProducer {
 		return Math.pow(contributionReduction, i);
 	}
 
-	public TemplateProducer(Note startNote) {
-		this(startNote, new Configuration().template.harmonicCount, new Configuration().template.contributionReduction);
+	public TemplateProducer(Note startNote, TemplateProperties p) {
+		this(startNote, p.harmonicCount, p.contributionReduction);
 	}
 
 	public TemplateProducer(Note startNote, int harmonicsCount, double contributionReduction) {

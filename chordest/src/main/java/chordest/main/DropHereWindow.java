@@ -16,9 +16,14 @@ import net.iharder.filedrop.FileDrop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.chord.ChordExtractor;
+import chordest.chord.ChordRecognizer;
+import chordest.chord.ChromaExtractor;
+import chordest.chord.comparison.Triads;
+import chordest.chord.templates.ITemplateProducer;
+import chordest.chord.templates.TemplateProducer;
 import chordest.configuration.Configuration;
 import chordest.io.lab.LabFileWriter;
+import chordest.model.Chord;
 import chordest.spectrum.WaveFileSpectrumDataProvider;
 import chordest.util.PathConstants;
 
@@ -69,10 +74,14 @@ public class DropHereWindow extends Component implements Runnable {
 						Configuration c = new Configuration();
 						progressBar.setValue(10);
 						String beatFileName = wavFileName.substring(0, wavFileName.lastIndexOf(".")) + PathConstants.EXT_BEAT;
-						ChordExtractor ce = new ChordExtractor(c.process, c.template, new WaveFileSpectrumDataProvider(wavFileName, beatFileName, c));
+						ChromaExtractor ce = new ChromaExtractor(c.process, c.template,
+								new WaveFileSpectrumDataProvider(wavFileName, beatFileName, c));
+						ITemplateProducer producer = new TemplateProducer(ce.getStartNote(), c.template);
+						ChordRecognizer cr = new ChordRecognizer(ce.getChroma(), ce.getNoChordness(), producer);
+						Chord[] chords = cr.recognize(new Triads().getOutputTypes());
 						
 						String labFileName = wavFileName.substring(0, wavFileName.lastIndexOf(".")) + PathConstants.EXT_LAB;
-						LabFileWriter labWriter = new LabFileWriter(ce);
+						LabFileWriter labWriter = new LabFileWriter(chords, ce.getOriginalBeatTimes());
 						try {
 							labWriter.writeTo(new File(labFileName));
 						} catch (IOException e) {

@@ -25,27 +25,16 @@ import chordest.util.DataUtil;
 import chordest.util.PathConstants;
 import chordest.util.TracklistCreator;
 
-public abstract class AbstractTestRecognizeFromCsv {
-
-	private static final Logger LOG = LoggerFactory.getLogger(AbstractTestRecognizeFromCsv.class);
-	private static final Logger ERR_LOG = LoggerFactory.getLogger("Errors");
-	private static final Logger SIM_LOG = LoggerFactory.getLogger("Similarity");
+public abstract class AbstractTestRecognizeFromCsv extends Roundtrip {
 
 	private static String OUTPUT_DIRECTORY = "work" + PathConstants.SEP + "lab" + PathConstants.SEP;
-
-	private static ComparisonAccumulator[] acc = new ComparisonAccumulator[] {
-		new ComparisonAccumulator(new Mirex2010()),
-		new ComparisonAccumulator(new Triads()),
-		new ComparisonAccumulator(new Tetrads())
-	};
 
 	public abstract String getCsvDirectory();
 
 	public abstract Chord[] recognize(File csvFile);
 
 	public void recognizeFromCsv() {
-		ERR_LOG.info("metric;type;total;0;1;2;3;4;5;6;7;8;9;10;11");
-		SIM_LOG.info("name;key;overlapM;overlap3;overlap4;segmentation;effective_length;full_length");
+		writeCsvHeaders();
 		for (int index = 0; index < TrainTestDataCircularGenerator.PARTS; index++) {
 			List<String> tracklist = TracklistCreator.readTrackList(
 					TrainTestDataCircularGenerator.getTestFileListName(index));
@@ -86,8 +75,8 @@ public abstract class AbstractTestRecognizeFromCsv {
 		
 		String track = StringUtils.substringAfterLast(expectedLab, PathConstants.SEP);
 		String csvFileName = StringUtils.replace(track, PathConstants.EXT_LAB, PathConstants.EXT_CSV);
-		Roundtrip.write(new CsvFileWriter(labReaderActual.getChords(), labReaderActual.getTimestamps()), Roundtrip.CSV_ACTUAL_DIR + csvFileName);
-		Roundtrip.write(new CsvFileWriter(labReaderExpected.getChords(), labReaderExpected.getTimestamps()), Roundtrip.CSV_EXPECTED_DIR + csvFileName);
+		write(new CsvFileWriter(labReaderActual.getChords(), labReaderActual.getTimestamps()), Roundtrip.CSV_TRIADS_DIR + csvFileName);
+		write(new CsvFileWriter(labReaderExpected.getChords(), labReaderExpected.getTimestamps()), Roundtrip.CSV_EXPECTED_DIR + csvFileName);
 		
 		ChordListsComparison[] cmp = new ChordListsComparison[3];
 		for (int i = 0; i < acc.length; i++) {

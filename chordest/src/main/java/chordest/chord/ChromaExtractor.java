@@ -4,13 +4,8 @@ import java.util.Arrays;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-import chordest.chord.recognition.IChordRecognition;
-import chordest.chord.recognition.TemplatesRecognition;
-import chordest.chord.templates.ITemplateProducer;
-import chordest.chord.templates.TemplateProducer;
 import chordest.configuration.Configuration.ProcessProperties;
 import chordest.configuration.Configuration.TemplateProperties;
-import chordest.model.Chord;
 import chordest.model.Key;
 import chordest.model.Note;
 import chordest.spectrum.ISpectrumDataProvider;
@@ -28,28 +23,34 @@ import chordest.util.DataUtil;
  * @author Nikolay
  *
  */
-public class ChordExtractor {
+public class ChromaExtractor {
 
 	private final double[] originalBeatTimes;
 	private final SpectrumData spectrumData;
-	private final Chord[] chords;
 	private double[][] chroma;
+	private double[] noChordness;
 	private Key key;
 
-	public ChordExtractor(ProcessProperties p, TemplateProperties t, ISpectrumDataProvider spectrumProvider) {
+	public ChromaExtractor(ProcessProperties p, TemplateProperties t,
+			ISpectrumDataProvider spectrumProvider) {
 		spectrumData = spectrumProvider.getSpectrumData();
 		getFirstOctaves(spectrumData, 4);
-		double[] tempBeats = DataUtil.toAllBeatTimes(spectrumData.beatTimes, spectrumData.framesPerBeat);
 		
-		Chord[] tempChords = doChordExtraction(p, t, spectrumData.spectrum);
+		doChromaExtraction(p, t, spectrumData.spectrum);
+		
+		double[] tempBeats = DataUtil.toAllBeatTimes(spectrumData.beatTimes, spectrumData.framesPerBeat);
 		if (tempBeats[tempBeats.length - 1] < spectrumData.totalSeconds) {
+			// append song length as the last beat position
 			tempBeats = Arrays.copyOf(tempBeats, tempBeats.length + 1);
 			tempBeats[tempBeats.length - 1] = spectrumData.totalSeconds;
-			tempChords = Arrays.copyOf(tempChords, tempChords.length + 1);
-			tempChords[tempChords.length - 1] = Chord.empty();
+			// add a zero chroma vector
+			chroma = Arrays.copyOf(chroma, chroma.length + 1);
+			chroma[chroma.length - 1] = new double[12];
+			// and mark the last beat as having no chord
+			noChordness = Arrays.copyOf(noChordness, noChordness.length + 1);
+			noChordness[noChordness.length - 1] = 0;
 		}
 		originalBeatTimes = tempBeats;
-		chords = tempChords;
 	}
 
 	/**
@@ -72,7 +73,7 @@ public class ChordExtractor {
 		}
 	}
 
-	private Chord[] doChordExtraction(final ProcessProperties p, TemplateProperties t, final double[][] spectrum) {
+	private void doChromaExtraction(final ProcessProperties p, TemplateProperties t, final double[][] spectrum) {
 //		double[][] result = DataUtil.shrink(spectrum, 4); // TODO
 //		result = DataUtil.smoothHorizontallyMedianAndShrink(result, p.medianFilterWindow, 2);
 		double[][] result = DataUtil.smoothHorizontallyMedianAndShrink(spectrum,
@@ -80,63 +81,49 @@ public class ChordExtractor {
 		result = DataUtil.toLogSpectrum(result, p.crpLogEta);
 //		result = DataUtil.filterHorizontal3(result);
 //		result = DataUtil.removeShortLines(result, 9);
-		return doTemplateMatching(t, doChromaReductionAndSelfSimSmooth(result, p.crpFirstNonZero, p.selfSimilarityTheta), spectrumData.scaleInfo.octaves);
+		result = DiscreteCosineTransform.doChromaReduction(result, p.crpFirstNonZero);
+		result = doSelfSimSmooth(result, p.selfSimilarityTheta);
+		toChromaAndNoChordness(t, result, spectrumData.scaleInfo.octaves);
 	}
 
-	private double[][] doChromaReductionAndSelfSimSmooth(final double[][] spectrum,
-			int crpNZ,  double theta) {
-		double[][] result = DiscreteCosineTransform.doChromaReduction(spectrum, crpNZ);
+	private double[][] doSelfSimSmooth(final double[][] spectrum, double theta) {
 //		double[][] result = spectrum;
 //		result = DataUtil.reduce(spectrum, 4);
 		
-		double[][] selfSim = DataUtil.getSelfSimilarity(result);
+		double[][] selfSim = DataUtil.getSelfSimilarity(spectrum);
 		selfSim = DataUtil.removeDissimilar(selfSim, theta);
-		result = DataUtil.smoothWithSelfSimilarity(result, selfSim);
+		double[][] result = DataUtil.smoothWithSelfSimilarity(spectrum, selfSim);
 		return result;
 	}
 
-	private Chord[] doTemplateMatching(TemplateProperties t, final double[][] sp, int octaves) {
+	private void toChromaAndNoChordness(TemplateProperties t, final double[][] sp, int octaves) {
 		double[][] sp12 = DataUtil.reduce(sp, octaves);
 		chroma = DataUtil.toSingleOctave(sp12, 12);
 
 		Note startNote = Note.byNumber(spectrumData.startNoteOffsetInSemitonesFromF0);
 		key = KeyExtractor.getKey(sp12, startNote);
-		ITemplateProducer producer = new TemplateProducer(startNote, t.harmonicCount, t.contributionReduction);
-		IChordRecognition first = new TemplatesRecognition(producer, null);
-		Chord[] temp = first.recognize(chroma, new ScaleInfo(1, 12));
-//		IChordRecognition rec = new ExtraTemplatesRecognition(startNote, sp12[0].length); // TODO
-//		Chord[] temp = rec.recognize(sp12, null);
 		
-		double[] noChordness = DataUtil.getNochordness(sp, octaves);
-		for (int i = 0; i < noChordness.length; i++) {
-			if (noChordness[i] < 0.0011) {
-				temp[i] = Chord.empty();
-			}
-		}
-		
-//		return temp;
-		return Harmony.smoothUsingHarmony(chroma, temp, new ScaleInfo(1, 12), producer);
-//		return new Viterbi(producer).decode(chroma);
+		noChordness = DataUtil.getNochordness(sp, octaves);
 	}
 
 	public double[] getOriginalBeatTimes() {
 		return originalBeatTimes;
 	}
 
-	public Chord[] getChords() {
-		return chords;
+	public Note getStartNote() {
+		return Note.byNumber(spectrumData.startNoteOffsetInSemitonesFromF0);
 	}
 
 	public double[][] getChroma() {
 		return chroma;
 	}
 
-	public Key getKey() {
-		return key;
+	public double[] getNoChordness() {
+		return noChordness;
 	}
 
-	public SpectrumData getSpectrum() {
-		return spectrumData;
+	public Key getKey() {
+		return key;
 	}
 
 }

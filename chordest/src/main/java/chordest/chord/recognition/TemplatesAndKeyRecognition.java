@@ -29,8 +29,8 @@ public class TemplatesAndKeyRecognition extends TemplatesRecognition {
 	
 	private Note startNote;
 	
-	public TemplatesAndKeyRecognition(Note pcpStartNote, ITemplateProducer producer) {
-		super(producer);
+	public TemplatesAndKeyRecognition(Note pcpStartNote, ITemplateProducer producer, String[] knownChords) {
+		super(producer, knownChords);
 		this.templateProducer = producer;
 		this.startNote = pcpStartNote;
 	}

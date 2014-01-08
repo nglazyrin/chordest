@@ -1,8 +1,10 @@
 package chordest.chord.recognition;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +19,13 @@ public class ExtraTemplatesRecognition implements IChordRecognition {
 
 	private final ExtraTemplateProducer producer;
 
-	public ExtraTemplatesRecognition(Note startNote, int templateSize) {
+	private final List<Chord> possibleChords;
+
+	public ExtraTemplatesRecognition(Note startNote, String[] knownChords, int templateSize) {
+		if (! ArrayUtils.contains(knownChords, Chord.N)) {
+			knownChords = ArrayUtils.add(knownChords, Chord.N);
+		}
+		possibleChords = Chord.getAllChordsWithShorthands(knownChords);
 		producer = new ExtraTemplateProducer(startNote, templateSize);
 	}
 
@@ -35,7 +43,7 @@ public class ExtraTemplatesRecognition implements IChordRecognition {
 		final double[] vector = AbstractChordRecognition.metric.normalize(cqtSpectrum);
 		Chord nearest = null;
 		double minDistance = Double.MAX_VALUE;
-		for (Chord chord : TemplatesRecognition.knownChords) {
+		for (Chord chord : possibleChords) {
 			if (chord.isEmpty()) {
 				continue;
 			}
@@ -50,23 +58,19 @@ public class ExtraTemplatesRecognition implements IChordRecognition {
 		return nearest;
 	}
 
-	public static class ExtraTemplateProducer {
+	public class ExtraTemplateProducer {
 
-		private static final int HARMONICS_COUNT = 3;
-		private static final double[] HARMONIC_CONTRIBUTIONS = new double[HARMONICS_COUNT];
-		private static final double CONTRIBUTION_REDUCTION = 0.6;
+		private final int HARMONICS_COUNT = 3;
+		private final double[] HARMONIC_CONTRIBUTIONS = new double[HARMONICS_COUNT];
+		private final double CONTRIBUTION_REDUCTION = 0.6;
 
-		static {
-			initializeHarmonicContributions();
-		}
-
-		private static void initializeHarmonicContributions() {
+		private void initializeHarmonicContributions() {
 			for (int i = 0; i < HARMONICS_COUNT; i++) {
 				HARMONIC_CONTRIBUTIONS[i] = getIthHarmonicContribution(i);
 			}
 		}
 
-		private static double getIthHarmonicContribution(int i) {
+		private double getIthHarmonicContribution(int i) {
 			return Math.pow(CONTRIBUTION_REDUCTION, i);
 		}
 
@@ -77,13 +81,14 @@ public class ExtraTemplatesRecognition implements IChordRecognition {
 		private Map<Chord, double[][]> templates = new HashMap<Chord, double[][]>();
 
 		public ExtraTemplateProducer(Note startNote, int templateSize) {
+			initializeHarmonicContributions();
 			this.startNote = startNote;
 			this.templateSize = templateSize;
 			if (templateSize % 12 != 0) {
 				throw new IllegalArgumentException("template size must be multiple of 12");
 			}
 			int octaves = templateSize / 12;
-			for (Chord chord : TemplatesRecognition.knownChords) {
+			for (Chord chord : possibleChords) {
 				if (chord.isEmpty()) {
 					continue;
 				}

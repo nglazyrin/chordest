@@ -8,10 +8,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import chordest.beat.FileBeatBarTimesProvider;
-import chordest.chord.ChordExtractor;
+import chordest.chord.ChordRecognizer;
+import chordest.chord.ChromaExtractor;
+import chordest.chord.comparison.Triads;
+import chordest.chord.templates.ITemplateProducer;
+import chordest.chord.templates.TemplateProducer;
 import chordest.configuration.Configuration;
 import chordest.configuration.LogConfiguration;
 import chordest.io.lab.LabFileWriter;
+import chordest.model.Chord;
 import chordest.spectrum.WaveFileSpectrumDataProvider;
 import chordest.util.PathConstants;
 import chordest.util.TracklistCreator;
@@ -42,16 +47,19 @@ public class BatchChordEst {
 			String trackName = new File(wavFileName).getName();
 			String labFileName = trackName + ".txt";
 			String beatFileName = args[1] + trackName + PathConstants.EXT_BEAT;
-			ChordExtractor ce;
+			ChromaExtractor ce;
 			if (new File(beatFileName).exists()) {
-				ce = new ChordExtractor(c.process, c.template, new WaveFileSpectrumDataProvider(
+				ce = new ChromaExtractor(c.process, c.template, new WaveFileSpectrumDataProvider(
 						wavFileName, beatFileName, c, new FileBeatBarTimesProvider(beatFileName)));
 			} else {
-				ce = new ChordExtractor(c.process, c.template, new WaveFileSpectrumDataProvider(
+				ce = new ChromaExtractor(c.process, c.template, new WaveFileSpectrumDataProvider(
 						wavFileName, beatFileName, c));
 			}
+			ITemplateProducer producer = new TemplateProducer(ce.getStartNote(), c.template);
+			ChordRecognizer cr = new ChordRecognizer(ce.getChroma(), ce.getNoChordness(), producer);
+			Chord[] chords = cr.recognize(new Triads().getOutputTypes());
 			
-			LabFileWriter labWriter = new LabFileWriter(ce);
+			LabFileWriter labWriter = new LabFileWriter(chords, ce.getOriginalBeatTimes());
 			try {
 				labWriter.writeTo(new File(args[2] + labFileName));
 			} catch (IOException e) {

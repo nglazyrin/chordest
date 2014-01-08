@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import chordest.chord.recognition.AbstractChordRecognition;
 import chordest.chord.templates.TemplateProducer;
+import chordest.configuration.Configuration.TemplateProperties;
 import chordest.model.Chord;
 import chordest.model.Note;
 import chordest.util.MapUtil;
@@ -49,8 +50,8 @@ public class TonnetzRecognition extends AbstractChordRecognition {
 	/**
 	 * All 24 major/minor chords will be used for recognition
 	 */
-	public TonnetzRecognition(Note pcpStartNote) {
-		Map<Chord, double[]> map = getTemplatesForChords(new TemplateProducer(pcpStartNote),
+	public TonnetzRecognition(Note pcpStartNote, TemplateProperties p) {
+		Map<Chord, double[]> map = getTemplatesForChords(new TemplateProducer(pcpStartNote, p),
 				Chord.getAllChordsWithShorthands(new String[] { Chord.MAJ, Chord.MIN, Chord.AUG, Chord.DIM }));
 		for (Chord chord : map.keySet()) {
 			map.put(chord, toTonalCentroid(map.get(chord)));

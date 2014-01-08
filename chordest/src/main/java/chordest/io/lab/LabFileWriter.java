@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Locale;
 
-import chordest.chord.ChordExtractor;
 import chordest.io.AbstractWriter;
 import chordest.model.Chord;
 
@@ -35,16 +34,6 @@ public class LabFileWriter extends AbstractWriter {
 		}
 		this.chords = chords;
 		this.timestamps = timestamps;
-	}
-
-	/**
-	 * Appends one more timestamp that marks end of the last chord played.
-	 * The segment between that timestamp and the end of the file is treated as
-	 * containing N (no chord).
-	 * @param ce
-	 */
-	public LabFileWriter(ChordExtractor ce) {
-		this(ce.getChords(), ce.getOriginalBeatTimes());
 	}
 
 	@Override

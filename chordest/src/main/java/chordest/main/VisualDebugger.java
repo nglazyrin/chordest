@@ -6,8 +6,8 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.chord.CircleOfFifths;
 import chordest.chord.Harmony;
+import chordest.chord.comparison.Triads;
 import chordest.chord.recognition.IChordRecognition;
 import chordest.chord.recognition.TemplatesRecognition;
 import chordest.chord.templates.ITemplateProducer;
@@ -18,7 +18,6 @@ import chordest.model.Chord;
 import chordest.model.Note;
 import chordest.spectrum.SpectrumData;
 import chordest.transform.CQConstants;
-import chordest.transform.DiscreteCosineTransform;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
 import chordest.util.NoteLabelProvider;
@@ -34,13 +33,13 @@ import chordest.util.Visualizer;
 public class VisualDebugger {
 
 	private static final Logger LOG = LoggerFactory.getLogger(VisualDebugger.class);
-	public static final String TRACK = "02 Another One Bites The Dust";
-	public static final String FILE = "spectrum8-60-6\\" + TRACK + ".wav.bin";
+	public static final String TRACK = "08_-_Love_Me_Do";
+	public static final String FILE = "E:\\dev\\spectra\\spectrum8-60-6\\" + TRACK + ".wav.bin";
 
 	private static final Configuration c = new Configuration();
 
-	private static double startTime = 40;
-	private static double endTime   = 44;
+	private static double startTime = 0;
+	private static double endTime   = 40;
 	
 	private static String[] labels;
 	private static String[] labels1;
@@ -61,12 +60,13 @@ public class VisualDebugger {
 		CQConstants cqc = CQConstants.getInstance(sd.samplingRate, sd.scaleInfo, sd.f0, sd.startNoteOffsetInSemitonesFromF0);
 		LOG.info("Max window length: " + (cqc.getLongestWindow() * 1.0 / sd.samplingRate));
 //		spectrum = DataUtil.smoothHorizontallyMedianAndShrink(spectrum, 1, sd.framesPerBeat);
-		spectrum = DataUtil.smoothHorizontallyMedianAndShrink(spectrum, c.process.medianFilterWindow, sd.framesPerBeat);
-		spectrum = DataUtil.toLogSpectrum(spectrum, c.process.crpLogEta);
-//		spectrum = DataUtil.getAWeightedSpectrum(spectrum, cqc.A); // TODO
 //		visualizeSpectrum(sd, spectrum, "Spectrum");
+		spectrum = DataUtil.smoothHorizontallyMedianAndShrink(spectrum, c.process.medianFilterWindow, sd.framesPerBeat);
+//		spectrum = DataUtil.toLogSpectrum(spectrum, c.process.crpLogEta);
+//		spectrum = DataUtil.getAWeightedSpectrum(spectrum, cqc.A); // TODO
+		visualizeSpectrum(sd, spectrum, "Spectrum");
 		
-		spectrum = DiscreteCosineTransform.doChromaReduction(spectrum, c.process.crpFirstNonZero);
+//		spectrum = DiscreteCosineTransform.doChromaReduction(spectrum, c.process.crpFirstNonZero);
 //		visualizeSpectrum(sd, spectrum, "Reduced");
 		double[][] selfSim = DataUtil.getSelfSimilarity(spectrum);
 		
@@ -88,8 +88,8 @@ public class VisualDebugger {
 //		visualizeSpectrum(sd, chroma, "Chroma");
 		
 		Note startNote = Note.byNumber(sd.startNoteOffsetInSemitonesFromF0);
-		ITemplateProducer producer = new TemplateProducer(startNote);
-		IChordRecognition first = new TemplatesRecognition(producer, null);
+		ITemplateProducer producer = new TemplateProducer(startNote, c.template);
+		IChordRecognition first = new TemplatesRecognition(producer, new Triads().getOutputTypes());
 		Chord[] chords = first.recognize(chroma, new ScaleInfo(1, 12));
 		
 		double[] noChordness = DataUtil.getNochordness(spectrum, sd.scaleInfo.octaves);
@@ -98,7 +98,7 @@ public class VisualDebugger {
 				chords[i] = Chord.empty();
 			}
 		}
-		Visualizer.visualizeXByTimeDistribution(noChordness, beats);
+//		Visualizer.visualizeXByTimeDistribution(noChordness, beats);
 		
 		printChords(chords, beats);
 		chords = Harmony.smoothUsingHarmony(chroma, chords, new ScaleInfo(1, 12), producer);
@@ -124,7 +124,10 @@ public class VisualDebugger {
 	}
 
 	private static void visualizeSpectrum(SpectrumData sd, double[][] spectrum, String label) {
-		double[] beats = shrinkBeats(sd.beatTimes, c.spectrum.framesPerBeat);
+		double[] beats = sd.beatTimes;
+		if (sd.spectrum.length > spectrum.length) {
+			beats = shrinkBeats(beats, c.spectrum.framesPerBeat);
+		}
 		double[] localBeats = getBeats(beats);
 		int startIndex = Arrays.binarySearch(beats, localBeats[0]);
 		int endIndex = startIndex + localBeats.length;
@@ -159,7 +162,7 @@ public class VisualDebugger {
 	}
 
 	private static void printTemplate(Chord chord) {
-		double[] array = new TemplateProducer(Note.C).getTemplateFor(chord);
+		double[] array = new TemplateProducer(Note.C, c.template).getTemplateFor(chord);
 		DataUtil.scaleTo01(array);
 		System.out.println(Arrays.toString(array));
 	}
