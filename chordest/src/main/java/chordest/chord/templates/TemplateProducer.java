@@ -76,8 +76,10 @@ public class TemplateProducer implements ITemplateProducer {
 		int fundamentalPitchClass = (pitchClass.offsetFrom(this.startNote) + 12) % 12;
 		template[getPitchClassForIthHarmonic(fundamentalPitchClass, 0)] +=
 				harmonicContributions[0] * coefficient;
-		template[getPitchClassForIthHarmonic(fundamentalPitchClass, 1)] += // TODO
-				harmonicContributions[1] * coefficient;
+		if (harmonicContributions.length > 1) {
+			template[getPitchClassForIthHarmonic(fundamentalPitchClass, 1)] += // TODO
+					harmonicContributions[1] * coefficient;
+		}
 	}
 
 	private int getPitchClassForIthHarmonic(int fundamentalPitchClass, int i) {
