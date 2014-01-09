@@ -30,47 +30,48 @@ def drawBarChart(p, col_names, target_file):
     print target_file
 
 def process(files, values):
-    aor = 0
-    waor = 0
+    waor3 = 0
+    waor4 = 0
     segm = 0
     rows = 0
     length = 0
     for file in files:
-        [aor, waor, rows, length, segm] = process_file(file, values, aor, waor, rows, length, segm)
-    aor = aor / rows
-    waor = waor / length
+        [waor3, waor4, rows, length, segm] = process_file(file, values, waor3, waor4, rows, length, segm)
+    waor3 = waor3 / length
+    waor4 = waor4 / length
     segm = segm / rows
-    return [aor, waor, segm]
+    return [waor3, waor4, segm]
 
-def process_file(file0, values, aor, waor, rows, length, segm):
+def process_file(file0, values, waor3, waor4, rows, length, segm):
     with open(file0, 'rb') as s0:
         sr0 = csv.DictReader(s0, delimiter=';')
         for row in sr0:
-            overlap = float(row['overlap3'].replace(',','.'))
+            overlap3 = float(row['overlap3'].replace(',','.'))
+            overlap4 = float(row['overlap4'].replace(',','.'))
             effective_length = float(row['effective_length'].replace(',','.'))
             segmentation = float(row['segmentation'].replace(',','.'))
             name = row['name']
-            aor = aor + overlap
             segm = segm + segmentation
             rows = rows + 1
-            waor = waor + overlap * effective_length
+            waor3 = waor3 + overlap3 * effective_length
+            waor4 = waor4 + overlap4 * effective_length
             length = length + effective_length
             if (name in values):
-                values[name].append(str(overlap))
+                values[name].append(str(overlap3))
             else:
-                values[name] = [ str(overlap) ]
-    return [aor, waor, rows, length, segm]
+                values[name] = [ str(overlap3) ]
+    return [waor3, waor4, rows, length, segm]
 
-def save(file, current_dir, summary, aor, waor, segm):
+def save(file, current_dir, summary, waor3, waor4, segm):
     with open(file, 'wb') as s:
-#        s.write('AOR: ' + str(aor) + '\n')
-        s.write('WAOR: ' + str(waor) + '\n')
-        s.write('Segmentation: ' + str(segm) + '\n')
+        s.write('Triads: ' + '{:.4}'.format(waor3) + '\n')
+        s.write('Tetrads: ' + '{:.4}'.format(waor4) + '\n')
+        s.write('Segmentation: ' + '{:.4}'.format(segm) + '\n')
     with open(summary, 'a+b') as s:
         s.write(current_dir + '\n')
-#        s.write('AOR: ' + str(aor) + '\n')
-        s.write('WAOR: ' + str(waor) + '\n')
-        s.write('Segmentation: ' + str(segm) + '\n\n')
+        s.write('Triads: ' + '{:.4}'.format(waor3) + '\n')
+        s.write('Tetrads: ' + '{:.4}'.format(waor4) + '\n')
+        s.write('Segmentation: ' + '{:.4}'.format(segm) + '\n\n')
 
 def save_dict(file, values, dirnames):
     od = OrderedDict(sorted(values.items(), key=lambda t: t[0]))
@@ -125,8 +126,8 @@ for root, dirs, _ in os.walk(current_dir):
                 has_drawn_something = True
             if (os.path.isfile(similarity_csv)):
                 dirnames.append(d)
-                (aor, waor, segm) = process([ similarity_csv ], values)
-                save(stats_txt, d, summary_txt, aor, waor, segm)
+                (waor3, waor4, segm) = process([ similarity_csv ], values)
+                save(stats_txt, d, summary_txt, waor3, waor4, segm)
         if has_drawn_something:
             for f in data:
                 p.figure(f.name)
