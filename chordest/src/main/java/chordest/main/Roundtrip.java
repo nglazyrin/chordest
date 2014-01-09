@@ -89,7 +89,7 @@ public class Roundtrip {
 
 	protected static void writeCsvHeaders() {
 		ERR_LOG.info("metric;type;total;0;1;2;3;4;5;6;7;8;9;10;11");
-		SIM_LOG.info("name,key,overlapM,overlap3,overlap4,segmentation,effective_length,full_length");
+		SIM_LOG.info("name;key;overlapM;overlap3;overlap4;segmentation;effective_length;full_length");
 	}
 
 	protected static void processFile(double[][] chroma, double[] noChordness,
