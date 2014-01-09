@@ -72,7 +72,8 @@ public class Roundtrip {
 			String track = StringUtils.substringBeforeLast(temp, PathConstants.EXT_WAV + PathConstants.EXT_BIN);
 			ChromaExtractor ce;
 			if (new File(binFileName).exists()) {
-				ce = new ChromaExtractor(c.process, c.template, new FileSpectrumDataProvider(binFileName));
+				ce = new ChromaExtractor(c.process, c.template, new FileSpectrumDataProvider(binFileName),
+						c.spectrum.framesPerBeat);
 			} else {
 				final String wavFileName = PathConstants.WAV_DIR + track + PathConstants.EXT_WAV;
 				final String beatFileName = PathConstants.BEAT_DIR + track + PathConstants.EXT_BEAT;

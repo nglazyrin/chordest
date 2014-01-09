@@ -30,10 +30,17 @@ public class ChromaExtractor {
 	private double[][] chroma;
 	private double[] noChordness;
 	private Key key;
+	private int framesPerBeatOverride;
 
 	public ChromaExtractor(ProcessProperties p, TemplateProperties t,
 			ISpectrumDataProvider spectrumProvider) {
+		this(p, t, spectrumProvider, -1);
+	}
+
+	public ChromaExtractor(ProcessProperties p, TemplateProperties t,
+			ISpectrumDataProvider spectrumProvider, int framesPerBeatOverride) {
 		spectrumData = spectrumProvider.getSpectrumData();
+		this.framesPerBeatOverride = framesPerBeatOverride > 0 ? framesPerBeatOverride : spectrumData.framesPerBeat;
 		getFirstOctaves(spectrumData, 4);
 		
 		doChromaExtraction(p, t, spectrumData.spectrum);
@@ -74,10 +81,15 @@ public class ChromaExtractor {
 	}
 
 	private void doChromaExtraction(final ProcessProperties p, TemplateProperties t, final double[][] spectrum) {
-//		double[][] result = DataUtil.shrink(spectrum, 4); // TODO
-//		result = DataUtil.smoothHorizontallyMedianAndShrink(result, p.medianFilterWindow, 2);
-		double[][] result = DataUtil.smoothHorizontallyMedianAndShrink(spectrum,
-				p.medianFilterWindow, spectrumData.framesPerBeat);
+		double[][] result;
+		if (spectrumData.framesPerBeat / framesPerBeatOverride > 1) {
+			result = DataUtil.shrink(spectrum, framesPerBeatOverride);
+			result = DataUtil.smoothHorizontallyMedianAndShrink(result,
+					p.medianFilterWindow, spectrumData.framesPerBeat / framesPerBeatOverride);
+		} else {
+			result = DataUtil.smoothHorizontallyMedianAndShrink(spectrum,
+					p.medianFilterWindow, spectrumData.framesPerBeat);
+		}
 		result = DataUtil.toLogSpectrum(result, p.crpLogEta);
 //		result = DataUtil.filterHorizontal3(result);
 //		result = DataUtil.removeShortLines(result, 9);
