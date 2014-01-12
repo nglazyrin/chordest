@@ -32,7 +32,7 @@ public class TestCsvChroma extends Roundtrip {
 				String temp = StringUtils.substringAfterLast(item, PathConstants.SEP);
 				String track = StringUtils.substringBeforeLast(temp, PathConstants.EXT_WAV + PathConstants.EXT_BIN);
 				String binFile = item;
-				String csvFile = CSV_DIRECTORY + index + "\\" + track + PathConstants.EXT_CSV;
+				String csvFile = CSV_DIRECTORY + index + "\\" + track + PathConstants.EXT_WAV + PathConstants.EXT_BIN + PathConstants.EXT_CSV;
 				SpectrumData sd = SpectrumFileReader.read(binFile);
 				double[][] chroma = recognize(new File(csvFile));
 				double[] noChordness = getNoChordness(chroma);
