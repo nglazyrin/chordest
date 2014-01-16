@@ -82,6 +82,8 @@ public class ChromaExtractor {
 
 	private void doChromaExtraction(final ProcessProperties p, TemplateProperties t, final double[][] spectrum) {
 		double[][] result;
+//		result = DataUtil.filterHorizontal3(spectrum);
+//		result = DataUtil.removeShortLines(result, 9);
 		if (spectrumData.framesPerBeat / framesPerBeatOverride > 1) {
 			result = DataUtil.shrink(spectrum, framesPerBeatOverride);
 			result = DataUtil.smoothHorizontallyMedianAndShrink(result,
@@ -91,8 +93,6 @@ public class ChromaExtractor {
 					p.medianFilterWindow, spectrumData.framesPerBeat);
 		}
 		result = DataUtil.toLogSpectrum(result, p.crpLogEta);
-//		result = DataUtil.filterHorizontal3(result);
-//		result = DataUtil.removeShortLines(result, 9);
 		result = DiscreteCosineTransform.doChromaReduction(result, p.crpFirstNonZero);
 		result = doSelfSimSmooth(result, p.selfSimilarityTheta);
 		toChromaAndNoChordness(t, result, spectrumData.scaleInfo.octaves);

@@ -8,16 +8,17 @@ import chordest.transform.ScaleInfo;
 
 public class ChordRecognizer {
 
-	private static final double MIN_NO_CHORDNESS = 0.0011;
-
 	private final double[][] chroma;
 	private final double[] noChordness;
 	private final ITemplateProducer producer;
+	private final double noChordnessLimit;
 
-	public ChordRecognizer(double[][] chroma, double[] noChordness, ITemplateProducer producer) {
+	public ChordRecognizer(double[][] chroma, double[] noChordness,
+			ITemplateProducer producer, double noChordnessLimit) {
 		this.chroma = chroma;
 		this.noChordness = noChordness;
 		this.producer = producer;
+		this.noChordnessLimit = noChordnessLimit;
 	}
 
 	public Chord[] recognize(String[] knownChordShorthands) {
@@ -26,7 +27,7 @@ public class ChordRecognizer {
 //		IChordRecognition recognition = new ExtraTemplatesRecognition(startNote, sp12[0].length); // TODO
 //		Chord[] temp = recognition.recognize(sp12, null);
 		for (int i = 0; i < noChordness.length; i++) {
-			if (noChordness[i] < MIN_NO_CHORDNESS) {
+			if (noChordness[i] < noChordnessLimit) {
 				temp[i] = Chord.empty();
 			}
 		}

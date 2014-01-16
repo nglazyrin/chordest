@@ -45,7 +45,7 @@ public class Roundtrip {
 	public static final String CSV_EXPECTED_DIR = PathConstants.CSV_DIR + "expected" + SEP;
 	public static final String LAB_TRIADS_DIR = PathConstants.OUTPUT_DIR + "triads" + SEP;
 	public static final String LAB_TETRADS_DIR = PathConstants.OUTPUT_DIR + "tetrads" + SEP;
-	public static final String FILE_LIST = PathConstants.RESOURCES_DIR + "filelists" + SEP + "q_bin.txt";
+	public static final String FILE_LIST = PathConstants.RESOURCES_DIR + "filelists" + SEP + "bqrz_bin.txt";
 
 	protected static final ComparisonAccumulator[] acc = new ComparisonAccumulator[] {
 		new ComparisonAccumulator(new Mirex2010()),
@@ -53,8 +53,9 @@ public class Roundtrip {
 		new ComparisonAccumulator(new Tetrads())
 	};
 
+	protected static Configuration c;
+
 	public static void main(String[] args) {
-		Configuration c;
 		List<String> tracklist;
 		String labDir;
 		if (args.length > 2) {
@@ -98,7 +99,7 @@ public class Roundtrip {
 			ComparisonAccumulator[] acc, ITemplateProducer producer) {
 		final String csvFileName = track + PathConstants.EXT_CSV;
 		final String labFileName = track + PathConstants.EXT_LAB;
-		ChordRecognizer cr = new ChordRecognizer(chroma, noChordness, producer);
+		ChordRecognizer cr = new ChordRecognizer(chroma, noChordness, producer, c.process.noChordnessLimit);
 		Chord[] triads = cr.recognize(new Triads().getOutputTypes());
 		Chord[] tetrads = cr.recognize(new Tetrads().getOutputTypes());
 		

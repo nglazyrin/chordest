@@ -77,7 +77,7 @@ public class DropHereWindow extends Component implements Runnable {
 						ChromaExtractor ce = new ChromaExtractor(c.process, c.template,
 								new WaveFileSpectrumDataProvider(wavFileName, beatFileName, c));
 						ITemplateProducer producer = new TemplateProducer(ce.getStartNote(), c.template);
-						ChordRecognizer cr = new ChordRecognizer(ce.getChroma(), ce.getNoChordness(), producer);
+						ChordRecognizer cr = new ChordRecognizer(ce.getChroma(), ce.getNoChordness(), producer, c.process.noChordnessLimit);
 						Chord[] chords = cr.recognize(new Triads().getOutputTypes());
 						
 						String labFileName = wavFileName.substring(0, wavFileName.lastIndexOf(".")) + PathConstants.EXT_LAB;

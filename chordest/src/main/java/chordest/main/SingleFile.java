@@ -59,7 +59,7 @@ public class SingleFile {
 					new WaveFileSpectrumDataProvider(WAV_FILENAME, BEAT_FILENAME, c));
 		}
 		ITemplateProducer producer = new TemplateProducer(ce.getStartNote(), c.template);
-		ChordRecognizer cr = new ChordRecognizer(ce.getChroma(), ce.getNoChordness(), producer);
+		ChordRecognizer cr = new ChordRecognizer(ce.getChroma(), ce.getNoChordness(), producer, c.process.noChordnessLimit);
 		Chord[] chords = cr.recognize(metric.getOutputTypes());
 
 		File labFile = new File(LAB_FILENAME);

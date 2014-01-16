@@ -30,6 +30,7 @@ public class Configuration {
 	private static final String PROCESS_SELF_SIMILARITY_THETA_KEY = "process.selfSimilarityTheta";
 	private static final String PROCESS_CRP_FIRST_NON_ZERO_KEY = "process.crpFirstNonZero";
 	private static final String PROCESS_CRP_LOGARITHM_ETA_KEY = "process.crpLogEta";
+	private static final String PROCESS_NOCHORDNESS_LIMIT_KEY = "process.noChordnessLimit";
 
 	private static final String PRE_VAMP_HOST_PATH_KEY = "pre.vampHostPath";
 	private static final String PRE_ESTIMATE_TUNING_FREQUENCY_KEY = "pre.estimateTuningFrequency";
@@ -81,7 +82,8 @@ public class Configuration {
         double theta = getDoubleValue(prop.getProperty(PROCESS_SELF_SIMILARITY_THETA_KEY));
         int logEta = getIntValue(prop.getProperty(PROCESS_CRP_LOGARITHM_ETA_KEY));
         int crpFirstNonZero = getIntValue(prop.getProperty(PROCESS_CRP_FIRST_NON_ZERO_KEY));
-        this.process = new ProcessProperties(window, theta, logEta, crpFirstNonZero);
+        double noChordnessLimit = getDoubleValue(prop.getProperty(PROCESS_NOCHORDNESS_LIMIT_KEY));
+        this.process = new ProcessProperties(window, theta, logEta, crpFirstNonZero, noChordnessLimit);
         
         String vampHost = prop.getProperty(PRE_VAMP_HOST_PATH_KEY);
         boolean estimateTuningFrequency = Boolean.parseBoolean(prop.getProperty(PRE_ESTIMATE_TUNING_FREQUENCY_KEY));
@@ -161,17 +163,21 @@ public class Configuration {
 		private static final double SELF_SIMILARITY_THETA_DEFAULT = 0.10;
 		private static final int CRP_LOG_ETA_DEFAULT = 50000;
 		private static final int CRP_FIRST_NON_ZERO_DEFAULT = 15;
+		private static final double NOCHORDNESS_LIMIT_DEFAULT = 0.0011;
 
 		public final int medianFilterWindow;
 		public final double selfSimilarityTheta;
 		public final int crpLogEta;
 		public final int crpFirstNonZero;
+		public final double noChordnessLimit;
 
-		private ProcessProperties(int window, double ssTheta, int crpLogEta, int crpFirstNonZero) {
+		private ProcessProperties(int window, double ssTheta, int crpLogEta,
+				int crpFirstNonZero, double noChordnessLimit) {
 			this.medianFilterWindow = window > 0 ? window : MEDIAN_FILTER_WINDOW_DEFAULT;
 			this.selfSimilarityTheta = ssTheta > 0 ? ssTheta : SELF_SIMILARITY_THETA_DEFAULT;
 			this.crpLogEta = crpLogEta > 0 ? crpLogEta : CRP_LOG_ETA_DEFAULT;
 			this.crpFirstNonZero = crpFirstNonZero >= 0 ? crpFirstNonZero : CRP_FIRST_NON_ZERO_DEFAULT;
+			this.noChordnessLimit = noChordnessLimit > 0 ? noChordnessLimit : NOCHORDNESS_LIMIT_DEFAULT;
 		}
 	}
 
