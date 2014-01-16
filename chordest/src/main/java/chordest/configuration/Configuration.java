@@ -125,6 +125,7 @@ public class Configuration {
 		LOG.info(String.format("\t%s = %s", PROCESS_MEDIAN_FILTER_WINDOW_KEY, process.medianFilterWindow));
 		LOG.info(String.format("\t%s = %s", PROCESS_SELF_SIMILARITY_THETA_KEY, process.selfSimilarityTheta));
 		LOG.info(String.format("\t%s = %s", PROCESS_CRP_FIRST_NON_ZERO_KEY, process.crpFirstNonZero));
+		LOG.info(String.format("\t%s = %s", PROCESS_NOCHORDNESS_LIMIT_KEY, process.noChordnessLimit));
 		LOG.info(String.format("\t%s = %s", PRE_VAMP_HOST_PATH_KEY, pre.vampHostPath));
 		LOG.info(String.format("\t%s = %s", PRE_ESTIMATE_TUNING_FREQUENCY_KEY, pre.estimateTuningFrequency));
 		LOG.info(String.format("\t%s = %s", TEMPLATE_HARMONIC_COUNT, template.harmonicCount));
