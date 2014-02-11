@@ -1,5 +1,6 @@
 package chordest.beat;
 
+import java.awt.Graphics;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -9,21 +10,29 @@ import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.commons.io.output.WriterOutputStream;
+import org.jfree.data.xy.DefaultXYDataset;
+import org.jfree.data.xy.XYZDataset;
+import org.junit.internal.matchers.Each;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import at.ofai.music.audio.Util;
 import uk.co.labbookpages.WavFile;
+import chordest.io.beat.Beat2FileReader;
+import chordest.io.beat.BeatFileWriter;
+import chordest.io.beat.BeatOnlyFileWriter;
 import chordest.transform.FFTTransformWrapper;
 import chordest.transform.ITransform;
 import chordest.transform.PooledTransformer;
 import chordest.transform.PooledTransformer.ITransformProvider;
+import chordest.util.DatasetUtil;
 import chordest.util.Visualizer;
 import chordest.wave.Buffer;
 import chordest.wave.WaveReader;
 
 public class MyBeatTimesProvider implements IBeatTimesProvider {
 	
-	private double[] beatTimes = new double[] {0.5, 1, 1.5, 2, 2.5, 3, 3.5};
+	private double[] beatTimes;
 	private int samplingRate = 0;
 	private double[] originalEnergy;
 	private int firstBar;
@@ -37,8 +46,8 @@ public class MyBeatTimesProvider implements IBeatTimesProvider {
 	public static final double SILENCE_SEC = 2.5;
 	
 	public static void main(String[] args) {
-		new MyBeatTimesProvider("D:/USU/MIR/SamplesWAV/BrainstormMaybe.wav");
-		//new MyBeatTimesProvider("D:/USU/MIR/MIREX '11/beattrack_train_2006/train/train1.wav");
+		//new MyBeatTimesProvider("D:/USU/MIR/SamplesWAV/BrainstormMaybe.wav");
+		new MyBeatTimesProvider("D:/USU/MIR/MIREX '11/beattrack_train_2006/train/train14.wav");
 	}
 
 	public MyBeatTimesProvider(String waveFileName) {
@@ -130,20 +139,8 @@ public class MyBeatTimesProvider implements IBeatTimesProvider {
 		Visualizer.visualizeXByTimeDistribution(kickLocations, windowBeginnings);
 		
 		String output = "D:/USU/MIR/MIREX '11/beattrack_train_2006/train/output.txt"; 
-		try{
-			FileWriter fstream = new FileWriter(output);
-			BufferedWriter out = new BufferedWriter(fstream);
-			
-			for (int i=0; i<kickLocations.length; ++i) {
-				if (kickLocations[i] > 0)
-					out.write(String.format(Locale.US, "%.3f ", i * WINDOW_STEP));
-			}
-				
-			out.close();
-		} catch (Exception e) {
-			System.err.println("Error: " + e.getMessage());
-		}
-		LOG.info(String.format("Finished processing of %s", waveFileName));
+		// save beatTimes to output file
+		BeatOnlyFileWriter.write(output, beatTimes);
 	}
 
 	private double[] getSmoothEnergy(double[] original) {
@@ -164,15 +161,20 @@ public class MyBeatTimesProvider implements IBeatTimesProvider {
 		return smoothed;
 	}
 
+	// calculates beatTimes
+	// and returns array where 0 if no beat, > 0 - otherwise. 
 	private double[] getKicksLocations(int length, int optimalPeriod) {
 		double[] result = new double[length];
 		int rest = firstBar % optimalPeriod;
-		for (int i=rest; i<length; i+=optimalPeriod) {
+		int countOfBeats = (length - rest) / optimalPeriod + 1;
+		beatTimes = new double[countOfBeats];
+		for (int i=rest, k=0; i<length; i+=optimalPeriod, ++k) {
 			result[i] = 100000.0;
+			beatTimes[k] = i / WINDOW_STEP / 1000; // divided by 1000 because ms -> sec
 		}
 		return result;
 	}
-
+	
 	private int getOptimalTempo(double[] smoothed) {
 		double minTempoDuration = 0.25;
 		double maxTempoDuration = 3;

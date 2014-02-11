@@ -18,9 +18,9 @@ import chordest.io.AbstractWriter;
  */
 public class BeatFileWriter extends AbstractWriter {
 
-	private static final Logger LOG = LoggerFactory.getLogger(BeatFileWriter.class);
+	protected static final Logger LOG = LoggerFactory.getLogger(BeatFileWriter.class);
 
-	private final double[] timestamps;
+	protected final double[] timestamps;
 
 	private int i = 0;
 
