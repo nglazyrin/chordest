@@ -19,11 +19,17 @@ import chordest.util.TracklistCreator;
 
 public class TestCsvChroma extends Roundtrip {
 
-	private static String CSV_DIRECTORY = "work\\dissertation\\sda\\rsda.48-40-32\\encoded";
-
-	private static final Configuration c = new Configuration();
+	private static String CSV_DIRECTORY = "work\\dissertation\\sda\\sda.60-300-300\\encoded";
 
 	public static void main(String[] args) {
+		String labDir;
+		if (args.length > 1) {
+			c = new Configuration(args[0]);
+			labDir = args[1];
+		} else {
+			c = new Configuration();
+			labDir = PathConstants.LAB_DIR;
+		}
 		writeCsvHeaders();
 		for (int index = 0; index < TrainTestDataCircularGenerator.PARTS; index++) {
 			List<String> tracklist = TracklistCreator.readTrackList(
@@ -38,7 +44,7 @@ public class TestCsvChroma extends Roundtrip {
 				double[] noChordness = getNoChordness(chroma);
 				double[] beatTimes = DataUtil.toAllBeatTimes(sd.beatTimes, sd.framesPerBeat);
 				ITemplateProducer producer = new TemplateProducer(Note.byNumber(c.spectrum.offsetFromF0InSemitones), c.template);
-				processFile(chroma, noChordness, beatTimes, PathConstants.LAB_DIR, track, acc, producer);
+				processFile(chroma, noChordness, beatTimes, labDir, track, acc, producer);
 			}
 		}
 		writeStatistics();
