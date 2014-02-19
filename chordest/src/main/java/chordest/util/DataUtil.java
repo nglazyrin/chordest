@@ -1,7 +1,5 @@
 package chordest.util;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -10,10 +8,9 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import uk.co.labbookpages.WavFile;
-import uk.co.labbookpages.WavFileException;
 import chordest.util.metric.EuclideanMetric;
 import chordest.wave.Buffer;
+import chordest.wave.WaveFileInfo;
 
 
 public class DataUtil {
@@ -762,32 +759,14 @@ public class DataUtil {
 
 	public static double[] generateDefaultBeats(final String wavFilePath) {
 		LOG.warn("Error occured during BeatRoot processing, generating a dummy sequence of beats");
-		WavFile wavFile = null;
-		try {
-			wavFile = WavFile.openWavFile(new File(wavFilePath));
-			int samplingRate = (int) wavFile.getSampleRate();
-			int frames = (int) wavFile.getNumFrames();
-			double totalSeconds = frames * 1.0 / samplingRate;
-			int length = (int) (Math.floor(totalSeconds))* 2;
-			double[] result = new double[length];
-			for (int i = 0; i < length; i++) {
-				result[i] = 0.5 * i;
-			}
-			return result;
-		} catch (WavFileException e) {
-			LOG.error("Error when reading wave file to generate default beat sequence", e);
-		} catch (IOException e) {
-			LOG.error("Error when reading wave file to generate default beat sequence", e);
-		} finally {
-			if (wavFile != null) {
-				try {
-					wavFile.close();
-				} catch (IOException e) {
-					LOG.error("Error when closing wave file after generation of default beat sequence", e);
-				}
-			}
+		WaveFileInfo wfi = new WaveFileInfo(wavFilePath);
+		double totalSeconds = wfi.seconds;
+		int length = (int) (Math.floor(totalSeconds))* 2;
+		double[] result = new double[length];
+		for (int i = 0; i < length; i++) {
+			result[i] = 0.5 * i;
 		}
-		return new double[] { 0 };
+		return result;
 	}
 
 }

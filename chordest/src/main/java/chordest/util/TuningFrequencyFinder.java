@@ -1,7 +1,6 @@
 package chordest.util;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
@@ -11,13 +10,11 @@ import chordest.transform.CQConstants;
 import chordest.transform.DummyConstantQTransform;
 import chordest.transform.ITransform;
 import chordest.transform.PooledTransformer;
-import chordest.transform.ScaleInfo;
 import chordest.transform.PooledTransformer.ITransformProvider;
+import chordest.transform.ScaleInfo;
 import chordest.wave.Buffer;
+import chordest.wave.WaveFileInfo;
 import chordest.wave.WaveReader;
-
-import uk.co.labbookpages.WavFile;
-import uk.co.labbookpages.WavFileException;
 
 public class TuningFrequencyFinder {
 	
@@ -35,24 +32,23 @@ public class TuningFrequencyFinder {
 	}
 
 	private static double getTuningFrequency(String filename, double basicFrequency, double[] beatTimes, int threadPoolSize) {
-		WavFile wavFile = null;
+		WaveFileInfo wfi = new WaveFileInfo(filename);
+		int samplingRate = wfi.samplingRate;
+		
+		final ScaleInfo scaleInfo = new ScaleInfo(OCTAVES, NOTES_IN_OCTAVE);
+		final CQConstants cqc = CQConstants.getInstance(samplingRate, scaleInfo, CQConstants.F0_DEFAULT, OFFSET);
+		int windowSize = cqc.getLongestWindow() + 1; // the longest window
+		
+		WaveReader reader = new WaveReader(new File(filename), beatTimes, windowSize);
+		ITransformProvider cqProvider = new ITransformProvider() {
+			@Override
+			public ITransform getTransform(Buffer buffer, CountDownLatch latch) {
+				return new DummyConstantQTransform(buffer, scaleInfo, latch, cqc);
+			}
+		};
+		PooledTransformer transformer = new PooledTransformer(
+				reader, threadPoolSize, beatTimes.length, cqProvider);
 		try {
-			wavFile = WavFile.openWavFile(new File(filename));
-			int samplingRate = (int) wavFile.getSampleRate();
-			
-			final ScaleInfo scaleInfo = new ScaleInfo(OCTAVES, NOTES_IN_OCTAVE);
-			final CQConstants cqc = CQConstants.getInstance(samplingRate, scaleInfo, CQConstants.F0_DEFAULT, OFFSET);
-			int windowSize = cqc.getLongestWindow() + 1; // the longest window
-			
-			WaveReader reader = new WaveReader(wavFile, beatTimes, windowSize);
-			ITransformProvider cqProvider = new ITransformProvider() {
-				@Override
-				public ITransform getTransform(Buffer buffer, CountDownLatch latch) {
-					return new DummyConstantQTransform(buffer, scaleInfo, latch, cqc);
-				}
-			};
-			PooledTransformer transformer = new PooledTransformer(
-					reader, threadPoolSize, beatTimes.length, cqProvider);
 			double[][] spectrum = transformer.run();
 			double[] tunes = new double[BINS_PER_NOTE];
 			for (double[] data : spectrum) {
@@ -79,16 +75,8 @@ public class TuningFrequencyFinder {
 			double result = Math.pow(2.0, power) * basicFrequency;
 			LOG.info(String.format("Tuning frequency: %f Hz", result));
 			return result;
-		} catch (WavFileException e) {
-			LOG.error("Error when reading wave file", e);
-		} catch (IOException e) {
-			LOG.error("Error when reading wave file", e);
 		} catch (InterruptedException e) {
 			LOG.error("Error when performing transforms", e);
-		} finally {
-			if (wavFile != null) { try {
-				wavFile.close();
-			} catch (IOException ignore) {} }
 		}
 		return BASIC_FREQUENCY;
 	}

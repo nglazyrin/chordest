@@ -1,14 +1,11 @@
 package chordest.spectrum;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import uk.co.labbookpages.WavFile;
-import uk.co.labbookpages.WavFileException;
 import chordest.beat.BeatRootBeatTimesProvider;
 import chordest.beat.IBeatTimesProvider;
 import chordest.beat.VampBeatTimesProvider;
@@ -26,6 +23,7 @@ import chordest.util.DataUtil;
 import chordest.util.QUtil;
 import chordest.util.TuningFrequencyFinder;
 import chordest.wave.Buffer;
+import chordest.wave.WaveFileInfo;
 import chordest.wave.WaveReader;
 
 public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
@@ -94,20 +92,12 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 		result.startNoteOffsetInSemitonesFromF0 = s.offsetFromF0InSemitones;
 		result.framesPerBeat = s.framesPerBeat;
 		
-		WavFile wavFile = null;
-		try {
-			wavFile = WavFile.openWavFile(new File(waveFileName));
-			result.samplingRate = (int) wavFile.getSampleRate();
-			result.totalSeconds = wavFile.getNumFrames() * 1.0 / result.samplingRate;
-		} catch (Exception e) {
-			LOG.error("Error when reading wave file " + waveFileName, e);
-		} finally {
-			if (wavFile != null) { try {
-				wavFile.close();
-			} catch (IOException e) {
-				LOG.error("Error when closing file " + waveFileName, e);
-			} }
+		WaveFileInfo wfi = new WaveFileInfo(waveFileName);
+		if (wfi.exception != null) {
+			LOG.error("Error when reading wave file " + waveFileName, wfi.exception);
 		}
+		result.samplingRate = wfi.samplingRate;
+		result.totalSeconds = wfi.seconds;
 		if (useConstantQTransform && p.estimateTuningFrequency) {
 //			double[] tuningBeatTimes = shiftBeatsLeft(beatTimes,
 //					getWindowsShiftForTuning(s.notesPerOctave, s.offsetFromF0InSemitones, result.samplingRate));
@@ -117,7 +107,7 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 			result.f0 = CQConstants.F0_DEFAULT;
 		}
 		
-		boolean REDUCE_FIRST = true; // TODO
+		boolean REDUCE_FIRST = false; // TODO
 		final CQConstants cqConstants = CQConstants.getInstance(result.samplingRate,
 				result.scaleInfo, result.f0, result.startNoteOffsetInSemitonesFromF0, REDUCE_FIRST);
 		if (REDUCE_FIRST) {
@@ -146,24 +136,13 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 		// need to make windows centered at the beat positions, so shift them to the left
 		final double[] windowBeginnings = shiftBeatsLeft(result.beatTimes,
 				getWindowsShift(cqConstants, s.beatTimesDelay * 0.001, result.samplingRate));
+		final WaveReader reader = new WaveReader(new File(waveFileName), windowBeginnings, windowSize);
+		final PooledTransformer transformer = new PooledTransformer(
+				reader, s.threadPoolSize, result.beatTimes.length, provider);
 		try {
-			wavFile = WavFile.openWavFile(new File(waveFileName));
-			final WaveReader reader = new WaveReader(wavFile, windowBeginnings, windowSize);
-			final PooledTransformer transformer = new PooledTransformer(
-					reader, s.threadPoolSize, result.beatTimes.length, provider);
 			result.spectrum = transformer.run();
-		} catch (WavFileException e) {
-			LOG.error("Error when reading wave file " + waveFileName, e);
-		} catch (IOException e) {
-			LOG.error("Error when reading wave file " + waveFileName, e);
 		} catch (InterruptedException e) {
 			LOG.error("Error when reading wave file " + waveFileName, e);
-		} finally {
-			if (wavFile != null) { try {
-				wavFile.close();
-			} catch (IOException e) {
-				LOG.error("Error when closing file " + waveFileName, e);
-			} }
 		}
 		return result;
 	}
