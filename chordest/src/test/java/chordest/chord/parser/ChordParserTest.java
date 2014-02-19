@@ -9,8 +9,6 @@ import chordest.io.lab.chordparser.ChordParser;
 import chordest.model.Chord;
 import chordest.model.Note;
 
-
-
 public class ChordParserTest {
 
 	@Test
