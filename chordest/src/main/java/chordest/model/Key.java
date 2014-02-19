@@ -55,6 +55,13 @@ public class Key {
 		return new Key(root.withOffset(Interval.PERFECT_FIFTH), type);
 	}
 
+	public boolean hasChord(Chord chord) {
+		if (! chord.isMajor() && ! chord.isMinor()) {
+			return false;
+		}
+		return getChords().contains(chord);
+	}
+
 	/**
 	 * Tries to recognize key using Krumhansl's key-finding algorithm
 	 * @param intensities 12-dimensional array, first component corresponds to A
