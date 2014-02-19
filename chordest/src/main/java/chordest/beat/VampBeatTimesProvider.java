@@ -27,6 +27,8 @@ public class VampBeatTimesProvider implements IBeatTimesProvider {
 
 	private static final String TARGET_DIR = PathConstants.BEAT_DIR;
 
+	private static final String BEATROOT_PLUGIN_NAME = "beatroot-vamp:beatroot";
+
 	private static final String QMBARBEAT_PLUGIN_NAME = "qm-vamp-plugins:qm-barbeattracker:beats";
 
 	private static final String MVAMPIBT_PLUGIN_NAME = "mvamp-ibt:marsyas_ibt";
