@@ -38,11 +38,11 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 
 	public WaveFileSpectrumDataProvider(final String waveFileName, String beatFileName, Configuration c) {
 		IBeatTimesProvider provider = null;
-		try {
-			provider = new BeatRootBeatTimesProvider(waveFileName);
-		} catch (Throwable e) {
-			provider = null;
-		}
+//		try {
+//			provider = new BeatRootBeatTimesProvider(waveFileName);
+//		} catch (Throwable e) {
+//			provider = null;
+//		}
 		if (provider == null) {
 			try {
 				provider = new VampBeatTimesProvider(waveFileName, beatFileName, c.pre);

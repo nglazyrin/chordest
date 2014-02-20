@@ -33,6 +33,12 @@ public class VampBeatTimesProvider implements IBeatTimesProvider {
 
 	private static final String MVAMPIBT_PLUGIN_NAME = "mvamp-ibt:marsyas_ibt";
 
+	private static final String[] PLUGINS = new String[] {
+		BEATROOT_PLUGIN_NAME,
+		QMBARBEAT_PLUGIN_NAME,
+		MVAMPIBT_PLUGIN_NAME
+	};
+
 	/**
 	 * Quick and dirty way to do beat extraction in batch mode.
 	 * @param args
@@ -59,11 +65,19 @@ public class VampBeatTimesProvider implements IBeatTimesProvider {
 
 	public VampBeatTimesProvider(String wavFilePath, String beatFilePath, PreProcessProperties pre) throws IOException, InterruptedException {
 		LOG.info("Performing beat detection for " + wavFilePath + " ...");
-		String[] cmd = { pre.vampHostPath, QMBARBEAT_PLUGIN_NAME, wavFilePath, "-o", beatFilePath };
-		Process p = Runtime.getRuntime().exec(cmd);
-        p.waitFor();
-        LOG.error(IOUtils.toString(p.getErrorStream()));
-        beats = new FileBeatBarTimesProvider(beatFilePath).getBeatTimes();
+		for (int i = 0; i < PLUGINS.length; i++) {
+			String[] cmd = { pre.vampHostPath, PLUGINS[i], wavFilePath, "-o", beatFilePath };
+			Process p = Runtime.getRuntime().exec(cmd);
+	        p.waitFor();
+	        LOG.error(IOUtils.toString(p.getErrorStream()));
+	        beats = new FileBeatBarTimesProvider(beatFilePath).getBeatTimes();
+	        if (beats.length > 0) {
+	        	break;
+	        } else {
+	        	LOG.warn(String.format("Plugin %s failed to detect beats for file '%s', trying %s",
+	        			PLUGINS[i], wavFilePath, i < PLUGINS.length - 1 ? PLUGINS[i+1] : "to generate dummy beat sequence with step = 0.5 s"));
+	        }
+		}
 	}
 
 	@Override
