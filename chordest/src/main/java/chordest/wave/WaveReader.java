@@ -16,6 +16,12 @@ import org.slf4j.LoggerFactory;
 
 import chordest.util.DataUtil;
 
+/**
+ * Reads the file by placing frames at specified time moments
+ * @param file
+ * @param times
+ * @param bufferSize 
+ */
 public class WaveReader implements ITaskProvider {
 
 	private static final Logger LOG = LoggerFactory.getLogger(WaveReader.class);
@@ -29,20 +35,50 @@ public class WaveReader implements ITaskProvider {
 	
 	private final int samplingRate;
 	private final int channels;
-	private final int frames;
-	private final double seconds;
+//	private final int frames;
+//	private final double seconds;
 
 	private final int bufferSize;
 	private final BlockingQueue<Buffer> buffers;
 
 	private final Object lock = new Object();
 
-	/**
-	 * Reads the file by placing frames at specified time moments
-	 * @param file
-	 * @param times
-	 * @param bufferSize 
-	 */
+	public WaveReader(AudioInputStream stream, double[] times, int bufferSize) {
+		if (stream == null) {
+			throw new NullPointerException("stream should not be null");
+		}
+		if (times == null) {
+			throw new NullPointerException("times should not be null");
+		}
+		this.times = times;
+		this.bufferSize = bufferSize;
+		this.stream = stream;
+		
+		this.format = stream.getFormat();
+		if (format.getSampleSizeInBits() % 8 != 0 || format.getSampleSizeInBits() > 16) {
+			throw new RuntimeException("Wave files with " + format.getSampleSizeInBits() + "-bit sample size are not supported");
+		}
+		Encoding encoding = format.getEncoding();
+		if (! (Encoding.PCM_SIGNED.equals(encoding) || Encoding.PCM_UNSIGNED.equals(encoding))) {
+			throw new RuntimeException("Encoding " + encoding.toString() + " is not supported");
+		}
+		
+		this.channels = format.getChannels();
+		this.samplingRate = (int) format.getSampleRate();
+//		int frames = (int) stream.getFrameLength();
+//		double seconds = frames * 1.0 / this.samplingRate;
+		
+		this.buffers = new ArrayBlockingQueue<Buffer>(QUEUE_SIZE, true); //TODO: calculate automatically
+
+		this.offsets = new long[times.length + 1]; // one element bigger than times
+//		double framesPerSecond = frames / seconds;
+		double framesPerSecond = stream.getFormat().getFrameRate();
+		for (int i = 0; i < times.length; i++) {
+			offsets[i] = (long) (times[i] * framesPerSecond);
+		}
+		offsets[times.length] = offsets[times.length - 1] + 1;
+	}
+
 	public WaveReader(File file, double[] times, int bufferSize) {
 		if (file == null) {
 			throw new NullPointerException("file should not be null");
@@ -71,8 +107,8 @@ public class WaveReader implements ITaskProvider {
 		
 		this.channels = format.getChannels();
 		this.samplingRate = (int) format.getSampleRate();
-		this.frames = (int) stream.getFrameLength();
-		this.seconds = this.frames * 1.0 / this.samplingRate;
+		int frames = (int) stream.getFrameLength();
+		double seconds = frames * 1.0 / this.samplingRate;
 		
 		this.buffers = new ArrayBlockingQueue<Buffer>(QUEUE_SIZE, true); //TODO: calculate automatically
 
@@ -146,9 +182,13 @@ public class WaveReader implements ITaskProvider {
 	@Override
 	public Buffer poll() throws InterruptedException {
 		synchronized (lock) {
-			if (buffers.size() > 0 && buffers.peek().isFull()) {
+			Buffer buffer = buffers.peek();
+			if (buffer != null && buffer.isFull()) {
+				buffers.remove();
+				return buffer;
+//			if (buffers.size() > 0 && buffers.peek().isFull()) {
 				// use take() instead of poll() because it is a blocking queue
-				return buffers.take();
+//				return buffers.take();
 			}
 			return null;
 		}
