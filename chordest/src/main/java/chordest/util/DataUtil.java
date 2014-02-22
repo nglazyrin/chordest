@@ -757,14 +757,13 @@ public class DataUtil {
 		}
 	}
 
-	public static double[] generateDefaultBeats(final String wavFilePath) {
-		LOG.warn("Error occured during BeatRoot processing, generating a dummy sequence of beats");
+	public static double[] generateDefaultBeats(final String wavFilePath, double step) {
 		WaveFileInfo wfi = new WaveFileInfo(wavFilePath);
 		double totalSeconds = wfi.seconds;
-		int length = (int) (Math.floor(totalSeconds))* 2;
+		int length = (int) (Math.floor(totalSeconds) / step);
 		double[] result = new double[length];
 		for (int i = 0; i < length; i++) {
-			result[i] = 0.5 * i;
+			result[i] = step * i;
 		}
 		return result;
 	}
