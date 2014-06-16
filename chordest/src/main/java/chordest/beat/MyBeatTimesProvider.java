@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.io.ObjectInputStream.GetField;
 import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 
@@ -21,6 +22,7 @@ import uk.co.labbookpages.WavFile;
 import chordest.io.beat.Beat2FileReader;
 import chordest.io.beat.BeatFileWriter;
 import chordest.io.beat.BeatOnlyFileWriter;
+import chordest.io.beat.BeatTimesFileReader;
 import chordest.transform.FFTTransformWrapper;
 import chordest.transform.ITransform;
 import chordest.transform.PooledTransformer;
@@ -39,18 +41,27 @@ public class MyBeatTimesProvider implements IBeatTimesProvider {
 	
 	private static final int WINDOW_SIZE = 2048;
 	private static final Logger LOG = LoggerFactory.getLogger(MyBeatTimesProvider.class);
-	private static final double WINDOW_STEP = 0.1;
+	public static final double WINDOW_STEP = 0.01;
 	private static final int PLUS_MINUS_COUNT = 2; // how many values on the left and on the right will be used to smooth
 	private static final double ONSET_TIME = 1.5; // max possible bar beginning delay
 	
 	public static final double SILENCE_SEC = 2.5;
 	
 	public static void main(String[] args) {
-		//new MyBeatTimesProvider("D:/USU/MIR/SamplesWAV/BrainstormMaybe.wav");
-		new MyBeatTimesProvider("D:/USU/MIR/MIREX '11/beattrack_train_2006/train/train14.wav");
+		// song that should be recognized
+		new MyBeatTimesProvider("D:/USU/MIR/SamplesWAV/Will Smith - Men In Black.wav");
+	}
+	
+	public MyBeatTimesProvider(String waveFileName) {
+		new MyBeatTimesProvider(waveFileName, "", "", true);
 	}
 
-	public MyBeatTimesProvider(String waveFileName) {
+	/// summary
+	/// @waveFileName - name of song that should be recognized
+	/// @txtFileName - name of file that contains tapped ground-truth values of song @waveFileName
+	/// @outputFileName - calculated values of rhythmic grid will be put in this file
+	/// @showAllGraphics - if false then some of the additional graphics won't be shown
+	public MyBeatTimesProvider(String waveFileName, String txtFileName, String outputFileName, boolean showAllGraphics) {
 		LOG.info("Detecting beats in " + waveFileName);
 		double totalSeconds = 0;
 		WavFile wavFile = null;
@@ -88,18 +99,22 @@ public class MyBeatTimesProvider implements IBeatTimesProvider {
 			// here it is finished already
 			LOG.info(String.format("There are %d spectrum columns, each of them contains %d values", spectrum.length, spectrum[0].length));
 			
-			// prepare labels for Y axis to draw spectrum
-			String[] yText = new String[spectrum[0].length];
-			for (int i = 0; i < yText.length; i++) {
-				yText[i] = String.valueOf(samplingRate / 2 / spectrum[0].length * (i + 1));
+			if (showAllGraphics)
+			{
+				// prepare labels for Y axis to draw spectrum
+				String[] yText = new String[spectrum[0].length];
+				for (int i = 0; i < yText.length; i++) {
+					yText[i] = String.valueOf(samplingRate / 2 / spectrum[0].length * (i + 1));
+				}
+				Visualizer.visualizeSpectrum(spectrum, windowBeginnings, yText, "Spectrum: " + waveFileName);
 			}
-			Visualizer.visualizeSpectrum(spectrum, windowBeginnings, yText, "Spectrum");
 			
 			double[] energy = new double[spectrum.length];
 			for (int i = 0; i < spectrum.length; i++) {
 				double temp = 0;
-				for (int j = 0; j < spectrum[i].length; j++) {
-					// TODO: try to involve a volume level perception 
+				// it's quite enough to sum only the first several values, i.e. low frequencies
+				// frequencies are starting from 16,352 Hz, the first C note
+				for (int j = 0; j < 5; j++) {
 					temp += spectrum[i][j] * spectrum[i][j];
 				}
 				energy[i] = temp;
@@ -108,7 +123,8 @@ public class MyBeatTimesProvider implements IBeatTimesProvider {
 			originalEnergy = energy;
 			
 			// draw a spectrum energy graph
-			Visualizer.visualizeXByTimeDistribution(energy, windowBeginnings);
+			if (showAllGraphics)
+				Visualizer.visualizeXByTimeDistribution(energy, windowBeginnings);
 		
 		} catch (Exception e) {
 			LOG.error(String.format("Error when reading wave file %s", waveFileName), e);
@@ -122,27 +138,60 @@ public class MyBeatTimesProvider implements IBeatTimesProvider {
 		
 		// peaks above average value only
 		double[] aboveAverage = getAboveAverageEnergy(originalEnergy);
-		Visualizer.visualizeXByTimeDistribution(aboveAverage, windowBeginnings);
+		if (showAllGraphics)
+			Visualizer.visualizeXByTimeDistribution(aboveAverage, windowBeginnings);
 		
 		// beginnings of bars
 		double[] barBeginnings = calculateBarBeginnings(aboveAverage, SILENCE_SEC);	
 		LOG.info(String.format("First bar is on %.2f s", firstBar * WINDOW_STEP) );
-		//Visualizer.visualizeXByTimeDistribution(barBeginnings, windowBeginnings);
+		if (showAllGraphics)
+			Visualizer.visualizeXByTimeDistribution(barBeginnings, windowBeginnings);
 		
-		double[] smoothEnergy = getSmoothEnergy(originalEnergy);
-		Visualizer.visualizeXByTimeDistribution(smoothEnergy, windowBeginnings);
+		// region Another way to calculate optimal tempo
 		
-		int optimalTempo = getOptimalTempo(smoothEnergy);
+		// peak energy smoothes between adjacent peaks
+//		double[] smoothEnergy = getSmoothEnergy(aboveAverage);
+//		if (showAllGraphics)
+//			Visualizer.visualizeXByTimeDistribution(smoothEnergy, windowBeginnings);
+		
+//		int optimalTempo = getOptimalTempo(smoothEnergy);
+		
+		// endregion 
+		
+		// trying to brute force all the periods and select the best one
+		int optimalTempo = getBestFromAllPossibleTemposWithBonuses(aboveAverage);
 		LOG.info(String.format("Optimal tempo is %.2f s", optimalTempo * WINDOW_STEP) );
 		
 		double[] kickLocations = getKicksLocations(originalEnergy.length, optimalTempo);
-		Visualizer.visualizeXByTimeDistribution(kickLocations, windowBeginnings);
+		if (showAllGraphics)
+			Visualizer.visualizeXByTimeDistribution(kickLocations, windowBeginnings);
 		
-		String output = "D:/USU/MIR/MIREX '11/beattrack_train_2006/train/output.txt"; 
-		// save beatTimes to output file
-		BeatOnlyFileWriter.write(output, beatTimes);
+					
+		// show tapped ground-truth and calculated graphics 
+		if (txtFileName != "")
+		{
+			File txtFile = new File(txtFileName);
+			BeatTimesFileReader btfp = new BeatTimesFileReader(txtFile);
+			double[] expectedBeatTimes = btfp.getBeatTimes()[0];
+			double[] expBeatLocations = new double[originalEnergy.length];
+			for (double time : expectedBeatTimes) {
+				expBeatLocations[(int)Math.floor(time / WINDOW_STEP)] = 100000;
+			}
+			Visualizer.visualizeXByTimeDistribution(expBeatLocations, windowBeginnings);
+			
+			// in order not to show twice
+			if (!showAllGraphics)
+				Visualizer.visualizeXByTimeDistribution(kickLocations, windowBeginnings);
+		}
+				
+		if (!outputFileName.isEmpty())
+		{
+			// save beatTimes to output file
+			BeatOnlyFileWriter.write(outputFileName, beatTimes);
+		}		
 	}
 
+	// obsolete
 	private double[] getSmoothEnergy(double[] original) {
 		int len = original.length;
 		double[] smoothed = new double[len];
@@ -170,11 +219,72 @@ public class MyBeatTimesProvider implements IBeatTimesProvider {
 		beatTimes = new double[countOfBeats];
 		for (int i=rest, k=0; i<length; i+=optimalPeriod, ++k) {
 			result[i] = 100000.0;
-			beatTimes[k] = i / WINDOW_STEP / 1000; // divided by 1000 because ms -> sec
+			beatTimes[k] = i * WINDOW_STEP;
 		}
 		return result;
 	}
 	
+	// get maximum from all possible
+	private int getBestFromAllPossibleTempos(double[] energy) {
+		double minTempoDuration = 0.25;
+		double maxTempoDuration = 3;
+		int minSamples = (int) Math.floor(minTempoDuration / WINDOW_STEP);
+		int maxSamples = (int) Math.floor(maxTempoDuration / WINDOW_STEP);
+		double[] tempo = new double[maxSamples];
+		int optimalTempoDuration = minSamples;
+		for (int period=minSamples; period<maxSamples; ++period) {
+			for (int offset=0; offset<period; ++offset) {
+				double tempValue = 0;
+				
+				int kicksCount = (energy.length - offset) / period;
+				for (int j=offset; j<energy.length; j+=period)
+					tempValue += energy[j] / kicksCount;
+				
+				if (tempValue > tempo[period])
+					tempo[period] = tempValue;
+			}
+			
+			if (tempo[period] > tempo[optimalTempoDuration])
+				optimalTempoDuration = period;
+		}
+		return optimalTempoDuration;
+	}
+	
+	// get maximum from all possible tempos but we care only about if energy[i] > 0 and not about its level. 
+	private int getBestFromAllPossibleTemposWithBonuses(double[] energy) {
+		double minTempoDuration = 0.25;
+		double maxTempoDuration = 3;
+		int minSamples = (int) Math.floor(minTempoDuration / WINDOW_STEP);
+		int maxSamples = (int) Math.floor(maxTempoDuration / WINDOW_STEP);
+		double[] tempo = new double[maxSamples];
+		int optimalTempoDuration = minSamples;
+		for (int period=minSamples; period<maxSamples; ++period) {
+			for (int offset=0; offset<period; ++offset) {
+				double tempValue = 0;
+				
+				double bonus = 1;
+				
+				int kicksCount = (energy.length - offset) / period;
+				for (int j=offset; j<energy.length; j+=period)
+					if (energy[j] > 0)
+					{
+						tempValue += bonus / kicksCount;
+						bonus *= 3;
+					}
+					else
+						bonus = Math.max(1, bonus / 6);
+				
+				if (tempValue > tempo[period])
+					tempo[period] = tempValue;
+			}
+			
+			if (tempo[period] > tempo[optimalTempoDuration])
+				optimalTempoDuration = period;
+		}
+		return optimalTempoDuration;
+	}
+	
+	// obsolete
 	private int getOptimalTempo(double[] smoothed) {
 		double minTempoDuration = 0.25;
 		double maxTempoDuration = 3;
@@ -193,11 +303,13 @@ public class MyBeatTimesProvider implements IBeatTimesProvider {
 			// apply perception model (normal distribution for tempo) 
 			double currentTempo = 1.0 * period / WINDOW_STEP; // current tempo duration in sec
 			int bpm = (int) (60.0 / currentTempo); // beats per minute
-			
-			double mean = 120;
-			double sigma = 55;
-			double prob = Math.exp(-(bpm - mean) * (bpm - mean) / (2*sigma*sigma)) / Math.sqrt(2*Math.PI*sigma*sigma);
-			tempo[period] *= prob;
+
+			// TODO: need to improve perception model, it is almost useless now
+			// trying to correct tempo based on perception model
+//			double mean = 80;
+//			double sigma = 10;
+//			double prob = Math.exp(-(bpm - mean) * (bpm - mean) / (2*sigma*sigma)) / Math.sqrt(2*Math.PI*sigma*sigma);
+//			tempo[period] *= prob;
 			
 			if (tempo[period] > tempo[optimalTempoDuration])
 				optimalTempoDuration = period;
@@ -257,7 +369,7 @@ public class MyBeatTimesProvider implements IBeatTimesProvider {
 		for (int i=0; i<original.length; ++i) {
 			avgEnergy += result[i] / original.length;
 		}
-		avgEnergy *= 1.5; // magic const
+		avgEnergy *= 1.5; // magic const (experimentally best level to reduce noise and small energies)
 		for (int i=0; i<original.length; ++i) {
 			result[i] = Math.max(0, result[i] - avgEnergy);
 		}
