@@ -3,11 +3,14 @@ package chordest.beat;
 import java.awt.Graphics;
 import java.io.BufferedWriter;
 import java.io.File;
+<<<<<<< HEAD
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.io.ObjectInputStream.GetField;
 import java.util.Locale;
+=======
+>>>>>>> branch 'master' of https://github.com/nglazyrin/chordest
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.commons.io.output.WriterOutputStream;
@@ -17,12 +20,15 @@ import org.junit.internal.matchers.Each;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+<<<<<<< HEAD
 import at.ofai.music.audio.Util;
 import uk.co.labbookpages.WavFile;
 import chordest.io.beat.Beat2FileReader;
 import chordest.io.beat.BeatFileWriter;
 import chordest.io.beat.BeatOnlyFileWriter;
 import chordest.io.beat.BeatTimesFileReader;
+=======
+>>>>>>> branch 'master' of https://github.com/nglazyrin/chordest
 import chordest.transform.FFTTransformWrapper;
 import chordest.transform.ITransform;
 import chordest.transform.PooledTransformer;
@@ -30,6 +36,7 @@ import chordest.transform.PooledTransformer.ITransformProvider;
 import chordest.util.DatasetUtil;
 import chordest.util.Visualizer;
 import chordest.wave.Buffer;
+import chordest.wave.WaveFileInfo;
 import chordest.wave.WaveReader;
 
 public class MyBeatTimesProvider implements IBeatTimesProvider {
@@ -63,8 +70,12 @@ public class MyBeatTimesProvider implements IBeatTimesProvider {
 	/// @showAllGraphics - if false then some of the additional graphics won't be shown
 	public MyBeatTimesProvider(String waveFileName, String txtFileName, String outputFileName, boolean showAllGraphics) {
 		LOG.info("Detecting beats in " + waveFileName);
+<<<<<<< HEAD
 		double totalSeconds = 0;
 		WavFile wavFile = null;
+=======
+		int windowSize = 2048;
+>>>>>>> branch 'master' of https://github.com/nglazyrin/chordest
 		
 		// this will create a new FFT instance per each block of wave data
 		// of length = windowSize samples
@@ -78,16 +89,20 @@ public class MyBeatTimesProvider implements IBeatTimesProvider {
 		// generate a time scale ranging from 0 to file length in seconds with step = WINDOW_STEP sec
 		double[] windowBeginnings = BeatRootBeatTimesProvider.generateTimeScale(waveFileName, WINDOW_STEP);
 		try {
-			wavFile = WavFile.openWavFile(new File(waveFileName));
-			
-			// some values that can be useful, see other WavFile methods if needed
-			samplingRate = (int) wavFile.getSampleRate();
-			totalSeconds = wavFile.getNumFrames() * 1.0 / samplingRate;
-			LOG.info(String.format("File length: %.2f s", totalSeconds));
-			LOG.info(String.format("Sampling rate: %d samples per second", samplingRate));
+			WaveFileInfo wfi = new WaveFileInfo(waveFileName);
+			if (wfi.exception != null) {
+				throw wfi.exception;
+			}
+			// some values that can be useful
+			LOG.info(String.format("File length: %.2f s", wfi.seconds));
+			LOG.info(String.format("Sampling rate: %d samples per second", wfi.samplingRate));
 
 			// the reader will provide wave data to transforms
+<<<<<<< HEAD
 			final WaveReader reader = new WaveReader(wavFile, windowBeginnings, WINDOW_SIZE);
+=======
+			final WaveReader reader = new WaveReader(new File(waveFileName), windowBeginnings, windowSize);
+>>>>>>> branch 'master' of https://github.com/nglazyrin/chordest
 			
 			// this creates a multithreaded transformer which has 4 threads to run transforms
 			final PooledTransformer transformer = new PooledTransformer(
@@ -99,6 +114,7 @@ public class MyBeatTimesProvider implements IBeatTimesProvider {
 			// here it is finished already
 			LOG.info(String.format("There are %d spectrum columns, each of them contains %d values", spectrum.length, spectrum[0].length));
 			
+<<<<<<< HEAD
 			if (showAllGraphics)
 			{
 				// prepare labels for Y axis to draw spectrum
@@ -107,6 +123,12 @@ public class MyBeatTimesProvider implements IBeatTimesProvider {
 					yText[i] = String.valueOf(samplingRate / 2 / spectrum[0].length * (i + 1));
 				}
 				Visualizer.visualizeSpectrum(spectrum, windowBeginnings, yText, "Spectrum: " + waveFileName);
+=======
+			// prepare labels for Y axis to draw spectrum
+			String[] yText = new String[spectrum[0].length];
+			for (int i = 0; i < yText.length; i++) {
+				yText[i] = String.valueOf(wfi.samplingRate / 2 / spectrum[0].length * (i + 1));
+>>>>>>> branch 'master' of https://github.com/nglazyrin/chordest
 			}
 			
 			double[] energy = new double[spectrum.length];
@@ -128,12 +150,6 @@ public class MyBeatTimesProvider implements IBeatTimesProvider {
 		
 		} catch (Exception e) {
 			LOG.error(String.format("Error when reading wave file %s", waveFileName), e);
-		} finally {
-			if (wavFile != null) { try {
-				wavFile.close();
-			} catch (IOException e) {
-				LOG.error(String.format("Error when closing file %s", waveFileName), e);
-			} }
 		}
 		
 		// peaks above average value only

@@ -12,15 +12,9 @@ public class LabFileWriter extends AbstractWriter {
 
 	private final Chord[] chords;
 	private final double[] timestamps;
+	private final boolean concatSame;
 
-	/**
-	 * Creates a new LabFileWriter for given arrays of chords and corresponding
-	 * timestamps. Last element of timestamps array must be the total sound 
-	 * length in seconds, so that timestamps.length == chords.length + 1
-	 * @param chords
-	 * @param timestamps
-	 */
-	public LabFileWriter(Chord[] chords, double[] timestamps) {
+	public LabFileWriter(Chord[] chords, double[] timestamps, boolean concat) {
 		if (chords == null) {
 			throw new NullPointerException("chords is null");
 		}
@@ -34,6 +28,18 @@ public class LabFileWriter extends AbstractWriter {
 		}
 		this.chords = chords;
 		this.timestamps = timestamps;
+		this.concatSame = concat;
+	}
+
+	/**
+	 * Creates a new LabFileWriter for given arrays of chords and corresponding
+	 * timestamps. Last element of timestamps array must be the total sound 
+	 * length in seconds, so that timestamps.length == chords.length + 1
+	 * @param chords
+	 * @param timestamps
+	 */
+	public LabFileWriter(Chord[] chords, double[] timestamps) {
+		this(chords, timestamps, true);
 	}
 
 	@Override
@@ -43,7 +49,7 @@ public class LabFileWriter extends AbstractWriter {
 		for (int i = 0; i < chords.length; i++) {
 			Chord current = chords[i];
 			if (current == null) { current = Chord.empty(); }
-			if (! current.equals(previous)) {
+			if (! current.equals(previous) || ! concatSame) {
 				double currentTime = timestamps[i];
 				writer.write(getResultLine(start, currentTime, previous));
 				previous = current;

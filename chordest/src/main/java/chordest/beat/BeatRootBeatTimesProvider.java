@@ -1,19 +1,14 @@
 package chordest.beat;
 
-import java.io.File;
-import java.io.IOException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import uk.co.labbookpages.WavFile;
-import uk.co.labbookpages.WavFileException;
 
 import at.ofai.music.beatroot.AudioPlayer;
 import at.ofai.music.beatroot.AudioProcessor;
 import at.ofai.music.beatroot.BeatTrackDisplay;
 import at.ofai.music.beatroot.GUI;
 import at.ofai.music.util.EventList;
+import chordest.wave.WaveFileInfo;
 
 /**
  * A class that runs Beatroot to obtain beat sequence for a given wave file
@@ -70,32 +65,14 @@ public class BeatRootBeatTimesProvider implements IBeatTimesProvider {
 
 	public static double[] generateTimeScale(String wavFilePath, double step) {
 		LOG.warn("Beat detection error, generating a dummy sequence of beats");
-		WavFile wavFile = null;
-		try {
-			wavFile = WavFile.openWavFile(new File(wavFilePath));
-			int samplingRate = (int) wavFile.getSampleRate();
-			int frames = (int) wavFile.getNumFrames();
-			double totalSeconds = frames * 1.0 / samplingRate;
-			int length = (int) (Math.floor(totalSeconds / step));
-			double[] result = new double[length];
-			for (int i = 0; i < length; i++) {
-				result[i] = step * i;
-			}
-			return result;
-		} catch (WavFileException e) {
-			LOG.error("Error when reading wave file to generate default beat sequence", e);
-		} catch (IOException e) {
-			LOG.error("Error when reading wave file to generate default beat sequence", e);
-		} finally {
-			if (wavFile != null) {
-				try {
-					wavFile.close();
-				} catch (IOException e) {
-					LOG.error("Error when closing wave file after generation of default beat sequence", e);
-				}
-			}
+		WaveFileInfo wfi = new WaveFileInfo(wavFilePath);
+		double totalSeconds = wfi.seconds;
+		int length = (int) (Math.floor(totalSeconds / step));
+		double[] result = new double[length];
+		for (int i = 0; i < length; i++) {
+			result[i] = step * i;
 		}
-		return new double[] { 0 };
+		return result;
 	}
 
 	public double getBPM() {
