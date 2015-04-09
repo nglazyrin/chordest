@@ -107,4 +107,9 @@ public enum Note {
 		return offset;
 	}
 
+	public int positiveOffsetFrom(Note other) {
+		int offset = offsetFrom(other);
+		return offset >= 0 ? offset : offset + 12;
+	}
+
 }
