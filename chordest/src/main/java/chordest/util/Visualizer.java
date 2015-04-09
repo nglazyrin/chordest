@@ -33,6 +33,17 @@ public class Visualizer {
 			LOG.error("Error when creating dataset", e);
 		}
 	}
+	
+	public static final void visualize2D(double[][] data, double[] timestamps, String[] labels, String title) {
+		try {
+			XYZDataset d3 = DatasetUtil.toXYZDataset(timestamps, labels, data);
+			JFreeChartUtils.visualize(title, "Time", "", d3);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+	}
 
 	public static final void visualizeSpectrum(double[][] spectrum, double[] beatTimes, String[] labels, String title) {
 		try {

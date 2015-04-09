@@ -49,7 +49,7 @@ public class DatasetUtil {
 		result.addSeries(new Double(1), data);
 		return result;
 	}
-
+	
 	/**
 	 * Creates an XYZDataset from double array containing X values 
 	 * (timestamps), double[] array containing Y values (frequency) and
