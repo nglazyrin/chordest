@@ -10,6 +10,7 @@ import chordest.transform.FFTTransformWrapper;
 import chordest.transform.ITransform;
 import chordest.transform.PooledTransformer;
 import chordest.transform.PooledTransformer.ITransformProvider;
+import chordest.util.DataUtil;
 import chordest.util.Visualizer;
 import chordest.wave.Buffer;
 import chordest.wave.WaveFileInfo;
@@ -37,7 +38,7 @@ public class MyBeatTimesProvider implements IBeatTimesProvider {
 		};
 		double[][] spectrum = null;
 		// generate a time scale ranging from 0 to file length in seconds with step = 0.1 s
-		double[] windowBeginnings = BeatRootBeatTimesProvider.generateTimeScale(waveFileName, 0.1);
+		double[] windowBeginnings = DataUtil.generateDefaultBeats(waveFileName, 0.5);
 		try {
 			WaveFileInfo wfi = new WaveFileInfo(waveFileName);
 			if (wfi.exception != null) {
