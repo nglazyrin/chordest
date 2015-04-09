@@ -68,6 +68,7 @@ public class Chord {
 	//private Map<Integer, Note> components = new HashMap<Integer, Note>();
 	private final Note[] components;
 	private final String shorthand;
+	private final Note bass;
 
 	public static Chord major(Note tonic) {
 		return new Chord(tonic, MAJ);
@@ -79,6 +80,29 @@ public class Chord {
 
 	public static Chord empty() {
 		return new Chord();
+	}
+
+	public static double[] toPositionArray(Chord c) {
+		double[] result = new double[12];
+		if (c != null && !c.isEmpty()) {
+			for (Note note : c.components) {
+				result[note.ordinal()] = 1;
+			}
+		}
+		return result;
+	}
+
+	public static Chord fromPositionArray(double[] array) {
+		if (array == null || array.length != 12) {
+			throw new IllegalArgumentException("array of length 12 expected");
+		}
+		List<Note> notes = new ArrayList<Note>();
+		for (int i = 0; i < 12; i++) {
+			if (array[i] > 0) {
+				notes.add(Note.byNumber(i));
+			}
+		}
+		return new Chord(notes.toArray(new Note[notes.size()]));
 	}
 
 	public static List<Chord> getAllChordsWithShorthands(String[] shorthands) {
@@ -94,78 +118,92 @@ public class Chord {
 	private Chord() {
 		this.shorthand = N;
 		this.components = new Note[0];
+		this.bass = null;
 	}
 
 	public Chord(Note... notes) {
-		List<Note> temp = new ArrayList<Note>();
-		// remove duplicates
-		for (Note note : notes) {
-			if (note != null && ! temp.contains(note)) {
-				temp.add(note);
-			}
-		}
-		Note[] array = temp.toArray(new Note[temp.size()]);
-		if (array.length > 0) {
+		this(0, notes);
+	}
+
+	public Chord(int bassInterval, Note... notes) {
+		if (notes.length > 0) {
 			// first try to build a chord with a known shorthand from the given set of notes
-			for (String shorthand : shorthandToIntervals.keySet()) {
-				int[] intervals = shorthandToIntervals.get(shorthand);
-				Note root = tryIntervals(array, intervals);
-				if (root != null) {
+			int[][] permutations = getAllPermutations(notes.length);
+			for (int[] permutation : permutations) {
+				Note[] tempNotes = new Note[notes.length];
+				for (int i = 0; i < permutation.length; i++) {
+					tempNotes[i] = notes[permutation[i]];
+				}
+				String shorthand = tryShorthands(tempNotes);
+				if (shorthand != null) {
 					this.shorthand = shorthand;
-					List<Note> components = new ArrayList<Note>();
-					components.add(root);
-					for (int i = 0; i < intervals.length; i++) {
-						components.add(root.withOffset(intervals[i]));
-					}
-					this.components = components.toArray(new Note[components.size()]);
+					this.components = tempNotes;
+					this.bass = this.components[0].withOffset(bassInterval);
 					return;
 				}
 			}
 			// if falied, just copy the notes and don't assign any shorthand
 			int i = 0;
-			while (i < array.length && array[i] != null) { i++; }
+			while (i < notes.length && notes[i] != null) { i++; }
 			this.shorthand = NO_SHORTHAND;
-			this.components = Arrays.copyOf(array, i);
+			this.bass = notes[0].withOffset(bassInterval);
+			notes = Arrays.copyOf(notes, i);
+			if (! ArrayUtils.contains(notes, this.bass)) {
+				notes = ArrayUtils.add(notes, this.bass);
+			}
+			this.components = notes;
 		} else {
 			this.shorthand = NO_SHORTHAND;
 			this.components = new Note[0];
+			this.bass = null;
 		}
 	}
 
 	public Chord(Note root, String shortHand) {
+		this(0, root, shortHand);
+	}
+
+	public Chord(int bassInterval, Note root, String shortHand) {
 		this.shorthand = String.copyValueOf(shortHand.toCharArray());
 		if (N.equals(shortHand)) {
 			this.components = new Note[0];
+			this.bass = null;
 			// do nothing
 		} else if (shorthandToIntervals.containsKey(shortHand)) {
 			int[] intervals = shorthandToIntervals.get(shortHand);
+			this.bass = root.withOffset(bassInterval);
 			List<Note> notes = new ArrayList<Note>();
 			notes.add(root);
 			for (int interval : intervals) {
 				notes.add(root.withOffset(interval));
 			}
+//			if (! notes.contains(this.bass)) {
+//				notes.add(this.bass);
+//			}
 			this.components = notes.toArray(new Note[notes.size()]);
 		} else {
 			if (root != null) {
-				this.components = new Note[] { root };
+				this.bass = root.withOffset(bassInterval);
+				if (root.equals(bass)) {
+					this.components = new Note[] { root };
+				} else {
+					this.components = new Note[] { root, bass };
+				}
 			} else {
 				this.components = new Note[0];
+				this.bass = null;
 			}
 		}
 	}
 
-	private Note tryIntervals(Note[] notes, int[] intervals) {
-		if (notes == null || notes.length != intervals.length + 1) {
+	private String tryShorthands(Note[] notes) {
+		if (notes == null) {
 			return null;
 		}
-		int[][] permutations = getAllPermutations(notes.length);
-		for (int[] permutation : permutations) {
-			Note[] tempNotes = new Note[notes.length];
-			for (int i = 0; i < permutation.length; i++) {
-				tempNotes[i] = notes[permutation[i]];
-			}
-			if (matchesIntervals(tempNotes, intervals)) {
-				return tempNotes[0];
+		for (String shorthand : shorthandToIntervals.keySet()) {
+			int[] intervals = shorthandToIntervals.get(shorthand);
+			if (notes.length == intervals.length + 1 && matchesIntervals(notes, intervals)) {
+				return shorthand;
 			}
 		}
 		return null;
@@ -230,6 +268,10 @@ public class Chord {
 		return shorthand;
 	}
 
+	public Note getBass() {
+		return bass;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (o == null) { return false; }
@@ -252,6 +294,16 @@ public class Chord {
 		}
 	}
 
+	public boolean hasSameBassWith(Chord other) {
+		if (bass == null && other.bass == null) {
+			return true;
+		}
+		if (bass != null && bass.equals(other.bass)) {
+			return true;
+		}
+		return false;
+	}
+
 	private boolean hasSameNotesWith(Chord other) {
 		if (this.getNotes().length != other.getNotes().length) { return false; }
 		Set<Note> notes = new LinkedHashSet<Note>();
@@ -269,6 +321,9 @@ public class Chord {
 		for (Note note : getNotes()) {
 			result += i * note.hashCode();
 			i++;
+		}
+		if (this.bass != null) {
+			result += bass.hashCode();
 		}
 		return result;
 	}
@@ -320,11 +375,24 @@ public class Chord {
 			sb.append(this.getRoot().getShortName());
 			sb.append(":min");
 		} else {
-			for (Note n : this.components) {
-				sb.append(n.getShortName());
+			int cumulativeOffset = 0;
+			Note previous = this.components[0];
+			sb.append(this.getRoot().getShortName());
+			sb.append(":(");
+			for (int i = 1; i < this.components.length; i++) {
+				Note n = this.components[i];
+				int offset = (n.offsetFrom(previous) + 12) % 12;
+				cumulativeOffset += offset;
+				previous = n;
+				sb.append(Interval.toInterval(cumulativeOffset));
 				sb.append(",");
 			}
 			sb.deleteCharAt(sb.length() - 1);
+			sb.append(")");
+		}
+		if (this.bass != null && ! this.bass.equals(this.getRoot())) {
+			sb.append("/");
+			sb.append(Interval.toInterval((bass.offsetFrom(this.getRoot()) + 12) % 12));
 		}
 		return sb.toString();
 	}
