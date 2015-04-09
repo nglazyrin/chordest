@@ -49,7 +49,7 @@ public class LabFileReader {
 			for (int i = 0; i < timestampsTemp.size(); i++) {
 				timestamps[i] = timestampsTemp.get(i);
 			}
-			LOG.info("Chords have been read from " + lab.getAbsolutePath());
+			LOG.debug("Chords have been read from " + lab.getAbsolutePath());
 		} catch (FileNotFoundException e) {
 			throw new IllegalArgumentException(e);
 		} catch (InputMismatchException e) {
