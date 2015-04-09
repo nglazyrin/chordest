@@ -9,6 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 import chordest.model.Chord;
+import chordest.model.Note;
 
 /**
  * To be used together with ChordListsComparison to accumulate statistics over
@@ -208,6 +209,23 @@ public class ComparisonAccumulator {
 				}
 			}
 			return false;
+		}
+		
+		public double[] getErrorsForTypes(String expectedType, String actualType) {
+			if ("N".equals(expectedType)) {
+				return new double[] { nChord };
+			} else if ("N".equals(actualType)) {
+				return new double[] { chordN };
+			} else {
+				int index = getIndex(new Chord(Note.C, expectedType), new Chord(Note.C, actualType));
+				if (index >= 0) {
+					int i = ArrayUtils.indexOf(types, expectedType);
+					if (i >= 0) {
+						return ArrayUtils.subarray(times[i], index, index + 12);
+					}
+				}
+			}
+			return new double[0];
 		}
 		
 		private int getIndex(Chord expected, Chord actual) {
