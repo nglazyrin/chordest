@@ -5,11 +5,11 @@ options {
 }
 
 PARSER_BEGIN(ChordParser)
-  package similarity.chord.parser;
+  package chordest.io.lab.chordparser;
 
-  import similarity.chord.Chord;
-  import similarity.chord.Interval;
-  import similarity.chord.Note;
+  import chordest.model.Chord;
+  import chordest.model.Interval;
+  import chordest.model.Note;
   import java.io.ByteArrayInputStream;
   import java.io.PrintStream;
   import java.util.List;
@@ -76,8 +76,7 @@ Chord ParseChord() :
       else if (degreeList[i] < 0) {        notes.remove(root.withOffset(-degreeList[i]));
       }    }
   }
-  { if (degree != 0) { notes.add(root.withOffset(degree)); } }
-  { return new Chord(notes.toArray(new Note[notes.size()])); }
+  { return new Chord(degree, notes.toArray(new Note[notes.size()])); }
  |
   root = ParseNote() <COLON> <OPEN_BRACE_AC> degreeList = DegreeList() <CLOSE_BRACE>
   { degree = 0; }
@@ -87,20 +86,14 @@ Chord ParseChord() :
   { List<Note> notes = new ArrayList<Note>(); }
   { notes.add(root); }
   { for (int i=0; i < degreeList.length; i++) { notes.add(root.withOffset(degreeList[i])); }  }
-  { if (degree != 0) { notes.add(root.withOffset(degree)); } }
-  { return new Chord(notes.toArray(new Note[notes.size()])); }
+  { return new Chord(degree, notes.toArray(new Note[notes.size()])); }
  |
   root = ParseNote()
   { degree = 0; }
   (
     <SLASH> degree = Degree()
   )?
-  { if (degree != 0) {
-    	List<Note> notes = new Chord(root, "maj").getNotesAsList();
-    	notes.add(root.withOffset(degree));
-    	return new Chord(notes.toArray(new Note[notes.size()]));
-    } else { return new Chord( root, "maj" ); }
-  }
+  { return new Chord(degree, root, "maj"); }
  |
   <NO_CHORD>
   { return Chord.empty(); }
