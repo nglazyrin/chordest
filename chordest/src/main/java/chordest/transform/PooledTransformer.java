@@ -86,8 +86,13 @@ public class PooledTransformer {
 			for (Future<Buffer> future : futures) {
 				if (future == null){
 					throw new NullPointerException("Future is null");
-				} else if (future.isCancelled() || !future.isDone()) {
-					throw new IllegalStateException("Future is not done");
+				} else if (future.isCancelled()) {
+					throw new IllegalStateException("Future is cancelled");
+				} else if (!future.isDone()) {
+					Thread.sleep(100);
+					if (! future.isDone()) {
+						throw new IllegalStateException("Future is not done");
+					}
 				}
 				result.add(future.get());
 			}
