@@ -6,7 +6,7 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import chordest.beat.BeatRootBeatTimesProvider;
+//import chordest.beat.BeatRootBeatTimesProvider;
 import chordest.beat.IBeatTimesProvider;
 import chordest.beat.VampBeatTimesProvider;
 import chordest.configuration.Configuration;
@@ -52,7 +52,7 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 				provider = new IBeatTimesProvider() {
 					@Override
 					public double[] getBeatTimes() {
-						return BeatRootBeatTimesProvider.generateTimeScale(waveFileName, 0.5);
+						return DataUtil.generateDefaultBeats(waveFileName, 0.5);
 					}
 				};
 			}
@@ -68,7 +68,7 @@ public class WaveFileSpectrumDataProvider implements ISpectrumDataProvider {
 				temp = new VampBeatTimesProvider(waveFileName, beatFileName, c.pre).getBeatTimes();
 			} catch (Throwable e) {
 				// last try to provide a sequence of beats
-				temp = BeatRootBeatTimesProvider.generateTimeScale(waveFileName, 0.5);
+				temp = DataUtil.generateDefaultBeats(waveFileName, 0.5);
 			}
 		}
 		beatTimes = temp;
