@@ -7,10 +7,12 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,10 +45,11 @@ public class TrainTestDataCircularGenerator {
 	private static final boolean USE_LOG = true; 
 	private static final int WINDOW = 15;
 	private static final int ETA = 50000;
-	private static final int INPUTS = 48;
+	public static final int INPUTS = 48;
 	private static final double THETA = 0.08;
 
-	private static final String ROOT_FOLDER = "E:\\personal\\dissertation\\data\\";
+	public static final String MODEL_FOLDER = "E:\\dev\\git\\my_repository\\chordest\\work\\";
+	public static final String ROOT_FOLDER = "E:\\dev\\spectra\\csv\\";
 	private static final String NUM = INPUTS == 60 ? "60" : "";
 	private static final String SUFFIX = USE_LOG ? "" : ".nolog";
 	private static final String DELIMITER = ",";
@@ -89,23 +92,41 @@ public class TrainTestDataCircularGenerator {
 		return ROOT_FOLDER + "test" + NUM + index + SUFFIX + "\\";
 	}
 
-	private static void generateTrainFile(int index) {
-		LOG.info("Generating train file");
-		String csvFileName = getCsvFileName(index);
+	public static void iterateTrainFiles(int index, Consumer< Pair<double[][], Chord[]> > consumer) {
 		List<String> tracklist = TracklistCreator.readTrackList(getTrainFileListName(index));
-		deleteIfExists(csvFileName);
 		int filesProcessed = 0;
-
 		for (final String binFileName : tracklist) {
 			SpectrumData sd = SpectrumFileReader.read(binFileName);
-			double[][] result = prepareSpectrum(sd);
+			double[][] spectrum = prepareSpectrum(sd);
 			Chord[] chords = prepareChords(binFileName, sd, DELTA);
-			processTrainFile(result, chords, 12, csvFileName);
+			consumer.accept(new Pair<double[][], Chord[]>(spectrum, chords));
 			if (++filesProcessed % 10 == 0) {
 				LOG.info(filesProcessed + " files processed");
 			}
 		}
-		LOG.info(tracklist.size() + " files were processed. Result was saved to " + csvFileName);
+		LOG.info(tracklist.size() + " files have been processed.");
+	}
+
+	public static void iterateTestFiles(int index, Consumer< Pair<double[][], String> > consumer) {
+		List<String> tracklist = TracklistCreator.readTrackList(getTrainFileListName(index));
+		int filesProcessed = 0;
+		for (final String binFileName : tracklist) {
+			SpectrumData sd = SpectrumFileReader.read(binFileName);
+			double[][] spectrum = prepareSpectrum(sd);
+			consumer.accept(new Pair<double[][], String>(spectrum, binFileName));
+			if (++filesProcessed % 10 == 0) {
+				LOG.info(filesProcessed + " files processed");
+			}
+		}
+		LOG.info(tracklist.size() + " files have been processed.");
+	}
+
+	private static void generateTrainFile(int index) {
+		LOG.info("Generating train file");
+		String csvFileName = getCsvFileName(index);
+		deleteIfExists(csvFileName);
+		iterateTrainFiles(index, pair -> processTrainFile(pair.getFirst(), pair.getSecond(), 12, csvFileName));
+		LOG.info("Result was saved to " + csvFileName);
 	}
 
 	private static void generateTestFiles(int index) {
@@ -133,7 +154,7 @@ public class TrainTestDataCircularGenerator {
 	 * Delete file or clean directory
 	 * @param fileName File or directory
 	 */
-	private static void deleteIfExists(String fileName) {
+	public static void deleteIfExists(String fileName) {
 		File resultFile = new File(fileName);
 		if (resultFile.exists()) {
 			if (resultFile.isDirectory()) {
@@ -152,7 +173,7 @@ public class TrainTestDataCircularGenerator {
 		}
 	}
 
-	private static int getOutputVectorLength(boolean forTest) {
+	public static int getOutputVectorLength(boolean forTest) {
 		if (forTest) {
 			return INPUTS + (EXTRA_OCTAVE ? 12 : 0);
 		} else {
@@ -224,21 +245,30 @@ public class TrainTestDataCircularGenerator {
 		
 	}
 
-	private static void processColumn(double[] data, Chord chord, int offset, OutputStream chordOut) throws IOException {
-		if (chord == null) {
-			return;
+	private static void processColumn(double[] data, Chord chord, int offset, OutputStream chordOut) {
+		Pair<double[], Chord> p = rotateSingleColumn(data, chord, offset);
+		try {
+			chordOut.write(toByteArray(p.getFirst(), p.getSecond()));
+		} catch (IOException e) {
+			LOG.error("Error when writing result", e);
 		}
-		int from = offset;
-		double[] dataLocal = EXTRA_OCTAVE ? Arrays.copyOfRange(data, from, from + INPUTS)
+	}
+
+	public static Pair<double[], Chord> rotateSingleColumn(double[] data, Chord chord, int offset) {
+		if (chord == null) {
+			return new Pair<double[], Chord>(new double[INPUTS], chord);
+		}
+		double[] dataLocal = EXTRA_OCTAVE ? Arrays.copyOfRange(data, offset, offset + INPUTS)
 				: rotateArray(data, offset);
 		DataUtil.scaleTo01(dataLocal);
-		if (chord.isEmpty()) {
-			chordOut.write(toByteArray(dataLocal, chord));
-		} else if (chord.getNotes().length > 2) {//if (chord.containsTriad(Chord.major(chord.getRoot())) || chord.containsTriad(Chord.minor(chord.getRoot()))) {
-			Chord chordLocal = rotateChord(chord, offset);
-			chordOut.write(toByteArray(dataLocal, chordLocal));
-		}
-
+		Chord chordLocal = rotateChord(chord, offset);
+		return new Pair<double[], Chord>(dataLocal, chordLocal);
+//		if (chord.isEmpty()) {
+//			consumer.accept(new Pair<double[], Chord>(dataLocal, chord));
+//		} else if (chord.getNotes().length > 2) {//if (chord.containsTriad(Chord.major(chord.getRoot())) || chord.containsTriad(Chord.minor(chord.getRoot()))) {
+//			Chord chordLocal = rotateChord(chord, offset);
+//			consumer.accept(new Pair<double[], Chord>(dataLocal, chordLocal));
+//		}
 	}
 
 	private static void processTestFile(double[][] data, int components, String targetFile) {
@@ -261,6 +291,9 @@ public class TrainTestDataCircularGenerator {
 	}
 
 	private static Chord rotateChord(Chord chord, int offset) {
+		if (chord.isEmpty()) {
+			return chord;
+		}
 		Note[] notes = chord.getNotes();
 		Note[] newNotes = new Note[notes.length];
 		for (int j = 0; j < notes.length; j++) {
@@ -304,7 +337,7 @@ public class TrainTestDataCircularGenerator {
 		return result;
 	}
 
-	private static byte[] toByteArray(double[] ds, Chord chord) throws UnsupportedEncodingException {
+	public static byte[] toByteArray(double[] ds, Chord chord) throws UnsupportedEncodingException {
 		if (ds == null || ds.length == 0) {
 			return new byte[0];
 		}

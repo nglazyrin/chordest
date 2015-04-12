@@ -5,12 +5,14 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
+import chordest.chord.KeyExtractor;
 import chordest.chord.templates.ITemplateProducer;
 import chordest.chord.templates.TemplateProducer;
 import chordest.configuration.Configuration;
 import chordest.io.csv.CsvSpectrumFileReader;
 import chordest.io.spectrum.SpectrumFileReader;
 import chordest.main.Roundtrip;
+import chordest.model.Key;
 import chordest.model.Note;
 import chordest.spectrum.SpectrumData;
 import chordest.util.DataUtil;
@@ -19,7 +21,8 @@ import chordest.util.TracklistCreator;
 
 public class TestCsvChroma extends Roundtrip {
 
-	private static String CSV_DIRECTORY = "work\\dissertation\\sda\\sda.60-300-300\\encoded";
+//	private static String CSV_DIRECTORY = "work\\dissertation\\sda\\sda.60-300-300\\encoded";
+	private static String CSV_DIRECTORY = "E:\\Dev\\Python\\pylearn-test\\models\\sda.48-100\\test";
 
 	public static void main(String[] args) {
 		String labDir;
@@ -41,10 +44,11 @@ public class TestCsvChroma extends Roundtrip {
 				String csvFile = CSV_DIRECTORY + index + "\\" + track + PathConstants.EXT_WAV + PathConstants.EXT_BIN + PathConstants.EXT_CSV;
 				SpectrumData sd = SpectrumFileReader.read(binFile);
 				double[][] chroma = recognize(new File(csvFile));
+				Key key = KeyExtractor.getKey(chroma, Note.byNumber(sd.startNoteOffsetInSemitonesFromF0));
 				double[] noChordness = getNoChordness(chroma);
 				double[] beatTimes = DataUtil.toAllBeatTimes(sd.beatTimes, sd.framesPerBeat);
 				ITemplateProducer producer = new TemplateProducer(Note.byNumber(c.spectrum.offsetFromF0InSemitones), c.template);
-				processFile(chroma, noChordness, beatTimes, labDir, track, acc, producer);
+				processFile(chroma, noChordness, null, beatTimes, key, labDir, track, acc, producer);
 			}
 		}
 		writeStatistics();
