@@ -18,7 +18,6 @@ import chordest.io.lab.LabFileWriter;
 import chordest.model.Chord;
 import chordest.spectrum.FileSpectrumDataProvider;
 import chordest.spectrum.WaveFileSpectrumDataProvider;
-import chordest.util.Visualizer;
 
 /**
  * Performs chord estimation only for a given file. Spectrum can be given as
@@ -28,55 +27,59 @@ import chordest.util.Visualizer;
  */
 public class SingleFile {
 
-//	private static final String SEP = PathConstants.SEP;
-//	private static final String ARTIST = "Beatles";
-//	private static final String ALBUM = "05_-_Help!";
-//	private static final String TRACK = "08_-_Act_Naturally";
-//	private static final String TRACK_PATH = ARTIST + SEP + ALBUM + SEP + TRACK + PathConstants.EXT_WAV;
 	private static final Logger LOG = LoggerFactory.getLogger(SingleFile.class);
 
 	public static void main(String[] args) {
-		if (args.length != 4) {
-			LOG.error("Usage: SingleFile /path/to/testFile.wav /path/to/testFileSpectrum.bin /path/to/testFile.lab /path/to/results/");
+		if (args.length < 1) {
+			LOG.error("Usage: SingleFile /path/to/testFile.wav [/path/to/testFileSpectrum.bin /path/to/testFile.lab /path/to/results/]");
 			System.exit(-1);
 		}
 		String WAV_FILENAME = args[0];
-		String SPECTRUM_FILENAME = args[1];
-		String LAB_FILENAME = args[2];
-		String RESULT_PATH = args[3];
-		File wavFile = new File(WAV_FILENAME);
-		String RESULT_FILENAME = RESULT_PATH + wavFile.getName() + ".txt";
-		String BEAT_FILENAME = RESULT_PATH + wavFile.getName() + ".beat.txt";
+		String SPECTRUM_FILENAME = null;
+		if (args.length > 1) {
+			SPECTRUM_FILENAME = args[1];
+		}
+		String LAB_FILENAME = null;
+		if (args.length > 2) {
+			LAB_FILENAME = args[2];
+		}
+		String RESULT_PATH = new File(WAV_FILENAME + ".lab").getAbsolutePath();
+		if (args.length > 3) {
+			RESULT_PATH = args[3];
+		}
+		String BEAT_FILENAME = new File(WAV_FILENAME + ".beat.txt").getAbsolutePath();
 		
 		Configuration c = new Configuration();
 		IEvaluationMetric metric = new Triads();
-		File spectrumFile = new File(SPECTRUM_FILENAME);
 		ChromaExtractor ce;
-		if (spectrumFile.exists()) {
-			ce = new ChromaExtractor(c.process, c.template, new FileSpectrumDataProvider(SPECTRUM_FILENAME));
+		if (SPECTRUM_FILENAME != null && new File(SPECTRUM_FILENAME).exists()) {
+			ce = new ChromaExtractor(c.process, c.template, 
+					new FileSpectrumDataProvider(SPECTRUM_FILENAME));
 		} else {
 			ce = new ChromaExtractor(c.process, c.template,
 					new WaveFileSpectrumDataProvider(WAV_FILENAME, BEAT_FILENAME, c));
 		}
 		ITemplateProducer producer = new TemplateProducer(ce.getStartNote(), c.template);
-		ChordRecognizer cr = new ChordRecognizer(ce.getChroma(), ce.getNoChordness(), producer, c.process.noChordnessLimit);
+		ChordRecognizer cr = new ChordRecognizer(ce.getChroma(), ce.getNoChordness(), producer, c.process.noChordnessLimit, ce.getKey());
 		Chord[] chords = cr.recognize(metric.getOutputTypes());
 
-		File labFile = new File(LAB_FILENAME);
-		if (labFile.exists()) {
-			LabFileReader labReader = new LabFileReader(labFile);
-			ChordListsComparison cmp = new ChordListsComparison(labReader.getChords(),
-					labReader.getTimestamps(), chords, ce.getOriginalBeatTimes(), metric);
-			LOG.info("Overlap measure: " + cmp.getOverlapMeasure());
-			LOG.info("Key: " + ce.getKey());
+		if (LAB_FILENAME != null) {
+			File labFile = new File(LAB_FILENAME);
+			if (labFile.exists()) {
+				LabFileReader labReader = new LabFileReader(labFile);
+				ChordListsComparison cmp = new ChordListsComparison(labReader.getChords(),
+						labReader.getTimestamps(), chords, ce.getOriginalBeatTimes(), metric);
+				LOG.info("Overlap measure: " + cmp.getOverlapMeasure());
+				LOG.info("Key: " + ce.getKey());
+			}
 		}
 		
 		int startOffset = c.spectrum.offsetFromF0InSemitones;
-		Visualizer.visualizeChords(chords, ce.getOriginalBeatTimes(), WAV_FILENAME, startOffset);
+//		Visualizer.visualizeChords(chords, ce.getOriginalBeatTimes(), WAV_FILENAME, startOffset);
 		
 		LabFileWriter labWriter = new LabFileWriter(chords, ce.getOriginalBeatTimes());
 		try {
-			labWriter.writeTo(new File(RESULT_FILENAME));
+			labWriter.writeTo(new File(RESULT_PATH));
 		} catch (IOException e) {
 			LOG.error("Error when writing lab file", e);
 		}
