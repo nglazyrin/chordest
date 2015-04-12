@@ -31,28 +31,34 @@ public class SpectrumVisualizer {
 //		System.out.println(Arrays.toString(array));
 		WaveFileSpectrumDataProvider p = new WaveFileSpectrumDataProvider(FILE, BEAT_FILE_NAME, c);
 		SpectrumData sd = p.getSpectrumData();
+		//getOctaves(sd, 1, 3);
 		double[][] spectrum = sd.spectrum;
 		String[] labels = NoteLabelProvider.getNoteLabels(sd.startNoteOffsetInSemitonesFromF0, sd.scaleInfo);
 //		String[] labels1 = NoteLabelProvider.getNoteLabels(sd.startNoteOffsetInSemitonesFromF0, new ScaleInfo(1, 12));
-//		getOctaves(sd, 1, 3);
+//		Visualizer.visualizeSpectrum(spectrum, sd.beatTimes, labels, "Spectrum");
 //		spectrum = DataUtil.whitenSpectrum(spectrum, c.spectrum.notesPerOctave);
-		spectrum = DataUtil.smoothHorizontallyMedian(spectrum, c.process.medianFilterWindow);
+//		Visualizer.visualizeSpectrum(spectrum, sd.beatTimes, labels, "Spectrum");
+		spectrum = DataUtil.smoothHorizontallyMedian(spectrum, c.process.medianFilterWindow / 2);
 //		spectrum = DataUtil.filterHorizontal3(spectrum);
 //		spectrum = DataUtil.removeShortLines(spectrum, 8);
-		spectrum = DataUtil.shrink(spectrum, sd.framesPerBeat);
 //		Visualizer.visualizeSpectrum(spectrum, sd.beatTimes, labels, "Spectrum");
-		spectrum = DataUtil.toLogSpectrum(spectrum, c.process.crpLogEta);
-		spectrum = DiscreteCosineTransform.doChromaReduction(spectrum, c.process.crpFirstNonZero);
+//		spectrum = DataUtil.shrink(spectrum, sd.framesPerBeat);
+//		Visualizer.visualizeSpectrum(spectrum, sd.beatTimes, labels, "Spectrum");
+//		spectrum = DataUtil.toLogSpectrum(spectrum, c.process.crpLogEta);
+//		spectrum = DiscreteCosineTransform.doChromaReduction(spectrum, c.process.crpFirstNonZero);
+		Visualizer.visualizeSpectrum(spectrum, sd.beatTimes, labels, "Spectrum");
 		DataUtil.scaleEachTo01(spectrum);
-//		double[][] ss = DataUtil.getSelfSimilarity(spectrum);
-//		ss = DataUtil.removeDissimilar(ss, c.process.selfSimilarityTheta);
-//		Visualizer.visualizeSelfSimilarity(ss, sd.beatTimes);
+		double[][] ss = DataUtil.getSelfSimilarity(spectrum);
+		ss = DataUtil.removeDissimilar(ss, c.process.selfSimilarityTheta);
+		spectrum = DataUtil.smoothWithSelfSimilarity(spectrum, ss);
+		Visualizer.visualizeSpectrum(spectrum, sd.beatTimes, labels, "Spectrum after self-sim");
+		Visualizer.visualizeSelfSimilarity(ss, sd.beatTimes);
 		
 //		labels = new String[190];
 //		for (int i = 0; i < labels.length; i ++) {
 //			labels[i] = "" + (22050.0 * i / 4096);
 //		}
-		Visualizer.visualizeSpectrum(spectrum, sd.beatTimes, labels, "Spectrum");
+//		Visualizer.visualizeSpectrum(spectrum, sd.beatTimes, labels, "Spectrum");
 		
 //		double[][] sp12 = DataUtil.reduce(spectrum, 4);
 //		double[][] chromas = DataUtil.toSingleOctave(sp12, 12);

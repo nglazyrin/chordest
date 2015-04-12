@@ -8,13 +8,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import chordest.chord.BassDetector;
 import chordest.chord.ChordRecognizer;
 import chordest.chord.ChromaExtractor;
 import chordest.chord.comparison.ChordListsComparison;
 import chordest.chord.comparison.ComparisonAccumulator;
+import chordest.chord.comparison.ComparisonAccumulator.Errors;
 import chordest.chord.comparison.Mirex2010;
 import chordest.chord.comparison.Tetrads;
+import chordest.chord.comparison.TetradsBass;
 import chordest.chord.comparison.Triads;
+import chordest.chord.comparison.TriadsBass;
 import chordest.chord.templates.ITemplateProducer;
 import chordest.chord.templates.TemplateProducer;
 import chordest.configuration.Configuration;
@@ -23,6 +27,7 @@ import chordest.io.csv.CsvFileWriter;
 import chordest.io.lab.LabFileReader;
 import chordest.io.lab.LabFileWriter;
 import chordest.model.Chord;
+import chordest.model.Key;
 import chordest.spectrum.FileSpectrumDataProvider;
 import chordest.spectrum.WaveFileSpectrumDataProvider;
 import chordest.util.PathConstants;
@@ -37,6 +42,7 @@ public class Roundtrip {
 
 	protected static final Logger LOG = LoggerFactory.getLogger(Roundtrip.class);
 	protected static final Logger ERR_LOG = LoggerFactory.getLogger("Errors");
+	protected static final Logger ERR_SUM_LOG = LoggerFactory.getLogger("ErrorsSummary");
 	protected static final Logger SIM_LOG = LoggerFactory.getLogger("Similarity");
 
 	private static final String SEP = PathConstants.SEP;
@@ -50,7 +56,9 @@ public class Roundtrip {
 	protected static final ComparisonAccumulator[] acc = new ComparisonAccumulator[] {
 		new ComparisonAccumulator(new Mirex2010()),
 		new ComparisonAccumulator(new Triads()),
-		new ComparisonAccumulator(new Tetrads())
+		new ComparisonAccumulator(new Tetrads()),
+		new ComparisonAccumulator(new TriadsBass()),
+		new ComparisonAccumulator(new TetradsBass())
 	};
 
 	protected static Configuration c;
@@ -82,24 +90,25 @@ public class Roundtrip {
 			}
 			ITemplateProducer producer = new TemplateProducer(ce.getStartNote(), c.template);
 
-			processFile(ce.getChroma(), ce.getNoChordness(), ce.getOriginalBeatTimes(),
-					labDir, track, acc, producer);
+			processFile(ce.getChroma(), ce.getNoChordness(), ce.createBassDetector(),
+					ce.getOriginalBeatTimes(), ce.getKey(), labDir, track, acc, producer);
 		}
 		
 		writeStatistics();
 	}
 
 	protected static void writeCsvHeaders() {
-		ERR_LOG.info("metric;type;total;0;1;2;3;4;5;6;7;8;9;10;11");
+		ERR_LOG.info("track;maj-min;min-maj;maj5;maj7;Nchord;chordN");
+		ERR_SUM_LOG.info("metric;type;total;0;1;2;3;4;5;6;7;8;9;10;11");
 		SIM_LOG.info("name;key;overlapM;overlap3;overlap4;segmentation;effective_length;full_length");
 	}
 
 	protected static void processFile(double[][] chroma, double[] noChordness,
-			double[] beatTimes, String labDir, String track,
-			ComparisonAccumulator[] acc, ITemplateProducer producer) {
+			BassDetector bassDetector,  double[] beatTimes, Key key, String labDir,
+			String track, ComparisonAccumulator[] acc, ITemplateProducer producer) {
 		final String csvFileName = track + PathConstants.EXT_CSV;
 		final String labFileName = track + PathConstants.EXT_LAB;
-		ChordRecognizer cr = new ChordRecognizer(chroma, noChordness, producer, c.process.noChordnessLimit);
+		ChordRecognizer cr = new ChordRecognizer(chroma, noChordness, bassDetector, producer, c.process.noChordnessLimit, key);
 		Chord[] triads = cr.recognize(new Triads().getOutputTypes());
 		Chord[] tetrads = cr.recognize(new Tetrads().getOutputTypes());
 		
@@ -112,24 +121,36 @@ public class Roundtrip {
 		ChordListsComparison[] cmp = new ChordListsComparison[acc.length];
 		for (int i = 0; i < acc.length; i++) {
 			LabFileReader labReaderActual = new LabFileReader(
-					new File((acc[i].getMetric() instanceof Tetrads ?
+					new File((acc[i].getMetric() instanceof Tetrads || acc[i].getMetric() instanceof TetradsBass ?
 							LAB_TETRADS_DIR : LAB_TRIADS_DIR) + labFileName));
 			cmp[i] = new ChordListsComparison(labReaderExpected.getChords(),
 					labReaderExpected.getTimestamps(), labReaderActual.getChords(),
 					labReaderActual.getTimestamps(), acc[i].getMetric());
 			acc[i].append(cmp[i]);
 		}
+		Errors errors = new Errors(cmp[1].getErrors(), acc[1].getMetric());
+		ERR_LOG.info(String.format("%s;%f;%f;%f;%f;%f;%f",
+				track,
+				errors.getErrorsForTypes(Chord.MAJ, Chord.MIN)[0],
+				errors.getErrorsForTypes(Chord.MIN, Chord.MAJ)[0],
+				errors.getErrorsForTypes(Chord.MAJ, Chord.MAJ)[5],
+				errors.getErrorsForTypes(Chord.MAJ, Chord.MAJ)[7],
+				errors.getErrorsForTypes(Chord.N, "")[0],
+				errors.getErrorsForTypes("", Chord.N)[0]
+						));
 		
 		LOG.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-		LOG.info(String.format("%s: Mirex %.4f; Triads %.4f; Tetrads %.4f; Segm %.4f", 
-				track, cmp[0].getOverlapMeasure(), cmp[1].getOverlapMeasure(),
-				cmp[2].getOverlapMeasure(), cmp[0].getSegmentation()));
+		LOG.info(String.format("%s: 3s %.4f; 4s %.4f; 3b %.4f; 4b %.4f; Segm %.4f", 
+				track, cmp[1].getOverlapMeasure(), cmp[2].getOverlapMeasure(),
+				cmp[3].getOverlapMeasure(), cmp[4].getOverlapMeasure(), cmp[1].getSegmentation()));
 		LOG.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-		SIM_LOG.info(String.format("%s;%s;%f;%f;%f;%f;%f;%f", 
+		SIM_LOG.info(String.format("%s;%s;%f;%f;%f;%f;%f;%f;%f;%f", 
 				track.replace(',', '_').replace('\\', '/'), null,
 				cmp[0].getOverlapMeasure(),
 				cmp[1].getOverlapMeasure(),
 				cmp[2].getOverlapMeasure(),
+				cmp[3].getOverlapMeasure(),
+				cmp[4].getOverlapMeasure(),
 				cmp[0].getSegmentation(),
 				cmp[2].getEffectiveSeconds(),
 				cmp[0].getTotalSeconds()));
@@ -139,7 +160,7 @@ public class Roundtrip {
 		for (int i = 0; i < acc.length; i++) {
 			LOG.info("");
 			acc[i].printStatistics(LOG);
-			acc[i].printErrorStatistics(ERR_LOG);
+			acc[i].printErrorStatistics(ERR_SUM_LOG);
 		}
 	}
 

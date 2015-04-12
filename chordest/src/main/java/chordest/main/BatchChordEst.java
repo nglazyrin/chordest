@@ -56,7 +56,7 @@ public class BatchChordEst {
 						wavFileName, beatFileName, c));
 			}
 			ITemplateProducer producer = new TemplateProducer(ce.getStartNote(), c.template);
-			ChordRecognizer cr = new ChordRecognizer(ce.getChroma(), ce.getNoChordness(), producer, c.process.noChordnessLimit);
+			ChordRecognizer cr = new ChordRecognizer(ce.getChroma(), ce.getNoChordness(), producer, c.process.noChordnessLimit, ce.getKey());
 			Chord[] chords = cr.recognize(new Triads().getOutputTypes());
 			
 			LabFileWriter labWriter = new LabFileWriter(chords, ce.getOriginalBeatTimes());

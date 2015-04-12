@@ -1,12 +1,16 @@
 package chordest.main;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import chordest.chord.Harmony;
+import chordest.chord.KeyExtractor;
+import chordest.chord.TactusCorrector;
 import chordest.chord.comparison.Triads;
 import chordest.chord.recognition.IChordRecognition;
 import chordest.chord.recognition.TemplatesRecognition;
@@ -15,9 +19,11 @@ import chordest.chord.templates.TemplateProducer;
 import chordest.configuration.Configuration;
 import chordest.io.spectrum.SpectrumFileReader;
 import chordest.model.Chord;
+import chordest.model.Key;
 import chordest.model.Note;
 import chordest.spectrum.SpectrumData;
 import chordest.transform.CQConstants;
+import chordest.transform.DiscreteCosineTransform;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
 import chordest.util.NoteLabelProvider;
@@ -33,13 +39,13 @@ import chordest.util.Visualizer;
 public class VisualDebugger {
 
 	private static final Logger LOG = LoggerFactory.getLogger(VisualDebugger.class);
-	public static final String TRACK = "08_-_Love_Me_Do";
-	public static final String FILE = "E:\\dev\\spectra\\spectrum8-60-6\\" + TRACK + ".wav.bin";
+	public static final String TRACK = "04_-_I_Me_Mine";
+	public static final String FILE = "E:\\dev\\spectra\\spectrum8-36-6-tun10-100ms\\" + TRACK + ".wav.bin";
 
 	private static final Configuration c = new Configuration();
 
-	private static double startTime = 0;
-	private static double endTime   = 40;
+	private static double startTime = 54;
+	private static double endTime   = 57;
 	
 	private static String[] labels;
 	private static String[] labels1;
@@ -62,11 +68,11 @@ public class VisualDebugger {
 //		spectrum = DataUtil.smoothHorizontallyMedianAndShrink(spectrum, 1, sd.framesPerBeat);
 //		visualizeSpectrum(sd, spectrum, "Spectrum");
 		spectrum = DataUtil.smoothHorizontallyMedianAndShrink(spectrum, c.process.medianFilterWindow, sd.framesPerBeat);
-//		spectrum = DataUtil.toLogSpectrum(spectrum, c.process.crpLogEta);
+		spectrum = DataUtil.toLogSpectrum(spectrum, c.process.crpLogEta);
 //		spectrum = DataUtil.getAWeightedSpectrum(spectrum, cqc.A); // TODO
 		visualizeSpectrum(sd, spectrum, "Spectrum");
 		
-//		spectrum = DiscreteCosineTransform.doChromaReduction(spectrum, c.process.crpFirstNonZero);
+		spectrum = DiscreteCosineTransform.doChromaReduction(spectrum, c.process.crpFirstNonZero);
 //		visualizeSpectrum(sd, spectrum, "Reduced");
 		double[][] selfSim = DataUtil.getSelfSimilarity(spectrum);
 		
@@ -82,6 +88,9 @@ public class VisualDebugger {
 //		Visualizer.visualizeSelfSimilarity(selfSim, beats);
 		spectrum = DataUtil.smoothWithSelfSimilarity(spectrum, selfSim);
 		visualizeSpectrum(sd, spectrum, "After self-sim");
+//		spectrum = DataUtil.filterHarmonics(spectrum, 3, sd.scaleInfo.notesInOctave);
+//		spectrum = DiscreteCosineTransform.doChromaReduction(spectrum, c.process.crpFirstNonZero);
+//		visualizeSpectrum(sd, spectrum, "Spectrum w/o harmonics");
 		
 		double[][] chroma = DataUtil.reduce(spectrum, sd.scaleInfo.octaves);
 		chroma = DataUtil.toSingleOctave(chroma, 12);
@@ -91,6 +100,7 @@ public class VisualDebugger {
 		ITemplateProducer producer = new TemplateProducer(startNote, c.template);
 		IChordRecognition first = new TemplatesRecognition(producer, new Triads().getOutputTypes());
 		Chord[] chords = first.recognize(chroma, new ScaleInfo(1, 12));
+		Key key = KeyExtractor.getKey(chroma, startNote);
 		
 		double[] noChordness = DataUtil.getNochordness(spectrum, sd.scaleInfo.octaves);
 		for (int i = 0; i < noChordness.length; i++) {
@@ -101,8 +111,10 @@ public class VisualDebugger {
 //		Visualizer.visualizeXByTimeDistribution(noChordness, beats);
 		
 		printChords(chords, beats);
-		chords = Harmony.smoothUsingHarmony(chroma, chords, new ScaleInfo(1, 12), producer);
+		chords = Harmony.smoothUsingHarmony(chroma, chords, new ScaleInfo(1, 12), producer, key);
+//		chords = TactusCorrector.correct(chords);
 		printChords(chords, beats);
+		printSelfSimBorders(selfSim, beats);
 //		printTemplate(Chord.major(Note.C));
 //		printTemplate(Chord.minor(Note.C));
 	}
@@ -157,7 +169,7 @@ public class VisualDebugger {
 		int startIndex = Arrays.binarySearch(beats, localBeats[0]);
 		int endIndex = startIndex + localBeats.length;
 		for (int i = startIndex; i < endIndex; i++) {
-			LOG.info(String.format("%f: %s", beats[i], chords[i]));
+			System.out.println(String.format("%f: %s", beats[i], chords[i]));
 		}
 	}
 
@@ -165,6 +177,17 @@ public class VisualDebugger {
 		double[] array = new TemplateProducer(Note.C, c.template).getTemplateFor(chord);
 		DataUtil.scaleTo01(array);
 		System.out.println(Arrays.toString(array));
+	}
+
+	private static void printSelfSimBorders(double[][] selfSim, double[] beats) {
+		int[] borders = DataUtil.getSelfSimBorders(selfSim);
+		List<Double> toPrint = new ArrayList<Double>();
+		for (int i = 0; i < borders.length - 1; i++) {
+			if (beats[borders[i]] >= startTime && beats[borders[i]] <= endTime) {
+				toPrint.add(beats[borders[i]]);
+			}
+		}
+		LOG.info(Arrays.toString(toPrint.toArray()));
 	}
 
 	public static void getOctaves(SpectrumData sd, int from, int to) {
