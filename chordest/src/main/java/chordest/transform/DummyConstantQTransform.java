@@ -32,9 +32,9 @@ public class DummyConstantQTransform extends AbstractTransform {
 
 	@Override
 	Buffer transform() {
-		int maxWindowLength = cqConstants.getLongestWindow();
+//		int maxWindowLength = cqConstants.getLongestWindow();
 		double[] data = buffer.getData();
-		if (data.length >= maxWindowLength) {
+//		if (data.length >= maxWindowLength) {
 			int spectrumSize = scaleInfo.getTotalComponentsCount();
 			double[] spectrum = new double[spectrumSize];
 			for (int kcq = 0; kcq < spectrumSize; kcq++) {
@@ -55,11 +55,11 @@ public class DummyConstantQTransform extends AbstractTransform {
 			double timeStamp = buffer.getTimeStamp();
 			buffer = null; // free the memory (~400 kB per each buffer, it is important)
 			return new ReadOnlyBuffer(spectrum, timeStamp);
-		} else {
-			throw new RuntimeException(String.format(
-					"Cannot perform transform: max window length '%d' is greater than data length '%d'", 
-					maxWindowLength, data.length));
-		}
+//		} else {
+//			throw new RuntimeException(String.format(
+//					"Cannot perform transform: max window length '%d' is greater than data length '%d'", 
+//					maxWindowLength, data.length));
+//		}
 	}
 
 }
