@@ -1,9 +1,15 @@
 package chordest.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -314,9 +320,12 @@ public class DataUtil {
 		if (cqtSpectrum.length == notesInOctave) {
 			return Arrays.copyOf(cqtSpectrum, cqtSpectrum.length);
 		} else {
+//			double[] deg = new double[] { 1.0, 0.9, 0.8, 0.7, 0.6, 0.5 };
+			double[] deg = new double[] { 1.0, 1.0, 1.0, 1.0, 0.6, 0.5 };
 			double [] result = new double[notesInOctave];
 			for (int index = 0; index < cqtSpectrum.length; index++) {
-				double value = cqtSpectrum[index];
+				double coeff = deg[index / notesInOctave];
+				double value = coeff * cqtSpectrum[index];
 				int noteNumber = index % notesInOctave;
 				result[noteNumber] += value;
 			}
@@ -371,8 +380,8 @@ public class DataUtil {
 //				delta--; // to exclude the subnotes that are in the "middle" between 2 real notes
 //			}
 			//int delta = subnotes > 2 ? 1 : 0;
+//			delta = Math.max(delta, 0);
 			int delta = 0; //TODO
-			delta = Math.max(delta, 0);
 			for (int i = 0; i < resultComponents; i++) {
 				double temp = 0;
 				for (int j = -delta; j <= delta; j++) {
@@ -665,6 +674,70 @@ public class DataUtil {
 		return result;
 	}
 
+	private static double[][] getCheckerboard(final int size) {
+		double[][] result = new double[2 * size][2 * size];
+		for (int i = 0; i < size; i++) {
+			for (int j = 0; j < size; j++) {
+				result[i][j] = result[i + size][j + size] = -1;
+				result[i + size][j] = result[i][j + size] = 1;
+			}
+		}
+		double step = 2.0 / (2 * size - 1);
+		double part1 = Math.sqrt(1.0 / (2 * Math.PI));
+		for (int i = 0; i < 2 * size; i++) {
+			double xval = step * i - 1;
+			for (int j = 0; j < 2 * size; j++) {
+				double yval = step * j - 1;
+				double part2 = -0.5 * (xval * xval + yval * yval);
+				double gaussian = part1 * Math.exp(part2);
+				result[i][j] *= gaussian;
+			}
+		}
+		return result;
+	}
+
+	public static int[] getSelfSimBorders(double[][] selfsim) {
+		int size = 4;
+		double[][] cb = getCheckerboard(size);
+		List<Integer> resultList = new ArrayList<Integer>();
+		double[] temp = new double[selfsim.length];
+		for (int i = 0; i < selfsim.length; i++) {
+			int start = i - size;
+			int stop = i + size;
+			int cbStart = 0;
+			int cbStop = 2 * size;
+			if (i < size) {
+				cbStart = size - i;
+				cbStop = 2 * size;
+				start = 0;
+				stop = cbStop - cbStart;
+			} else if (i > selfsim.length - size) {
+				int d = selfsim.length - i;
+				cbStart = 0;
+				cbStop = size + d;
+				start = selfsim.length - cbStop;
+				stop = selfsim.length;
+			}
+			for (int j = 0; j < cbStop - cbStart; j++) {
+				for (int k = 0; k < cbStop - cbStart; k++) {
+					temp[i] += (selfsim[start + j][start + k] * cb[cbStart + j][cbStart + k]);
+				}
+			}
+		}
+		resultList.add(0);
+		for (int i = 1; i < temp.length; i++) {
+			if (i < temp.length - 1 && temp[i] >= temp[i - 1] && temp[i] > temp[i + 1]) {
+				resultList.add(i);
+			}
+		}
+		resultList.add(selfsim.length);
+		int[] result = new int[resultList.size()];
+		for (int i = 0; i < resultList.size(); i++) {
+			result[i] = resultList.get(i);
+		}
+		return result;
+	}
+
 	public static double[] getNochordness(final double[][] spectrum, int octaves) {
 		if (spectrum == null) {
 			throw new NullPointerException("spectrum is null");
@@ -716,16 +789,16 @@ public class DataUtil {
 		return result;
 	}
 
-	public static double[] sumVectors(final double[][] pcps, final int from, final int to) {
-		if (pcps == null) {
-			throw new NullPointerException("pcps is null");
+	public static double[] sumVectors(final double[][] vectors, final int from, final int to) {
+		if (vectors == null) {
+			throw new NullPointerException("vectors is null");
 		}
-		if (from < 0 || to < 0 || from > to || to > pcps.length) {
+		if (from < 0 || to < 0 || from > to || to > vectors.length) {
 			throw new IllegalArgumentException("from = " + from + ", to = " + to);
 		}
-		double[] result = new double[12];
+		double[] result = new double[vectors[0].length];
 		for (int i = from; i < to; i++) {
-			result = DataUtil.add(result, pcps[i]);
+			result = DataUtil.add(result, vectors[i]);
 		}
 		return result;
 	}
