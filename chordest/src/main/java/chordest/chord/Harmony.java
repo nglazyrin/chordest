@@ -9,6 +9,7 @@ import chordest.chord.recognition.AbstractChordRecognition;
 import chordest.chord.recognition.TemplatesRecognition;
 import chordest.chord.templates.ITemplateProducer;
 import chordest.model.Chord;
+import chordest.model.Key;
 import chordest.model.Note;
 import chordest.transform.ScaleInfo;
 import chordest.util.DataUtil;
@@ -17,7 +18,7 @@ import chordest.util.metric.IMetric;
 public class Harmony {
 
 	public static Chord[] smoothUsingHarmony(final double[][] pcp, final Chord[] chords, 
-			final ScaleInfo scaleInfo, final ITemplateProducer producer) {
+			final ScaleInfo scaleInfo, final ITemplateProducer producer, final Key key) {
 		if (pcp == null) {
 			throw new NullPointerException();
 		}
@@ -33,7 +34,7 @@ public class Harmony {
 			result[i] = chords[i];
 		}
 		
-		removeSameRootDifferentType(pcp, result, producer);
+//		removeSameRootDifferentType(pcp, result, producer, key);
 		removeSingleBeatChords(pcp, result, producer);
 		return result;
 	}
@@ -81,7 +82,7 @@ public class Harmony {
 	}
 
 	private static void removeSameRootDifferentType(final double[][] pcp, final Chord[] result,
-			final ITemplateProducer producer) {
+			final ITemplateProducer producer, final Key key) {
 		final List<IntervalToCorrect> intervals = gatherIntervals(result);
 		for (IntervalToCorrect interval : intervals) {
 			final List<Chord> possibleChords = new ArrayList<Chord>(interval.chordTypes.size());
@@ -102,8 +103,36 @@ public class Harmony {
 		}
 	}
 
+//	private static void removeSameRootDifferentType(final double[][] pcp, final Chord[] result,
+//			final ITemplateProducer producer, final Key key) {
+//		final List<IntervalToCorrect> intervals = gatherIntervals(result);
+//		List<double[]> temp = new ArrayList<>();
+//		for (int i = 0; i < pcp.length; i++) {
+//			boolean skip = false;
+//			for (IntervalToCorrect interval : intervals) {
+//				if (!skip && i >= interval.start && i < interval.end) {
+//					skip = true;
+//				}
+//			}
+//			if (! skip) {
+//				temp.add(pcp[i]);
+//			}
+//		}
+//		Key myKey = KeyExtractor.getKey(temp.toArray(new double[temp.size()][]), ((TemplateProducer)producer).getStartNote());
+//		for (IntervalToCorrect interval : intervals) {
+//			Note root = interval.root;
+//			Chord best = Chord.minor(root);
+//			if (! myKey.hasChord(best)) {
+//				best = Chord.major(root);
+//			}
+//			for (int i = interval.start; i < interval.end; i++) {
+//				result[i] = best;
+//			}
+//		}
+//	}
+
 	private static List<IntervalToCorrect> gatherIntervals(final Chord[] chords) {
-		List<IntervalToCorrect> intervals = new ArrayList<IntervalToCorrect>();
+		List<IntervalToCorrect> intervals = new ArrayList<>();
 		Chord previous = Chord.empty();
 		int start = 0;
 		int end = -1;

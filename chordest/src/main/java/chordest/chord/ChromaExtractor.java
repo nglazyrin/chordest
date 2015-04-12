@@ -27,6 +27,8 @@ public class ChromaExtractor {
 
 	private final double[] originalBeatTimes;
 	private final SpectrumData spectrumData;
+	private double[][] originalSpectrum;
+	private double[][] spectrum;
 	private double[][] chroma;
 	private double[] noChordness;
 	private Key key;
@@ -93,6 +95,8 @@ public class ChromaExtractor {
 					p.medianFilterWindow, spectrumData.framesPerBeat);
 		}
 		result = DataUtil.toLogSpectrum(result, p.crpLogEta);
+		originalSpectrum = result;
+//		result = DataUtil.filterHarmonics(result, 3, spectrumData.scaleInfo.notesInOctave);
 		result = DiscreteCosineTransform.doChromaReduction(result, p.crpFirstNonZero);
 		result = doSelfSimSmooth(result, p.selfSimilarityTheta);
 		toChromaAndNoChordness(t, result, spectrumData.scaleInfo.octaves);
@@ -109,6 +113,8 @@ public class ChromaExtractor {
 	}
 
 	private void toChromaAndNoChordness(TemplateProperties t, final double[][] sp, int octaves) {
+		spectrum = sp;
+		
 		double[][] sp12 = DataUtil.reduce(sp, octaves);
 		chroma = DataUtil.toSingleOctave(sp12, 12);
 
@@ -126,6 +132,10 @@ public class ChromaExtractor {
 		return Note.byNumber(spectrumData.startNoteOffsetInSemitonesFromF0);
 	}
 
+	public double[][] getSpectrum() {
+		return spectrum;
+	}
+
 	public double[][] getChroma() {
 		return chroma;
 	}
@@ -136,6 +146,10 @@ public class ChromaExtractor {
 
 	public Key getKey() {
 		return key;
+	}
+
+	public BassDetector createBassDetector() {
+		return new BassDetector(spectrum, spectrumData.scaleInfo, spectrumData.startNoteOffsetInSemitonesFromF0);
 	}
 
 }
